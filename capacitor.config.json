@@ -1,0 +1,17 @@
+{
+  "appId": "com.taranveer.roomsplit",
+  "appName": "RoomSplit",
+  "webDir": "dist",
+  "plugins": {
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    },
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "launchAutoHide": true,
+      "backgroundColor": "#2563EB",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    }
+  }
+}

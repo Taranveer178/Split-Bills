@@ -1,0 +1,224 @@
+import {
+  Bell,
+  LayoutGrid,
+  LogOut,
+  PieChart,
+  Plus,
+  User,
+} from 'lucide-react';
+import roomsplitIcon from '../../assets/roomsplit-icon.webp';
+
+const ITEMS = [
+  { id: 'groups', label: 'Overview', mobileLabel: 'Spaces', icon: LayoutGrid },
+  { id: 'notifications', label: 'Activity', mobileLabel: 'Activity', icon: Bell },
+  { id: 'monthly', label: 'Analytics', mobileLabel: 'Monthly', icon: PieChart },
+  { id: 'profile', label: 'Account', mobileLabel: 'Profile', icon: User },
+];
+
+export default function PrimaryNav({
+  activeItem,
+  onNavigate,
+  onQuickAction,
+  unreadCount = 0,
+  onLogout,
+  user,
+  desktopOnly = false,
+}) {
+  return (
+    <>
+      {/* ===================================================================== */}
+      {/* MOBILE NATIVE LIQUID GLASS DOCK (< md)                                */}
+      {/* ===================================================================== */}
+      {!desktopOnly && (
+        <nav
+          aria-label="Mobile navigation"
+          className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 pointer-events-none md:hidden"
+        >
+          <div className="liquid-nav-dock pointer-events-auto mx-auto flex h-16 w-full max-w-[25rem] items-center justify-between gap-1 rounded-[28px] p-1.5">
+            {ITEMS.slice(0, 2).map(({ id, mobileLabel, icon: Icon }) => {
+              const isActive = activeItem === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => onNavigate(id)}
+                  aria-label={mobileLabel}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`relative flex h-full flex-1 flex-col items-center justify-center gap-0.5 rounded-[22px] transition-all duration-200 active:scale-95 ${
+                    isActive
+                      ? 'bg-gradient-to-b from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25 font-bold'
+                      : 'text-slate-600 hover:bg-white/60 hover:text-slate-900 font-semibold'
+                  }`}
+                >
+                  <span className="relative inline-flex items-center justify-center">
+                    <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                    {id === 'notifications' && unreadCount > 0 && (
+                      <span
+                        className={`absolute -top-1 -right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-extrabold leading-none ring-2 ${
+                          isActive
+                            ? 'bg-white text-blue-600 ring-blue-600'
+                            : 'bg-rose-500 text-white ring-white'
+                        }`}
+                      >
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-[10px] leading-tight tracking-tight">{mobileLabel}</span>
+                </button>
+              );
+            })}
+
+            {/* Center Native Quick-Add Action Button (if handler provided) */}
+            {onQuickAction && (
+              <button
+                type="button"
+                onClick={onQuickAction}
+                aria-label="Quick add bill"
+                className="mx-0.5 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[20px] bg-gradient-to-tr from-slate-900 via-slate-800 to-blue-900 text-white shadow-lg shadow-slate-900/25 border border-white/30 transition-transform active:scale-90"
+              >
+                <Plus size={22} strokeWidth={2.75} />
+              </button>
+            )}
+
+            {ITEMS.slice(2).map(({ id, mobileLabel, icon: Icon }) => {
+              const isActive = activeItem === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => onNavigate(id)}
+                  aria-label={mobileLabel}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`relative flex h-full flex-1 flex-col items-center justify-center gap-0.5 rounded-[22px] transition-all duration-200 active:scale-95 ${
+                    isActive
+                      ? 'bg-gradient-to-b from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25 font-bold'
+                      : 'text-slate-600 hover:bg-white/60 hover:text-slate-900 font-semibold'
+                  }`}
+                >
+                  <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                  <span className="text-[10px] leading-tight tracking-tight">{mobileLabel}</span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+      )}
+
+      {/* ===================================================================== */}
+      {/* DESKTOP LIQUID GLASS SIDEBAR (md+)                                    */}
+      {/* ===================================================================== */}
+      <aside
+        aria-label="Desktop navigation"
+        className="hidden md:flex md:order-first md:h-full md:w-60 lg:w-64 md:flex-shrink-0 md:flex-col md:justify-between bg-white/75 backdrop-blur-2xl border-r border-white/80 shadow-[4px_0_24px_rgba(15,23,42,0.03)] px-4 py-6 z-30"
+      >
+        <div>
+          {/* Brand Header */}
+          <button
+            type="button"
+            onClick={() => onNavigate('groups')}
+            aria-label="Go to RoomSplit home"
+            className="flex w-full items-center gap-3 rounded-2xl px-2 py-1.5 text-left transition-opacity hover:opacity-90"
+          >
+            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-white p-1.5 shadow-sm border border-slate-200/70">
+              <img
+                src={roomsplitIcon}
+                alt="RoomSplit"
+                className="h-full w-full object-contain"
+              />
+            </span>
+            <div>
+              <span className="block text-base font-extrabold tracking-tight text-slate-900 leading-none">
+                RoomSplit
+              </span>
+              <span className="mt-1 block text-[11px] font-semibold text-blue-600 leading-none">
+                Shared Ledger
+              </span>
+            </div>
+          </button>
+
+          <div className="mt-7 mb-2 px-3">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              Workspace
+            </span>
+          </div>
+
+          {/* Desktop Navigation Items */}
+          <div className="space-y-1.5">
+            {ITEMS.map(({ id, label, icon: Icon }) => {
+              const isActive = activeItem === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => onNavigate(id)}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`group flex h-11 w-full items-center gap-3 rounded-2xl px-3.5 text-sm transition-all duration-200 ${
+                    isActive
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-md shadow-blue-600/20'
+                      : 'text-slate-600 font-semibold hover:bg-white/80 hover:text-slate-900'
+                  }`}
+                >
+                  <Icon
+                    size={18}
+                    strokeWidth={isActive ? 2.5 : 2}
+                    className={isActive ? 'text-white' : 'text-slate-500 group-hover:text-blue-600'}
+                  />
+                  <span>{label}</span>
+
+                  {id === 'notifications' && unreadCount > 0 && (
+                    <span
+                      className={`ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[11px] font-extrabold leading-none ${
+                        isActive
+                          ? 'bg-white text-blue-600'
+                          : 'bg-rose-500 text-white shadow-sm'
+                      }`}
+                    >
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Desktop User Footer Card */}
+        <div className="space-y-2 border-t border-slate-200/60 pt-4">
+          {user && (
+            <div
+              onClick={() => onNavigate('profile')}
+              className="flex items-center gap-3 rounded-2xl bg-white/70 border border-white/90 p-2.5 shadow-sm hover:bg-white cursor-pointer transition-all"
+            >
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-sm">
+                {user.photoDataUrl ? (
+                  <img src={user.photoDataUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  (user.username || 'U').charAt(0).toUpperCase()
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-bold text-slate-900">{user.username}</p>
+                <p className="truncate text-[11px] text-slate-500 font-mono">
+                  {user.upiId || user.email || 'Set up UPI'}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {onLogout && (
+            <button
+              type="button"
+              onClick={onLogout}
+              aria-label="Log out"
+              className="flex h-10 w-full items-center gap-2.5 rounded-2xl px-3.5 text-xs font-bold text-slate-500 transition-colors hover:bg-rose-50/80 hover:text-rose-600"
+            >
+              <LogOut size={16} />
+              <span>Sign out</span>
+            </button>
+          )}
+        </div>
+      </aside>
+    </>
+  );
+}
