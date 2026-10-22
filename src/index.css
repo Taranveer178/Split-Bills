@@ -18,6 +18,12 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
+select,
+textarea {
+  font-size: 16px;
+}
+
 .liquid-glass {
   background: rgba(255, 255, 255, 0.76);
   backdrop-filter: blur(24px) saturate(180%);
