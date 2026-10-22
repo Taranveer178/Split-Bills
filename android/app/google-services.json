@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "6706257446",
+    "project_number": "814016879682",
     "project_id": "roomsplit-test",
     "storage_bucket": "roomsplit-test.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:6706257446:android:2ce2c92bdb2f9735c310e7",
+        "mobilesdk_app_id": "1:814016879682:android:2ce2c92bdb2f9735c310e7",
         "android_client_info": {
           "package_name": "com.taranveer.roomsplit"
         }

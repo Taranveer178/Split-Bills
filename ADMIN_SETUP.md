@@ -10,12 +10,14 @@ Set these secrets for the Worker:
 - `ADMIN_PASSWORD`: a long, unique password not used for regular RoomSplit accounts.
 - `ADMIN_SESSION_SECRET`: a random secret of at least 32 characters.
 - `FIREBASE_SERVICE_ACCOUNT`: the complete JSON contents of the service-account key file. The Worker reads `project_id`, `client_email`, and `private_key` from this value.
+- `FIREBASE_WEB_API_KEY`: the web API key from the RoomSplit Firebase app configuration, used to verify Firebase Auth ID tokens for push requests.
+- `APP_ORIGIN`: the canonical app origin if it differs from `https://roomsplit.taranveer.in`.
 
 Alternatively, configure `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_PRIVATE_KEY` as separate secrets. Use `npx wrangler secret put SECRET_NAME` to set each value, then deploy with `npm run deploy:cloudflare`. The Firebase service account is used only by the Worker. Do not expose its key through a `VITE_` variable.
 
 ## Firebase service account
 
-Create a service account for the RoomSplit Firebase project with Firestore document read/write permissions for `users`, `groups`, `expenses`, `messages`, `notifications`, `calls`, and `settings`. Keep the downloaded key private and remove the local copy when setup is complete.
+Create a service account for the RoomSplit Firebase project with Firestore document read/write permissions for `users`, `groups`, `expenses`, `messages`, `notifications`, `calls`, and `settings`, plus permission to send Firebase Cloud Messaging messages. Enable the Firebase Cloud Messaging API in the Google Cloud project. Keep the downloaded key private and remove the local copy when setup is complete.
 
 ## Use
 

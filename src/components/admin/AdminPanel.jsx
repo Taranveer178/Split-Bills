@@ -92,7 +92,7 @@ export default function AdminPanel() {
       .catch((requestError) => {
         if (isCurrent && requestError.message !== 'Admin login is not configured') {
           setError(requestError.message.includes('Failed to fetch')
-            ? 'Admin API is unavailable. Run this app with Vercel Dev or use its deployed URL.'
+            ? 'Admin API is unavailable. Run the Cloudflare Worker or use its deployed URL.'
             : requestError.message);
         } else if (isCurrent) {
           setError(requestError.message);

@@ -11,10 +11,12 @@ import {
   where,
   writeBatch,
 } from 'firebase/firestore';
-import { db, app } from '../firebase';
+import { db, app, auth } from '../firebase';
 
 const VAPID_KEY = 'BNPn8ktElldgtANhbx-7Ks2kizVEHjj6sdWju7gc0JAgsX6jd8TNBqxcy7Auu6C2lEZbgDV_DHlo2dg3_EbLkko';
-const VERCEL_API_URL = 'https://room-split-app.vercel.app/api/send-push';
+const PUSH_API_URL = Capacitor.isNativePlatform()
+  ? 'https://roomsplit.taranveer.in/api/send-push'
+  : '/api/send-push';
 const PUSH_TOKEN_STORAGE_KEY = 'rs_fcm_device_token';
 let desiredUserId = null;
 let currentPushToken = localStorage.getItem(PUSH_TOKEN_STORAGE_KEY);
@@ -350,10 +352,14 @@ export async function listenToForegroundMessages(onMessageReceived) {
 }
 
 export async function triggerPushNotification({ recipientId, title, message, groupId }) {
-  const response = await fetch(VERCEL_API_URL, {
+  const idToken = await auth?.currentUser?.getIdToken();
+  if (!idToken) throw new Error('Sign in to RoomSplit before sending a test notification.');
+
+  const response = await fetch(PUSH_API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `Bearer ${idToken}`,
     },
     body: JSON.stringify({
       recipientId,
@@ -367,4 +373,11 @@ export async function triggerPushNotification({ recipientId, title, message, gro
     const detail = await response.text();
     throw new Error(`Push delivery failed (${response.status}): ${detail}`);
   }
+
+  const result = await response.json();
+  if (!result.success || result.count < 1) {
+    throw new Error(result.message || 'Push API accepted the request but delivered no notifications.');
+  }
+
+  return result;
 }

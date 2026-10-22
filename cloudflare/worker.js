@@ -2,6 +2,13 @@ const SESSION_COOKIE = 'roomsplit_admin_session';
 const SESSION_SECONDS = 8 * 60 * 60;
 const MAX_RECORD_BYTES = 850 * 1024;
 const MAX_LIST_SIZE = 500;
+const ROOM_SPLIT_FIREBASE_PROJECT_ID = 'roomsplit-test';
+const PUSH_ALLOWED_ORIGINS = new Set([
+  'https://roomsplit.taranveer.in',
+  'capacitor://localhost',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+]);
 const ALLOWED_COLLECTIONS = new Set([
   'users',
   'groups',
@@ -196,7 +203,7 @@ async function getAccessToken(env) {
     encodeBase64Url(JSON.stringify({ alg: 'RS256', typ: 'JWT' })),
     encodeBase64Url(JSON.stringify({
       iss: serviceAccount.clientEmail,
-      scope: 'https://www.googleapis.com/auth/datastore',
+      scope: 'https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/firebase.messaging',
       aud: 'https://oauth2.googleapis.com/token',
       iat: now,
       exp: now + 3600,
@@ -307,6 +314,121 @@ async function handleDataRequest(request, env, collectionName) {
   return jsonResponse({ record: sanitizeRecord(collectionName, documentFromFirestore(updated)) });
 }
 
+async function handlePushRequest(request, env) {
+  const origin = request.headers.get('Origin');
+  const appOrigin = env.APP_ORIGIN || 'https://roomsplit.taranveer.in';
+  const allowedOrigins = new Set([...PUSH_ALLOWED_ORIGINS, appOrigin]);
+  if (origin && !allowedOrigins.has(origin)) {
+    return jsonResponse({ error: 'Origin not allowed' }, 403);
+  }
+
+  const corsHeaders = {
+    ...(origin ? { 'Access-Control-Allow-Origin': origin } : {}),
+    'Access-Control-Allow-Methods': 'OPTIONS,POST',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    Vary: 'Origin',
+  };
+  if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
+  if (request.method !== 'POST') {
+    return jsonResponse({ error: 'Method not allowed' }, 405, { ...corsHeaders, Allow: 'OPTIONS, POST' });
+  }
+
+  let payload;
+  try {
+    payload = await parseRequestJson(request);
+  } catch (error) {
+    return jsonResponse({ error: error.message }, 400, corsHeaders);
+  }
+
+  const recipientId = typeof payload?.recipientId === 'string' ? payload.recipientId.trim() : '';
+  const title = typeof payload?.title === 'string' ? payload.title.slice(0, 120) : 'RoomSplit';
+  const message = typeof payload?.message === 'string' ? payload.message.slice(0, 500) : 'New activity';
+  const groupId = typeof payload?.groupId === 'string' ? payload.groupId.trim() : '';
+  if (!recipientId) return jsonResponse({ error: 'recipientId is required' }, 400, corsHeaders);
+
+  try {
+    const serviceAccount = getServiceAccount(env);
+    if (serviceAccount.projectId !== ROOM_SPLIT_FIREBASE_PROJECT_ID) {
+      console.error('Push dispatch blocked: Firebase service account project does not match the RoomSplit app.');
+      return jsonResponse({ error: 'Push service is configured for the wrong Firebase project' }, 503, corsHeaders);
+    }
+
+    const authorization = request.headers.get('Authorization') || '';
+    const idToken = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
+    if (!idToken || !env.FIREBASE_WEB_API_KEY) {
+      return jsonResponse({ error: 'Firebase authentication is required' }, 401, corsHeaders);
+    }
+    const authResponse = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(env.FIREBASE_WEB_API_KEY)}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      },
+    );
+    const authResult = await authResponse.json();
+    if (!authResponse.ok || authResult.users?.[0]?.localId !== recipientId) {
+      return jsonResponse({ error: 'Authenticated user does not match the recipient' }, 403, corsHeaders);
+    }
+
+    const userDocument = await firestoreRequest(env, `users/${encodeURIComponent(recipientId)}`);
+    const user = documentFromFirestore(userDocument);
+    if (groupId) {
+      const groupDocument = await firestoreRequest(env, `groups/${encodeURIComponent(groupId)}`);
+      const group = documentFromFirestore(groupDocument);
+      if (!Array.isArray(group.members) || !group.members.includes(recipientId)) {
+        return jsonResponse({ error: 'Recipient is not a member of this group' }, 403, corsHeaders);
+      }
+      if (Array.isArray(user.mutedGroupIds) && user.mutedGroupIds.includes(groupId)) {
+        return jsonResponse({ success: true, muted: true, count: 0 }, 200, corsHeaders);
+      }
+    }
+
+    const tokens = [...new Set((Array.isArray(user.fcmTokens) ? user.fcmTokens : [])
+      .filter((token) => typeof token === 'string' && token.length > 0))];
+    if (!tokens.length) {
+      return jsonResponse({ success: false, message: 'No registered device tokens found', count: 0 }, 200, corsHeaders);
+    }
+
+    const accessToken = await getAccessToken(env);
+    const results = await Promise.all(tokens.map(async (token) => {
+      const response = await fetch(
+        `https://fcm.googleapis.com/v1/projects/${encodeURIComponent(serviceAccount.projectId)}/messages:send`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: {
+              token,
+              notification: { title, body: message },
+              data: { groupId, recipientId, url: '/' },
+              android: {
+                priority: 'HIGH',
+                notification: { channel_id: 'default', sound: 'default' },
+              },
+              apns: { payload: { aps: { sound: 'default' } } },
+            },
+          }),
+        },
+      );
+      return { ok: response.ok, status: response.status };
+    }));
+    const count = results.filter((result) => result.ok).length;
+    if (!count) {
+      console.error('FCM delivery failed:', results.map((result) => result.status));
+      return jsonResponse({ success: false, error: 'FCM rejected all registered device tokens', count: 0 }, 502, corsHeaders);
+    }
+    return jsonResponse({ success: true, count }, 200, corsHeaders);
+  } catch (error) {
+    console.error('Push dispatch failed:', error);
+    const status = error.message.includes('NOT_FOUND') || error.message.includes('Not found') ? 404 : 500;
+    return jsonResponse({ error: status === 404 ? 'Recipient not found' : 'Push delivery failed' }, status, corsHeaders);
+  }
+}
+
 async function handleAdminRequest(request, env) {
   const url = new URL(request.url);
   const route = url.pathname;
@@ -373,7 +495,11 @@ async function handleAdminRequest(request, env) {
 
 export default {
   async fetch(request, env) {
-    if (new URL(request.url).pathname.startsWith('/api/admin/')) {
+    const pathname = new URL(request.url).pathname;
+    if (pathname === '/api/send-push') {
+      return handlePushRequest(request, env);
+    }
+    if (pathname.startsWith('/api/admin/')) {
       return handleAdminRequest(request, env);
     }
     return env.ASSETS.fetch(request);

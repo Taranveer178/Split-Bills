@@ -5,7 +5,6 @@ import {
   Settings,
   Wallet,
   MessageSquare,
-  Receipt,
   Users,
   CheckCircle2,
   Copy,
@@ -138,57 +137,43 @@ export default function GroupView({
             <div className="flex items-center gap-1 rounded-2xl bg-slate-200/70 p-1 backdrop-blur-md">
               <button
                 type="button"
-                onClick={() => handleTabSelect('expenses')}
-                className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                  activeTab === 'expenses' || !activeTab
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-                title="Expenses"
-              >
-                <Receipt size={15} />
-                <span className="hidden sm:inline">Bills</span>
-              </button>
-
-              <button
-                type="button"
                 onClick={() => handleTabSelect('balances')}
-                className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                   activeTab === 'balances'
                     ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
                 title="Balances"
               >
-                <Wallet size={15} />
+                <Wallet size={19} />
                 <span className="hidden sm:inline">Balances</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleTabSelect('chat')}
-                className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                   activeTab === 'chat'
                     ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
                 title="Chat"
               >
-                <MessageSquare size={15} />
+                <MessageSquare size={19} />
                 <span className="hidden sm:inline">Chat</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleTabSelect('members')}
-                className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                   activeTab === 'members'
                     ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
                 title="Room Settings"
               >
-                <Settings size={15} />
+                <Settings size={19} />
                 <span className="hidden sm:inline">Settings</span>
               </button>
             </div>
