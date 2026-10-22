@@ -37,6 +37,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { triggerPushNotification } from '../../utils/notifications';
+import { uploadChatMedia } from '../../utils/cloudinaryUpload';
 
 const EMOJI_CATEGORIES = {
   Recent: ['😀', '😂', '🥰', '😍', '😎', '😭', '😅', '🤔', '🙌', '👏', '👍', '👎', '🙏', '❤️', '🔥', '🎉', '✨', '💸', '🍕', '☕', '🏠', '✅', '❌'],
@@ -768,47 +769,18 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
       setAttachmentError('Choose an image, video, audio, PDF, text, or file.');
       return;
     }
-    if (!isImage && file.size > 500 * 1024) {
+    const isCloudinaryMedia = isImage || isGif || isWebp || isVideo;
+    if (!isCloudinaryMedia && file.size > 500 * 1024) {
       setAttachmentError('Files must be 500 KB or smaller.');
-      return;
-    }
-    if (isImage && file.size > 8 * 1024 * 1024) {
-      setAttachmentError('Choose an image smaller than 8 MB.');
       return;
     }
 
     setUploading(true);
     try {
       let attachmentData;
-      if (isImage && !isWebp) {
-        const objectUrl = URL.createObjectURL(file);
-        try {
-          const image = await new Promise((resolve, reject) => {
-            const loadedImage = new Image();
-            loadedImage.onload = () => resolve(loadedImage);
-            loadedImage.onerror = () => reject(new Error('Could not load this image.'));
-            loadedImage.src = objectUrl;
-          });
-          const scale = Math.min(1, 960 / Math.max(image.width, image.height));
-          const canvas = document.createElement('canvas');
-          canvas.width = Math.max(1, Math.round(image.width * scale));
-          canvas.height = Math.max(1, Math.round(image.height * scale));
-          const context = canvas.getContext('2d');
-          if (!context) throw new Error('Could not process this image.');
-
-          for (let attempt = 0; attempt < 4; attempt += 1) {
-            context.drawImage(image, 0, 0, canvas.width, canvas.height);
-            attachmentData = canvas.toDataURL('image/jpeg', 0.75 - attempt * 0.1);
-            if (attachmentData.length <= 640 * 1024) break;
-            canvas.width = Math.max(1, Math.round(canvas.width * 0.8));
-            canvas.height = Math.max(1, Math.round(canvas.height * 0.8));
-          }
-        } finally {
-          URL.revokeObjectURL(objectUrl);
-        }
-        if (attachmentData.length > 640 * 1024) {
-          throw new Error('This image is still too large. Choose another image.');
-        }
+      if (isCloudinaryMedia) {
+        const uploadedMedia = await uploadChatMedia(file);
+        attachmentData = uploadedMedia.url;
       } else {
         attachmentData = await new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -826,7 +798,7 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
         text: '',
         attachmentType,
         attachmentName: file.name || (isGif ? 'sticker.gif' : 'keyboard-media.png'),
-        attachmentMimeType: isImage ? 'image/jpeg' : file.type || 'application/octet-stream',
+        attachmentMimeType: file.type || 'application/octet-stream',
         attachmentData,
         timestamp: getTimestamp(),
         createdAt: serverTimestamp(),
