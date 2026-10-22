@@ -4,8 +4,8 @@ RoomSplit helps people who share living spaces track shared expenses, split bill
 
 ## Links
 
-- [RoomSplit website](https://roomsplit.taranveer.in/)
-- [Sitemap](https://roomsplit.taranveer.in/sitemap.xml)
+- [RoomSplit website](https://split-bills.taranveer.in/)
+- [Sitemap](https://split-bills.taranveer.in/sitemap.xml)
 
 ## Usage
 

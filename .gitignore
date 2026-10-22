@@ -26,3 +26,12 @@ dist-ssr
 .dev.vars
 .wrangler
 
+.devs.vars
+.dev.vars
+.dev.vars.*
+
+.dev.vars
+.dev.vars.*
+.devs.vars
+.devs.vars.*
+

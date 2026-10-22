@@ -4,7 +4,7 @@ const MAX_RECORD_BYTES = 850 * 1024;
 const MAX_LIST_SIZE = 500;
 const ROOM_SPLIT_FIREBASE_PROJECT_ID = 'roomsplit-test';
 const PUSH_ALLOWED_ORIGINS = new Set([
-  'https://roomsplit.taranveer.in',
+  'https://split-bills.taranveer.in',
   'capacitor://localhost',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
@@ -316,7 +316,7 @@ async function handleDataRequest(request, env, collectionName) {
 
 async function handlePushRequest(request, env) {
   const origin = request.headers.get('Origin');
-  const appOrigin = env.APP_ORIGIN || 'https://roomsplit.taranveer.in';
+  const appOrigin = env.APP_ORIGIN || 'https://split-bills.taranveer.in';
   const allowedOrigins = new Set([...PUSH_ALLOWED_ORIGINS, appOrigin]);
   if (origin && !allowedOrigins.has(origin)) {
     return jsonResponse({ error: 'Origin not allowed' }, 403);

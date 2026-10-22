@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin
 
-Sitemap: https://roomsplit.taranveer.in/sitemap.xml
+Sitemap: https://split-bills.taranveer.in/sitemap.xml

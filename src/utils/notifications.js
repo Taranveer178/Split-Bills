@@ -15,7 +15,7 @@ import { db, app, auth } from '../firebase';
 
 const VAPID_KEY = 'BNPn8ktElldgtANhbx-7Ks2kizVEHjj6sdWju7gc0JAgsX6jd8TNBqxcy7Auu6C2lEZbgDV_DHlo2dg3_EbLkko';
 const PUSH_API_URL = Capacitor.isNativePlatform()
-  ? 'https://roomsplit.taranveer.in/api/send-push'
+  ? 'https://split-bills.taranveer.in/api/send-push'
   : '/api/send-push';
 const PUSH_TOKEN_STORAGE_KEY = 'rs_fcm_device_token';
 let desiredUserId = null;
