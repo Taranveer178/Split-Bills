@@ -23,7 +23,7 @@ Create a service account for the RoomSplit Firebase project with Firestore docum
 
 Visit `https://YOUR_DOMAIN/admin` and sign in with `ADMIN_USERNAME` and `ADMIN_PASSWORD`. The panel supports listing, searching, creating, editing, and deleting records in the supported collections. Lists show up to 500 documents per collection. App settings are stored as documents in `settings`; define a document such as `global` to hold configuration used by the app.
 
-For local development, create an ignored `.dev.vars` file with `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`, and `FIREBASE_SERVICE_ACCOUNT`, then run `npm run dev`. Store the JSON value on one line, properly quoted/escaped for dotenv. This starts the Cloudflare Worker locally alongside Vite; the app is available at `http://localhost:5173/admin` unless that port is already in use. `npm run dev:cloudflare` serves the built app and Worker directly through Wrangler.
+For local development, create a root-level `.dev.vars` file (exact filename) with `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`, `FIREBASE_WEB_API_KEY`, and either `FIREBASE_SERVICE_ACCOUNT` or all three of `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_PRIVATE_KEY`. If both credential formats are present, `FIREBASE_SERVICE_ACCOUNT` takes precedence. Store JSON/private-key values in dotenv-compatible form and keep this ignored file private. Then run `npm run dev`. This starts the Cloudflare Worker locally alongside Vite; the app is available at `http://localhost:5173/admin` unless that port is already in use. `npm run dev:cloudflare` serves the built app and Worker directly through Wrangler.
 
 ## Security notes
 

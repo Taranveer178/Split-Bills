@@ -47,6 +47,14 @@ function getServiceAccount(env) {
   };
 }
 
+function getServiceAccountSource(env) {
+  if (env.FIREBASE_SERVICE_ACCOUNT) return 'FIREBASE_SERVICE_ACCOUNT';
+  if (env.FIREBASE_PROJECT_ID || env.FIREBASE_CLIENT_EMAIL || env.FIREBASE_PRIVATE_KEY) {
+    return 'FIREBASE_PROJECT_ID / FIREBASE_CLIENT_EMAIL / FIREBASE_PRIVATE_KEY';
+  }
+  return 'none';
+}
+
 function jsonResponse(body, status = 200, headers = {}) {
   return new Response(JSON.stringify(body), {
     status,
@@ -346,13 +354,50 @@ async function handlePushRequest(request, env) {
   const groupId = typeof payload?.groupId === 'string' ? payload.groupId.trim() : '';
   if (!recipientId) return jsonResponse({ error: 'recipientId is required' }, 400, corsHeaders);
 
+  const credentialSource = getServiceAccountSource(env);
+  let serviceAccount;
   try {
-    const serviceAccount = getServiceAccount(env);
-    if (serviceAccount.projectId !== ROOM_SPLIT_FIREBASE_PROJECT_ID) {
-      console.error('Push dispatch blocked: Firebase service account project does not match the RoomSplit app.');
-      return jsonResponse({ error: 'Push service is configured for the wrong Firebase project' }, 503, corsHeaders);
-    }
+    serviceAccount = getServiceAccount(env);
+  } catch (error) {
+    console.error('Push credentials are invalid:', error.message);
+    return jsonResponse({
+      error: 'Push credentials are invalid',
+      details: error.message,
+      credentialSource,
+    }, 503, corsHeaders);
+  }
 
+  const missingFields = Object.entries({
+    projectId: serviceAccount.projectId,
+    clientEmail: serviceAccount.clientEmail,
+    privateKey: serviceAccount.privateKey,
+  }).filter(([, value]) => !value).map(([name]) => name);
+  if (missingFields.length) {
+    console.error('Push credentials are incomplete:', { credentialSource, missingFields });
+    return jsonResponse({
+      error: 'Push credentials are incomplete',
+      details: `Missing required fields: ${missingFields.join(', ')}`,
+      credentialSource,
+      missingFields,
+    }, 503, corsHeaders);
+  }
+
+  if (serviceAccount.projectId !== ROOM_SPLIT_FIREBASE_PROJECT_ID) {
+    console.error('Push service Firebase project mismatch:', {
+      expectedProjectId: ROOM_SPLIT_FIREBASE_PROJECT_ID,
+      configuredProjectId: serviceAccount.projectId,
+      credentialSource,
+    });
+    return jsonResponse({
+      error: 'Firebase project mismatch',
+      details: 'The configured service account project does not match the Firebase project used by the app.',
+      expectedProjectId: ROOM_SPLIT_FIREBASE_PROJECT_ID,
+      configuredProjectId: serviceAccount.projectId,
+      credentialSource,
+    }, 503, corsHeaders);
+  }
+
+  try {
     const authorization = request.headers.get('Authorization') || '';
     const idToken = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
     if (!idToken || !env.FIREBASE_WEB_API_KEY) {
