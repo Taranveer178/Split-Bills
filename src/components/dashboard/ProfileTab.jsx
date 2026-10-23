@@ -16,6 +16,7 @@ import {
   EmailAuthProvider,
   linkWithCredential,
   sendEmailVerification,
+  signInWithEmailAndPassword,
   updateEmail,
   updatePassword,
   updateProfile,
@@ -122,9 +123,19 @@ export default function ProfileTab({ user, onUpdateUser, showToast }) {
       let linkedLegacyAccount = false;
       const nextEmail = email.trim().toLowerCase();
       if (firebaseUser?.isAnonymous && nextEmail && password.trim()) {
-        const credential = EmailAuthProvider.credential(nextEmail, password);
-        const linkedCredential = await linkWithCredential(firebaseUser, credential);
-        await sendEmailVerification(linkedCredential.user);
+        let linkedUser;
+        try {
+          const credential = EmailAuthProvider.credential(nextEmail, password);
+          const linkedCredential = await linkWithCredential(firebaseUser, credential);
+          linkedUser = linkedCredential.user;
+        } catch (error) {
+          if (error.code !== 'auth/email-already-in-use' && error.code !== 'auth/credential-already-in-use') {
+            throw error;
+          }
+          const existingCredential = await signInWithEmailAndPassword(auth, nextEmail, password);
+          linkedUser = existingCredential.user;
+        }
+        if (!linkedUser.emailVerified) await sendEmailVerification(linkedUser);
         firestoreUpdates.email = nextEmail;
         firestoreUpdates.password = '';
         linkedLegacyAccount = true;
@@ -160,7 +171,9 @@ export default function ProfileTab({ user, onUpdateUser, showToast }) {
 
       if (typeof showToast === 'function') {
         showToast(linkedLegacyAccount
-          ? 'Profile updated. Verify your email to enable push notifications.'
+          ? (auth.currentUser?.emailVerified
+            ? 'Profile linked to Firebase. Push notifications are ready.'
+            : 'Profile linked. Verify your email to enable push notifications.')
           : 'Profile updated successfully!');
       } else {
         setFallbackToast(true);
@@ -170,7 +183,13 @@ export default function ProfileTab({ user, onUpdateUser, showToast }) {
     } catch (error) {
       console.error('Profile update error:', error);
       if (error.code === 'auth/email-already-in-use' || error.code === 'auth/credential-already-in-use') {
-        setLocalError('This email already has a Firebase account. Sign out, then sign in to RoomSplit with that email and password.');
+        setLocalError('This email is already linked to Firebase. Enter its current Firebase password to link this RoomSplit profile.');
+      } else if (
+        error.code === 'auth/invalid-credential'
+        || error.code === 'auth/wrong-password'
+        || error.code === 'auth/user-not-found'
+      ) {
+        setLocalError('Could not sign in to the existing Firebase account. Check its current password, or reset it from the sign-in screen.');
       } else if (error.code === 'auth/weak-password') {
         setLocalError('Choose a password with at least 6 characters to link this account.');
       } else if (error.code === 'auth/requires-recent-login') {
@@ -415,15 +434,22 @@ export default function ProfileTab({ user, onUpdateUser, showToast }) {
             <div>
               <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
                 <Lock size={14} />
-                <span>New Password</span>
+                <span>{auth.currentUser?.isAnonymous ? 'Firebase Account Password' : 'New Password'}</span>
               </label>
               <Input
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="Leave blank to keep existing password"
+                placeholder={auth.currentUser?.isAnonymous
+                  ? 'Enter existing password or choose a new one'
+                  : 'Leave blank to keep existing password'}
                 minLength={6}
               />
+              {auth.currentUser?.isAnonymous && (
+                <p className="mt-1.5 text-xs text-slate-500">
+                  If this email already has a Firebase account, enter that account’s current password.
+                </p>
+              )}
             </div>
 
             <div className="flex items-center justify-end gap-2.5 pt-2">

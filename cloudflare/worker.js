@@ -235,7 +235,9 @@ async function getAccessToken(env) {
     }),
   });
   const result = await response.json();
-  if (!response.ok || !result.access_token) throw new Error('Could not authenticate with Firebase Admin');
+  if (!response.ok || !result.access_token) {
+    throw new Error(result.error_description || result.error || 'Could not authenticate with Firebase Admin');
+  }
   tokenCache = { key: cacheKey, value: result.access_token, expiresAt: Date.now() + result.expires_in * 1000 };
   return tokenCache.value;
 }
@@ -399,6 +401,7 @@ async function handlePushRequest(request, env) {
     }, 503, corsHeaders);
   }
 
+  let stage = 'verify Firebase sign-in';
   try {
     const authorization = request.headers.get('Authorization') || '';
     const idToken = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
@@ -420,6 +423,7 @@ async function handlePushRequest(request, env) {
     }
 
     if (authenticatedUser.localId !== senderId) {
+      stage = 'load sender account';
       const senderDocument = await firestoreRequest(env, `users/${encodeURIComponent(senderId)}`);
       const sender = documentFromFirestore(senderDocument);
       const verifiedEmailMatches = authenticatedUser.emailVerified === true
@@ -438,9 +442,11 @@ async function handlePushRequest(request, env) {
       return jsonResponse({ error: 'A group is required when sending a notification to another user' }, 400, corsHeaders);
     }
 
+    stage = 'load recipient account and push tokens';
     const userDocument = await firestoreRequest(env, `users/${encodeURIComponent(recipientId)}`);
     const user = documentFromFirestore(userDocument);
     if (groupId) {
+      stage = 'verify group membership';
       const groupDocument = await firestoreRequest(env, `groups/${encodeURIComponent(groupId)}`);
       const group = documentFromFirestore(groupDocument);
       if (!Array.isArray(group.members)
@@ -459,7 +465,9 @@ async function handlePushRequest(request, env) {
       return jsonResponse({ success: false, message: 'No registered device tokens found', count: 0 }, 200, corsHeaders);
     }
 
+    stage = 'get Firebase Cloud Messaging access token';
     const accessToken = await getAccessToken(env);
+    stage = 'send message through Firebase Cloud Messaging';
     const results = await Promise.all(tokens.map(async (token) => {
       const response = await fetch(
         `https://fcm.googleapis.com/v1/projects/${encodeURIComponent(serviceAccount.projectId)}/messages:send`,
@@ -492,9 +500,18 @@ async function handlePushRequest(request, env) {
     }
     return jsonResponse({ success: true, count }, 200, corsHeaders);
   } catch (error) {
-    console.error('Push dispatch failed:', error);
-    const status = error.message.includes('NOT_FOUND') || error.message.includes('Not found') ? 404 : 500;
-    return jsonResponse({ error: status === 404 ? 'Recipient not found' : 'Push delivery failed' }, status, corsHeaders);
+    const rawDetails = error instanceof Error ? error.message : 'Unknown error';
+    const details = rawDetails
+      .replace(/-----BEGIN PRIVATE KEY-----[\s\S]*?-----END PRIVATE KEY-----/g, '[redacted private key]')
+      .replace(/Bearer\s+\S+/gi, 'Bearer [redacted]')
+      .slice(0, 500);
+    console.error('Push dispatch failed:', { stage, details });
+    const status = rawDetails.includes('NOT_FOUND') || rawDetails.includes('Not found') ? 404 : 500;
+    return jsonResponse({
+      error: status === 404 ? 'Recipient not found' : 'Push delivery failed',
+      stage,
+      details,
+    }, status, corsHeaders);
   }
 }
 
