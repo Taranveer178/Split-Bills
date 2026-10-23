@@ -144,6 +144,7 @@ export default function AddExpenseTab({
           });
           for (const notif of recipientNotifications) {
             triggerPushNotification({
+              senderId: currentUser.id,
               recipientId: notif.recipientId,
               title: `New Expense in ${group.name || 'Group'}`,
               message: notif.message,

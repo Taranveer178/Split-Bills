@@ -660,6 +660,7 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
 
     recipientIds.forEach((recipientId) => {
       triggerPushNotification({
+        senderId: currentUser.id,
         recipientId,
         title: `Message in ${group.name || 'Group'}`,
         message: `${senderName}: ${message}`,

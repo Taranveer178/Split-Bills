@@ -333,7 +333,7 @@ async function handlePushRequest(request, env) {
   const corsHeaders = {
     ...(origin ? { 'Access-Control-Allow-Origin': origin } : {}),
     'Access-Control-Allow-Methods': 'OPTIONS,POST',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type',
     Vary: 'Origin',
   };
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
@@ -349,10 +349,12 @@ async function handlePushRequest(request, env) {
   }
 
   const recipientId = typeof payload?.recipientId === 'string' ? payload.recipientId.trim() : '';
+  const senderId = typeof payload?.senderId === 'string' ? payload.senderId.trim() : '';
   const title = typeof payload?.title === 'string' ? payload.title.slice(0, 120) : 'RoomSplit';
   const message = typeof payload?.message === 'string' ? payload.message.slice(0, 500) : 'New activity';
   const groupId = typeof payload?.groupId === 'string' ? payload.groupId.trim() : '';
   if (!recipientId) return jsonResponse({ error: 'recipientId is required' }, 400, corsHeaders);
+  if (!senderId) return jsonResponse({ error: 'senderId is required' }, 400, corsHeaders);
 
   const credentialSource = getServiceAccountSource(env);
   let serviceAccount;
@@ -412,8 +414,28 @@ async function handlePushRequest(request, env) {
       },
     );
     const authResult = await authResponse.json();
-    if (!authResponse.ok || authResult.users?.[0]?.localId !== recipientId) {
-      return jsonResponse({ error: 'Authenticated user does not match the recipient' }, 403, corsHeaders);
+    const authenticatedUser = authResult.users?.[0];
+    if (!authResponse.ok || !authenticatedUser) {
+      return jsonResponse({ error: 'Authenticated user does not match the sender' }, 403, corsHeaders);
+    }
+
+    if (authenticatedUser.localId !== senderId) {
+      const senderDocument = await firestoreRequest(env, `users/${encodeURIComponent(senderId)}`);
+      const sender = documentFromFirestore(senderDocument);
+      const verifiedEmailMatches = authenticatedUser.emailVerified === true
+        && typeof authenticatedUser.email === 'string'
+        && typeof sender.email === 'string'
+        && authenticatedUser.email.toLowerCase() === sender.email.toLowerCase();
+      if (!verifiedEmailMatches) {
+        return jsonResponse({
+          error: 'Authenticated user does not match the sender',
+          details: 'Sign in with the Firebase account linked to this RoomSplit account. Legacy accounts must have a verified matching email.',
+        }, 403, corsHeaders);
+      }
+    }
+
+    if (senderId !== recipientId && !groupId) {
+      return jsonResponse({ error: 'A group is required when sending a notification to another user' }, 400, corsHeaders);
     }
 
     const userDocument = await firestoreRequest(env, `users/${encodeURIComponent(recipientId)}`);
@@ -421,8 +443,10 @@ async function handlePushRequest(request, env) {
     if (groupId) {
       const groupDocument = await firestoreRequest(env, `groups/${encodeURIComponent(groupId)}`);
       const group = documentFromFirestore(groupDocument);
-      if (!Array.isArray(group.members) || !group.members.includes(recipientId)) {
-        return jsonResponse({ error: 'Recipient is not a member of this group' }, 403, corsHeaders);
+      if (!Array.isArray(group.members)
+        || !group.members.includes(senderId)
+        || !group.members.includes(recipientId)) {
+        return jsonResponse({ error: 'Sender and recipient must both be members of the group' }, 403, corsHeaders);
       }
       if (Array.isArray(user.mutedGroupIds) && user.mutedGroupIds.includes(groupId)) {
         return jsonResponse({ success: true, muted: true, count: 0 }, 200, corsHeaders);

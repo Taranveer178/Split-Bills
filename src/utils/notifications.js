@@ -351,7 +351,8 @@ export async function listenToForegroundMessages(onMessageReceived) {
   });
 }
 
-export async function triggerPushNotification({ recipientId, title, message, groupId }) {
+export async function triggerPushNotification({ senderId, recipientId, title, message, groupId }) {
+  if (!senderId) throw new Error('A sender account is required to send push notifications.');
   const idToken = await auth?.currentUser?.getIdToken();
   if (!idToken) throw new Error('Sign in to RoomSplit before sending a test notification.');
 
@@ -362,6 +363,7 @@ export async function triggerPushNotification({ recipientId, title, message, gro
       Authorization: `Bearer ${idToken}`,
     },
     body: JSON.stringify({
+      senderId,
       recipientId,
       title: title || 'RoomSplit',
       message: message || 'You have a new update in your group.',

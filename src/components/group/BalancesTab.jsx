@@ -190,6 +190,7 @@ export default function BalancesTab({
       try {
         await sendPaymentNotification(confirmSettlement.from, 'SETTLEMENT_CONFIRMED', message);
         await triggerPushNotification({
+          senderId: currentUser.id,
           recipientId: confirmSettlement.from,
           title: 'Payment Confirmed',
           message,
@@ -246,6 +247,7 @@ export default function BalancesTab({
         await sendPaymentNotification(customPayee, 'PAYMENT_RECORDED', message);
 
         await triggerPushNotification({
+          senderId: currentUser.id,
           recipientId: customPayee,
           title: 'Payment Received',
           message,

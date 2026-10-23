@@ -3,6 +3,7 @@ import { AlertCircle, Eye, EyeOff, ArrowLeft, CheckCircle2 } from 'lucide-react'
 import {
   createUserWithEmailAndPassword,
   deleteUser,
+  sendEmailVerification,
   sendPasswordResetEmail,
   signInAnonymously,
   signInWithEmailAndPassword,
@@ -191,7 +192,10 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
 
         if (matchedUser.password === password) {
           try {
-            await createUserWithEmailAndPassword(auth, userEmail, password);
+            const credential = await createUserWithEmailAndPassword(auth, userEmail, password);
+            if (credential.user.uid !== matchedUser.id) {
+              await sendEmailVerification(credential.user);
+            }
             await onSaveUser({ ...matchedUser, password: '' });
             onLogin(matchedUser.id);
             return;
@@ -200,7 +204,13 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
           }
         }
 
-        await signInWithEmailAndPassword(auth, userEmail, password);
+        const credential = await signInWithEmailAndPassword(auth, userEmail, password);
+        if (
+          matchedUser.id !== credential.user.uid
+          && !credential.user.emailVerified
+        ) {
+          await sendEmailVerification(credential.user);
+        }
         if (matchedUser.password) await onSaveUser({ ...matchedUser, password: '' });
         onLogin(matchedUser.id);
         return;

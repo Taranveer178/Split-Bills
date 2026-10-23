@@ -41,6 +41,7 @@ export default function ProfileTab({ user, onUpdateUser, showToast }) {
       }
       setTestPushStatus('Device registered. Sending test push...');
       await triggerPushNotification({
+        senderId: user.id,
         recipientId: user.id,
         title: 'Test Push Notification',
         message: 'Push notifications are working correctly on RoomSplit!',
