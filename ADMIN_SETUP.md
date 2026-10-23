@@ -17,7 +17,7 @@ Alternatively, configure `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FI
 
 ## Firebase service account
 
-Create a service account for the RoomSplit Firebase project with Firestore document read/write permissions for `users`, `groups`, `expenses`, `messages`, `notifications`, `calls`, and `settings`, plus permission to send Firebase Cloud Messaging messages. Enable the Firebase Cloud Messaging API in the Google Cloud project. Keep the downloaded key private and remove the local copy when setup is complete.
+Create a service account for the RoomSplit Firebase project with Firestore document read/write permissions for `users`, `groups`, `expenses`, `messages`, `notifications`, `calls`, and `settings`, plus permission to send Firebase Cloud Messaging messages. Enable the Firebase Cloud Messaging API in the Google Cloud project. When configuring credentials, use the complete, unedited service-account JSON or its complete `private_key` value; do not truncate or manually reformat the PEM key. Keep the downloaded key private and remove the local copy when setup is complete.
 
 ## Use
 

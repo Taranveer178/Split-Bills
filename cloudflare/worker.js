@@ -193,9 +193,23 @@ function sanitizeRecord(collectionName, record) {
 }
 
 function pemToBytes(pem) {
-  const base64 = pem.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\s/g, '');
-  const binary = atob(base64);
-  return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  const normalizedPem = pem.trim().replace(/\\n/g, '\n');
+  const match = normalizedPem.match(
+    /^-----BEGIN PRIVATE KEY-----\s*([\s\S]+?)\s*-----END PRIVATE KEY-----$/,
+  );
+  if (!match) {
+    throw new Error('Firebase service-account private_key must be a complete PKCS#8 PEM key.');
+  }
+
+  const base64 = match[1].replace(/\s/g, '');
+  try {
+    const binary = atob(base64);
+    return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  } catch {
+    throw new Error(
+      'Firebase service-account private_key contains invalid base64. Replace the live key with the complete, unedited private_key from its service-account JSON file.',
+    );
+  }
 }
 
 async function getAccessToken(env) {
@@ -217,13 +231,22 @@ async function getAccessToken(env) {
       exp: now + 3600,
     })),
   ].join('.');
-  const privateKey = await crypto.subtle.importKey(
-    'pkcs8',
-    pemToBytes(serviceAccount.privateKey.replace(/\\n/g, '\n')),
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  );
+  let privateKey;
+  try {
+    privateKey = await crypto.subtle.importKey(
+      'pkcs8',
+      pemToBytes(serviceAccount.privateKey),
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false,
+      ['sign'],
+    );
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('service-account private_key')) throw error;
+    throw new Error(
+      'Firebase service-account private_key is not a valid PKCS#8 key. Replace it with the complete private_key from the service-account JSON file.',
+      { cause: error },
+    );
+  }
   const signature = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', privateKey, new TextEncoder().encode(unsignedToken));
   const assertion = `${unsignedToken}.${encodeBase64Url(new Uint8Array(signature))}`;
   const response = await fetch('https://oauth2.googleapis.com/token', {
@@ -423,7 +446,7 @@ async function handlePushRequest(request, env) {
     }
 
     if (authenticatedUser.localId !== senderId) {
-      stage = 'load sender account';
+      stage = 'authenticate Firebase Admin and load sender account';
       const senderDocument = await firestoreRequest(env, `users/${encodeURIComponent(senderId)}`);
       const sender = documentFromFirestore(senderDocument);
       const verifiedEmailMatches = authenticatedUser.emailVerified === true
@@ -442,11 +465,11 @@ async function handlePushRequest(request, env) {
       return jsonResponse({ error: 'A group is required when sending a notification to another user' }, 400, corsHeaders);
     }
 
-    stage = 'load recipient account and push tokens';
+    stage = 'authenticate Firebase Admin and load recipient account/push tokens';
     const userDocument = await firestoreRequest(env, `users/${encodeURIComponent(recipientId)}`);
     const user = documentFromFirestore(userDocument);
     if (groupId) {
-      stage = 'verify group membership';
+      stage = 'authenticate Firebase Admin and verify group membership';
       const groupDocument = await firestoreRequest(env, `groups/${encodeURIComponent(groupId)}`);
       const group = documentFromFirestore(groupDocument);
       if (!Array.isArray(group.members)

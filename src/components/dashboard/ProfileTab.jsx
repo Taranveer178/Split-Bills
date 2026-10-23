@@ -15,6 +15,7 @@ import {
 import {
   EmailAuthProvider,
   linkWithCredential,
+  reauthenticateWithCredential,
   sendEmailVerification,
   signInWithEmailAndPassword,
   updateEmail,
@@ -31,6 +32,7 @@ export default function ProfileTab({ user, onUpdateUser, showToast }) {
   const [email, setEmail] = useState(user?.email || '');
   const [upiId, setUpiId] = useState(user?.upiId || '');
   const [photoDataUrl, setPhotoDataUrl] = useState(user?.photoDataUrl || '');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState('');
@@ -114,39 +116,70 @@ export default function ProfileTab({ user, onUpdateUser, showToast }) {
     setLoading(true);
 
     try {
-      const firebaseUser = auth.currentUser;
+      let firebaseUser = auth.currentUser;
       if (password.trim() && password.length < 6) {
-        throw new Error('New password must be at least 6 characters long.');
+        throw new Error('Password must be at least 6 characters long.');
       }
 
       const firestoreUpdates = {};
       let linkedLegacyAccount = false;
       const nextEmail = email.trim().toLowerCase();
-      if (firebaseUser?.isAnonymous && nextEmail && password.trim()) {
+      const emailChanged = nextEmail !== (user.email || '').toLowerCase();
+      if (firebaseUser?.isAnonymous && nextEmail && (currentPassword.trim() || password.trim())) {
         let linkedUser;
-        try {
-          const credential = EmailAuthProvider.credential(nextEmail, password);
-          const linkedCredential = await linkWithCredential(firebaseUser, credential);
-          linkedUser = linkedCredential.user;
-        } catch (error) {
-          if (error.code !== 'auth/email-already-in-use' && error.code !== 'auth/credential-already-in-use') {
+        if (currentPassword.trim()) {
+          const existingCredential = await signInWithEmailAndPassword(auth, nextEmail, currentPassword);
+          linkedUser = existingCredential.user;
+          firebaseUser = linkedUser;
+          if (password.trim() && password !== currentPassword) {
+            await updatePassword(firebaseUser, password);
+          }
+        } else {
+          try {
+            const credential = EmailAuthProvider.credential(nextEmail, password);
+            const linkedCredential = await linkWithCredential(firebaseUser, credential);
+            linkedUser = linkedCredential.user;
+            firebaseUser = linkedUser;
+          } catch (error) {
+            if (error.code === 'auth/email-already-in-use' || error.code === 'auth/credential-already-in-use') {
+              throw new Error(
+                'This email already has a Firebase account. Enter its current password above to link it, or use a different email.',
+                { cause: error },
+              );
+            }
             throw error;
           }
-          const existingCredential = await signInWithEmailAndPassword(auth, nextEmail, password);
-          linkedUser = existingCredential.user;
         }
         if (!linkedUser.emailVerified) await sendEmailVerification(linkedUser);
         firestoreUpdates.email = nextEmail;
         firestoreUpdates.password = '';
         linkedLegacyAccount = true;
       }
+      if (firebaseUser && !firebaseUser.isAnonymous && !linkedLegacyAccount) {
+        const needsReauthentication = Boolean(password.trim() || emailChanged);
+        if (needsReauthentication) {
+          if (!currentPassword.trim()) {
+            throw new Error('Enter your current Firebase password to change your email or password.');
+          }
+          if (!firebaseUser.email) {
+            throw new Error('This Firebase sign-in does not have an email/password credential.');
+          }
+          await reauthenticateWithCredential(
+            firebaseUser,
+            EmailAuthProvider.credential(firebaseUser.email, currentPassword),
+          );
+        }
+      }
       if (name.trim() && name.trim() !== user.username) {
         if (firebaseUser) await updateProfile(firebaseUser, { displayName: name.trim() });
         firestoreUpdates.username = name.trim();
       }
       if (upiId.trim() !== (user.upiId || '')) firestoreUpdates.upiId = upiId.trim();
-      if (!linkedLegacyAccount && nextEmail !== (user.email || '').toLowerCase()) {
-        if (firebaseUser && !firebaseUser.isAnonymous) await updateEmail(firebaseUser, nextEmail);
+      if (!linkedLegacyAccount && emailChanged) {
+        if (firebaseUser && !firebaseUser.isAnonymous) {
+          await updateEmail(firebaseUser, nextEmail);
+          await sendEmailVerification(firebaseUser);
+        }
         firestoreUpdates.email = nextEmail;
       }
       if (photoDataUrl !== (user.photoDataUrl || '')) firestoreUpdates.photoDataUrl = photoDataUrl;
@@ -166,8 +199,9 @@ export default function ProfileTab({ user, onUpdateUser, showToast }) {
         } else if (typeof onUpdateUser === 'function') {
           await onUpdateUser(user.id, { password });
         }
-        setPassword('');
       }
+      setCurrentPassword('');
+      setPassword('');
 
       if (typeof showToast === 'function') {
         showToast(linkedLegacyAccount
@@ -189,7 +223,7 @@ export default function ProfileTab({ user, onUpdateUser, showToast }) {
         || error.code === 'auth/wrong-password'
         || error.code === 'auth/user-not-found'
       ) {
-        setLocalError('Could not sign in to the existing Firebase account. Check its current password, or reset it from the sign-in screen.');
+        setLocalError('The Firebase password is incorrect. Check it, or reset it from the sign-in screen.');
       } else if (error.code === 'auth/weak-password') {
         setLocalError('Choose a password with at least 6 characters to link this account.');
       } else if (error.code === 'auth/requires-recent-login') {
@@ -434,20 +468,33 @@ export default function ProfileTab({ user, onUpdateUser, showToast }) {
             <div>
               <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
                 <Lock size={14} />
-                <span>{auth.currentUser?.isAnonymous ? 'Firebase Account Password' : 'New Password'}</span>
+                <span>{auth.currentUser?.isAnonymous ? 'Current Firebase Password' : 'Current Password'}</span>
+              </label>
+              <Input
+                type="password"
+                value={currentPassword}
+                onChange={(event) => setCurrentPassword(event.target.value)}
+                placeholder="Required to link or change Firebase credentials"
+                autoComplete="current-password"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                <Lock size={14} />
+                <span>{auth.currentUser?.isAnonymous ? 'New Firebase Password' : 'New Password'}</span>
               </label>
               <Input
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder={auth.currentUser?.isAnonymous
-                  ? 'Enter existing password or choose a new one'
-                  : 'Leave blank to keep existing password'}
+                placeholder="Leave blank to keep the current password"
+                autoComplete="new-password"
                 minLength={6}
               />
               {auth.currentUser?.isAnonymous && (
                 <p className="mt-1.5 text-xs text-slate-500">
-                  If this email already has a Firebase account, enter that account’s current password.
+                  For an existing Firebase account, enter its current password above. To create a new linked account, enter a new password here.
                 </p>
               )}
             </div>
@@ -463,6 +510,7 @@ export default function ProfileTab({ user, onUpdateUser, showToast }) {
                   setEmail(user?.email || '');
                   setUpiId(user?.upiId || '');
                   setPhotoDataUrl(user?.photoDataUrl || '');
+                  setCurrentPassword('');
                   setPassword('');
                 }}
               >

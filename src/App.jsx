@@ -340,6 +340,8 @@ export default function App() {
     let isCancelled = false;
     const setupAuthAndSync = async () => {
       try {
+        await auth.authStateReady();
+        if (isCancelled) return;
         if (!auth.currentUser) await signInAnonymously(auth);
         if (isCancelled) return;
         unsubscribers.push(onSnapshot(collection(db, 'users'), (snapshot) => {
@@ -478,6 +480,7 @@ export default function App() {
       return loadedUsers;
     }
 
+    await auth.authStateReady();
     if (!auth.currentUser) await signInAnonymously(auth);
     const snapshot = await getDocs(collection(db, 'users'));
     const loadedUsers = snapshot.empty
