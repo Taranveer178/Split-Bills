@@ -12,7 +12,14 @@ import {
   Camera,
   Bell,
 } from 'lucide-react';
-import { updateEmail, updatePassword, updateProfile } from 'firebase/auth';
+import {
+  EmailAuthProvider,
+  linkWithCredential,
+  sendEmailVerification,
+  updateEmail,
+  updatePassword,
+  updateProfile,
+} from 'firebase/auth';
 import { auth } from '../../firebase';
 import { Button, Input } from '../common/UI';
 import { requestNotificationPermission, triggerPushNotification } from '../../utils/notifications';
@@ -112,13 +119,22 @@ export default function ProfileTab({ user, onUpdateUser, showToast }) {
       }
 
       const firestoreUpdates = {};
+      let linkedLegacyAccount = false;
+      const nextEmail = email.trim().toLowerCase();
+      if (firebaseUser?.isAnonymous && nextEmail && password.trim()) {
+        const credential = EmailAuthProvider.credential(nextEmail, password);
+        const linkedCredential = await linkWithCredential(firebaseUser, credential);
+        await sendEmailVerification(linkedCredential.user);
+        firestoreUpdates.email = nextEmail;
+        firestoreUpdates.password = '';
+        linkedLegacyAccount = true;
+      }
       if (name.trim() && name.trim() !== user.username) {
         if (firebaseUser) await updateProfile(firebaseUser, { displayName: name.trim() });
         firestoreUpdates.username = name.trim();
       }
       if (upiId.trim() !== (user.upiId || '')) firestoreUpdates.upiId = upiId.trim();
-      if (email.trim().toLowerCase() !== (user.email || '').toLowerCase()) {
-        const nextEmail = email.trim().toLowerCase();
+      if (!linkedLegacyAccount && nextEmail !== (user.email || '').toLowerCase()) {
         if (firebaseUser && !firebaseUser.isAnonymous) await updateEmail(firebaseUser, nextEmail);
         firestoreUpdates.email = nextEmail;
       }
@@ -132,7 +148,7 @@ export default function ProfileTab({ user, onUpdateUser, showToast }) {
         }
       }
 
-      if (password.trim()) {
+      if (password.trim() && !linkedLegacyAccount) {
         if (firebaseUser && !firebaseUser.isAnonymous) {
           await updatePassword(firebaseUser, password);
           if (typeof onUpdateUser === 'function') await onUpdateUser(user.id, { password: '' });
@@ -143,7 +159,9 @@ export default function ProfileTab({ user, onUpdateUser, showToast }) {
       }
 
       if (typeof showToast === 'function') {
-        showToast('Profile updated successfully!');
+        showToast(linkedLegacyAccount
+          ? 'Profile updated. Verify your email to enable push notifications.'
+          : 'Profile updated successfully!');
       } else {
         setFallbackToast(true);
         setTimeout(() => setFallbackToast(false), 3000);
@@ -151,7 +169,11 @@ export default function ProfileTab({ user, onUpdateUser, showToast }) {
       setIsEditing(false);
     } catch (error) {
       console.error('Profile update error:', error);
-      if (error.code === 'auth/requires-recent-login') {
+      if (error.code === 'auth/email-already-in-use' || error.code === 'auth/credential-already-in-use') {
+        setLocalError('This email already has a Firebase account. Sign out, then sign in to RoomSplit with that email and password.');
+      } else if (error.code === 'auth/weak-password') {
+        setLocalError('Choose a password with at least 6 characters to link this account.');
+      } else if (error.code === 'auth/requires-recent-login') {
         setLocalError(
           'For security, please log out and log back in before changing your password or email.'
         );

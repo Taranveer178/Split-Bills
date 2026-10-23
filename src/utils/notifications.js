@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
+import { reload } from 'firebase/auth';
 import {
   arrayRemove,
   arrayUnion,
@@ -353,7 +354,16 @@ export async function listenToForegroundMessages(onMessageReceived) {
 
 export async function triggerPushNotification({ senderId, recipientId, title, message, groupId }) {
   if (!senderId) throw new Error('A sender account is required to send push notifications.');
-  const idToken = await auth?.currentUser?.getIdToken();
+  const currentUser = auth?.currentUser;
+  if (!currentUser) throw new Error('Sign in to RoomSplit before sending a test notification.');
+  if (currentUser.isAnonymous) {
+    throw new Error('This legacy account is not linked to Firebase Auth. Add an email and a password of at least 6 characters in Profile, save, then try again.');
+  }
+  await reload(currentUser);
+  if (currentUser.uid !== senderId && !currentUser.emailVerified) {
+    throw new Error('Verify your account email, then try the notification again.');
+  }
+  const idToken = await currentUser.getIdToken(true);
   if (!idToken) throw new Error('Sign in to RoomSplit before sending a test notification.');
 
   const response = await fetch(PUSH_API_URL, {
