@@ -34,6 +34,7 @@ export default function GroupView({
   currentUser,
   onBack,
   onNavigateDashboard,
+  dashboardTab = 'groups',
   showToast,
 }) {
   const activeTab = initialTab;
@@ -100,7 +101,7 @@ export default function GroupView({
           <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
             <button
               type="button"
-              onClick={() => onNavigateDashboard('groups')}
+              onClick={() => onNavigateDashboard(dashboardTab)}
               className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 hover:bg-white/80 hover:text-slate-900 flex-shrink-0 transition-colors"
               title="Back to Dashboard"
               aria-label="Back to dashboard"
@@ -395,7 +396,7 @@ export default function GroupView({
       </div>
 
       <PrimaryNav
-        activeItem="groups"
+        activeItem={dashboardTab}
         onNavigate={onNavigateDashboard}
         user={currentUser}
         desktopOnly

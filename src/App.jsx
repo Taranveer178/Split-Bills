@@ -186,6 +186,9 @@ export default function App() {
   );
   const [currentView, setCurrentView] = useState(initialRoute.view);
   const [dashboardTab, setDashboardTab] = useState(initialRoute.dashboardTab || 'groups');
+  const [returnDashboardTab, setReturnDashboardTab] = useState(
+    initialRoute.dashboardTab || 'groups'
+  );
   const [currentGroupRoute, setCurrentGroupRoute] = useState(
     initialRoute.groupId || initialRoute.groupSlug || null
   );
@@ -270,7 +273,10 @@ export default function App() {
     } else {
       setCurrentGroupDrawerOpen(false);
     }
-    if (route.view === 'dashboard') setDashboardTab(route.dashboardTab || 'groups');
+    if (route.view === 'dashboard') {
+      setDashboardTab(route.dashboardTab || 'groups');
+      setReturnDashboardTab(route.dashboardTab || 'groups');
+    }
   };
 
   const navigateTo = (route, { replace = false } = {}) => {
@@ -800,11 +806,14 @@ export default function App() {
           onOpenGroup={(id, initialTab = 'expenses') => {
             const group = groups.find((item) => item.id === id);
             if (group) {
+              const tabToReturnTo = currentRouteRef.current.dashboardTab || dashboardTab;
+              setReturnDashboardTab(tabToReturnTo);
               navigateTo({
                 view: 'group',
                 groupId: group.id,
                 groupName: group.name,
                 initialTab,
+                returnDashboardTab: tabToReturnTo,
               });
             }
           }}
@@ -844,6 +853,7 @@ export default function App() {
                 groupName: activeGroup.name,
                 initialTab: tab,
                 drawerOpen: false,
+                returnDashboardTab,
               }, { replace });
             }}
             onOpenRoomOptions={() => {
@@ -853,6 +863,7 @@ export default function App() {
                 groupName: activeGroup.name,
                 initialTab: 'expenses',
                 drawerOpen: true,
+                returnDashboardTab,
               }, { replace: currentGroupInitialTab !== 'expenses' });
             }}
             onCloseRoomOptions={() => {
@@ -862,6 +873,7 @@ export default function App() {
                 groupName: activeGroup.name,
                 initialTab: currentGroupInitialTab,
                 drawerOpen: false,
+                returnDashboardTab,
               }, { replace: true });
             }}
             onActiveChatChange={setActiveChatGroupId}
@@ -874,7 +886,14 @@ export default function App() {
             onSendNotification={saveNotifications}
             users={users}
             currentUser={activeUser}
-            onBack={goBack}
+            dashboardTab={returnDashboardTab}
+            onBack={() => navigateTo(
+              {
+                view: 'dashboard',
+                dashboardTab: returnDashboardTab,
+              },
+              { replace: true }
+            )}
             onNavigateDashboard={(tab) => {
               navigateTo({ view: 'dashboard', dashboardTab: tab });
             }}

@@ -5,15 +5,19 @@ import {
   PieChart,
   Plus,
   User,
+  Users,
 } from 'lucide-react';
 import roomsplitIcon from '../../assets/roomsplit-icon.webp';
 
 const ITEMS = [
   { id: 'groups', label: 'Overview', mobileLabel: 'Spaces', icon: LayoutGrid },
+  { id: 'spaces', label: 'Spaces', mobileLabel: 'Spaces', icon: Users },
   { id: 'notifications', label: 'Activity', mobileLabel: 'Activity', icon: Bell },
   { id: 'monthly', label: 'Analytics', mobileLabel: 'Monthly', icon: PieChart },
   { id: 'profile', label: 'Account', mobileLabel: 'Profile', icon: User },
 ];
+
+const MOBILE_ITEMS = ITEMS.filter(({ id }) => id !== 'spaces');
 
 export default function PrimaryNav({
   activeItem,
@@ -35,7 +39,7 @@ export default function PrimaryNav({
           className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 pointer-events-none md:hidden"
         >
           <div className="liquid-nav-dock pointer-events-auto mx-auto flex h-16 w-full max-w-[25rem] items-center justify-between gap-1 rounded-[28px] p-1.5">
-            {ITEMS.slice(0, 2).map(({ id, mobileLabel, icon: Icon }) => {
+            {MOBILE_ITEMS.slice(0, 2).map(({ id, mobileLabel, icon: Icon }) => {
               const isActive = activeItem === id;
               return (
                 <button
@@ -81,7 +85,7 @@ export default function PrimaryNav({
               </button>
             )}
 
-            {ITEMS.slice(2).map(({ id, mobileLabel, icon: Icon }) => {
+            {MOBILE_ITEMS.slice(2).map(({ id, mobileLabel, icon: Icon }) => {
               const isActive = activeItem === id;
               return (
                 <button
@@ -96,7 +100,21 @@ export default function PrimaryNav({
                       : 'text-slate-600 hover:bg-white/60 hover:text-slate-900 font-semibold'
                   }`}
                 >
-                  <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                  {id === 'profile' ? (
+                    <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-[10px] font-extrabold text-white ring-2 ring-white/80">
+                      {user?.photoDataUrl ? (
+                        <img
+                          src={user.photoDataUrl}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        (user?.username || 'U').charAt(0).toUpperCase()
+                      )}
+                    </span>
+                  ) : (
+                    <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                  )}
                   <span className="text-[10px] leading-tight tracking-tight">{mobileLabel}</span>
                 </button>
               );

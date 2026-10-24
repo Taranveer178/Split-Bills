@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
-  LogOut,
   Plus,
   UserPlus,
   Users,
@@ -19,7 +18,6 @@ import {
   Wallet,
   PieChart,
   CheckCircle2,
-  Clock,
   Copy,
   Check,
   QrCode,
@@ -32,6 +30,7 @@ import PrimaryNav from '../common/PrimaryNav';
 import ActivityTab from './ActivityTab';
 import MonthlyAnalyticsTab from './MonthlyAnalyticsTab';
 import ProfileTabView from './ProfileTab';
+import DesktopSpacesTab from './DesktopSpacesTab';
 import { calculateSettlements } from '../../utils/settlement';
 import { CATEGORIES, PAYMENT_METHODS } from '../../utils/constants';
 
@@ -456,24 +455,15 @@ export default function Dashboard({
           >
             <UserPlus size={15} />
           </button>
-          <button
-            type="button"
-            onClick={onLogout}
-            title="Sign out"
-            aria-label="Sign out"
-            className="liquid-glass-interactive flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 hover:text-rose-600"
-          >
-            <LogOut size={15} />
-          </button>
         </div>
       </header>
 
       {/* --- MAIN CONTENT AREA --- */}
       <main className="relative z-10 min-w-0 flex-1 overscroll-y-contain overflow-y-auto pb-24 scrollbar-hide md:order-2 md:pb-8">
-        {activeTab === 'groups' && (
+        {(activeTab === 'groups' || activeTab === 'spaces') && (
           <div className="mx-auto max-w-[1360px] p-3.5 sm:p-5 md:p-6 lg:p-8">
             {/* PWA Install Banner */}
-            {showInstallBanner && (
+            {activeTab === 'groups' && showInstallBanner && (
               <div className="liquid-glass mb-4 flex items-center justify-between rounded-2xl px-4 py-3">
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
@@ -497,7 +487,11 @@ export default function Dashboard({
             {/* ===================================================================== */}
             {/* NATIVE MOBILE APP DASHBOARD (< md): COMPACT, LIQUID GLASS, NOT LONG   */}
             {/* ===================================================================== */}
-            <div className="space-y-3.5 md:hidden">
+            <div
+              className={`space-y-3.5 md:hidden ${
+                activeTab === 'spaces' ? 'hidden' : ''
+              }`}
+            >
               {/* 1. Native Wallet Hero Card (Liquid Refractive Gradient Glass) */}
               <div className="relative overflow-hidden rounded-[26px] border border-white/30 bg-gradient-to-br from-blue-600 via-indigo-600 to-slate-900 p-4 text-white shadow-lg shadow-blue-600/20">
                 <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
@@ -837,7 +831,11 @@ export default function Dashboard({
             {/* ===================================================================== */}
             <div className="hidden md:block space-y-6">
               {/* 1. Desktop Top Command Bar */}
-              <div className="liquid-glass flex flex-col gap-4 rounded-3xl p-5 lg:flex-row lg:items-center lg:justify-between">
+              <div
+                className={`liquid-glass flex flex-col gap-4 rounded-3xl p-5 lg:flex-row lg:items-center lg:justify-between ${
+                  activeTab === 'groups' ? '' : 'hidden'
+                }`}
+              >
                 <div>
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-blue-600">
                     <span>Command Center</span>
@@ -911,7 +909,11 @@ export default function Dashboard({
               </div>
 
               {/* 2. Desktop 4-Card Liquid Glass KPI Strip */}
-              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              <div
+                className={`grid grid-cols-2 gap-4 lg:grid-cols-4 ${
+                  activeTab === 'groups' ? '' : 'hidden'
+                }`}
+              >
                 <div className="liquid-glass rounded-3xl p-5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-500">Net Position</span>
@@ -1007,13 +1009,22 @@ export default function Dashboard({
                   </p>
                 </div>
               </div>
-
               {/* 3. Main 12-Column Desktop Bento Grid */}
               <div className="grid grid-cols-12 gap-6 items-start">
                 {/* LEFT 8 COLUMNS: Spaces Directory + Recent Ledger */}
-                <div className="col-span-12 xl:col-span-8 space-y-6">
+                <div
+                  className={
+                    activeTab === 'spaces'
+                      ? 'col-span-12 space-y-6'
+                      : 'col-span-12 xl:col-span-8 space-y-6'
+                  }
+                >
                   {/* SPACES DIRECTORY PANEL */}
-                  <section className="liquid-glass rounded-3xl p-6">
+                  <section
+                    className={`liquid-glass rounded-3xl p-6 ${
+                      activeTab === 'spaces' ? 'hidden' : ''
+                    }`}
+                  >
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/60 pb-3.5">
                       <div className="flex items-center gap-2">
                         <h2 className="text-base font-extrabold tracking-tight text-slate-900">
@@ -1078,7 +1089,11 @@ export default function Dashboard({
                         </p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <div
+                        className={`grid gap-4 ${
+                          activeTab === 'groups' ? 'grid-cols-1 gap-2' : 'grid-cols-2'
+                        }`}
+                      >
                         {visibleGroups.map((group) => {
                           const metrics = groupMetrics.byGroup[group.id] || {
                             myNet: 0,
@@ -1094,12 +1109,32 @@ export default function Dashboard({
                             <div
                               key={group.id}
                               onClick={() => onOpenGroup(group.id)}
-                              className="liquid-glass-interactive group flex flex-col justify-between rounded-2xl p-4 cursor-pointer"
+                              className={`liquid-glass-interactive group rounded-2xl cursor-pointer ${
+                                activeTab === 'groups'
+                                  ? 'flex items-center gap-3 px-3 py-2.5'
+                                  : 'flex flex-col justify-between p-4'
+                              }`}
                             >
-                              <div>
-                                <div className="flex items-start justify-between gap-3">
+                              <div
+                                className={`${
+                                  activeTab === 'groups'
+                                    ? 'flex min-w-0 flex-1 items-center'
+                                    : ''
+                                }`}
+                              >
+                                <div
+                                  className={`flex justify-between gap-3 ${
+                                    activeTab === 'groups'
+                                      ? 'w-full items-center'
+                                      : 'items-start'
+                                  }`}
+                                >
                                   <div className="flex min-w-0 items-center gap-3">
-                                    <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-base font-extrabold text-white shadow-sm">
+                                    <div
+                                      className={`flex flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 font-extrabold text-white shadow-sm ${
+                                        activeTab === 'groups' ? 'h-10 w-10 text-sm' : 'h-11 w-11 text-base'
+                                      }`}
+                                    >
                                       {group.imageDataUrl ? (
                                         <img
                                           src={group.imageDataUrl}
@@ -1118,31 +1153,86 @@ export default function Dashboard({
                                         {isPinned && (
                                           <Pin size={12} className="text-blue-600 flex-shrink-0" />
                                         )}
+                                        {activeTab === 'groups' && isMuted && (
+                                          <BellOff size={12} className="flex-shrink-0 text-amber-500" />
+                                        )}
                                       </div>
-                                      <p className="truncate text-xs text-slate-500">
-                                        {group.description || `${group.members.length} members`}
+                                      <p className="truncate text-[11px] font-medium text-slate-500">
+                                        {activeTab === 'groups'
+                                          ? `${group.members.length} members · ₹${metrics.roomSpend.toFixed(0)} spent`
+                                          : group.description || `${group.members.length} members`}
                                       </p>
                                     </div>
                                   </div>
 
-                                  <span
-                                    className={`flex-shrink-0 rounded-xl px-2.5 py-1 font-mono text-xs font-extrabold border ${
-                                      metrics.myNet > 0.01
-                                        ? 'bg-emerald-50/90 text-emerald-700 border-emerald-200/80'
+                                  <div className="flex flex-shrink-0 items-center gap-1.5">
+                                    <span
+                                      className={`rounded-xl px-2.5 py-1 font-mono text-xs font-extrabold border ${
+                                        metrics.myNet > 0.01
+                                          ? 'bg-emerald-50/90 text-emerald-700 border-emerald-200/80'
+                                          : metrics.myNet < -0.01
+                                            ? 'bg-rose-50/90 text-rose-700 border-rose-200/80'
+                                            : 'bg-slate-100/80 text-slate-600 border-slate-200/60'
+                                      }`}
+                                    >
+                                      {metrics.myNet > 0.01
+                                        ? `+₹${metrics.myNet.toFixed(activeTab === 'groups' ? 0 : 2)}`
                                         : metrics.myNet < -0.01
-                                          ? 'bg-rose-50/90 text-rose-700 border-rose-200/80'
-                                          : 'bg-slate-100/80 text-slate-600 border-slate-200/60'
-                                    }`}
-                                  >
-                                    {metrics.myNet > 0.01
-                                      ? `+₹${metrics.myNet.toFixed(2)}`
-                                      : metrics.myNet < -0.01
-                                        ? `-₹${Math.abs(metrics.myNet).toFixed(2)}`
-                                        : 'Settled'}
-                                  </span>
+                                          ? `-₹${Math.abs(metrics.myNet).toFixed(activeTab === 'groups' ? 0 : 2)}`
+                                          : 'Settled'}
+                                    </span>
+                                    {activeTab === 'groups' && (
+                                      <>
+                                        <button
+                                          type="button"
+                                          onClick={(event) => {
+                                            event.stopPropagation();
+                                            updateGroupPreference(
+                                              group.id,
+                                              'pinnedGroupIds',
+                                              !isPinned
+                                            );
+                                          }}
+                                          className={`flex h-8 w-8 items-center justify-center rounded-xl ${
+                                            isPinned
+                                              ? 'bg-blue-50 text-blue-600'
+                                              : 'text-slate-400 hover:bg-white'
+                                          }`}
+                                          aria-label={isPinned ? `Unpin ${group.name}` : `Pin ${group.name}`}
+                                        >
+                                          <Pin size={14} />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={(event) => {
+                                            event.stopPropagation();
+                                            updateGroupPreference(
+                                              group.id,
+                                              'archivedGroupIds',
+                                              !isArchived
+                                            );
+                                          }}
+                                          className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 hover:bg-white"
+                                          aria-label={
+                                            isArchived ? `Restore ${group.name}` : `Archive ${group.name}`
+                                          }
+                                        >
+                                          {isArchived ? (
+                                            <ArchiveRestore size={14} />
+                                          ) : (
+                                            <Archive size={14} />
+                                          )}
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
                                 </div>
 
-                                <div className="mt-3.5 grid grid-cols-2 gap-2 rounded-xl bg-white/60 border border-white/80 px-3 py-2 text-xs">
+                                <div
+                                  className={`mt-3.5 grid grid-cols-2 gap-2 rounded-xl bg-white/60 border border-white/80 px-3 py-2 text-xs ${
+                                    activeTab === 'spaces' ? '' : 'hidden'
+                                  }`}
+                                >
                                   <div>
                                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
                                       Room Spend
@@ -1164,7 +1254,11 @@ export default function Dashboard({
                                 </div>
                               </div>
 
-                              <div className="mt-3.5 flex items-center justify-between border-t border-slate-200/50 pt-3">
+                              <div
+                                className={`mt-3.5 flex items-center justify-between border-t border-slate-200/50 pt-3 ${
+                                  activeTab === 'spaces' ? '' : 'hidden'
+                                }`}
+                              >
                                 <div className="flex items-center gap-2">
                                   <div className="flex -space-x-1.5 overflow-hidden">
                                     {group.members.slice(0, 4).map((mId) => {
@@ -1293,8 +1387,34 @@ export default function Dashboard({
                     )}
                   </section>
 
+                  {activeTab === 'spaces' && (
+                    <DesktopSpacesTab
+                      groups={visibleGroups}
+                      activeCount={activeGroups.length}
+                      pinnedCount={pinnedGroups.length}
+                      archivedCount={archivedGroups.length}
+                      spaceFilter={spaceFilter}
+                      onSpaceFilterChange={setSpaceFilter}
+                      groupMetrics={groupMetrics}
+                      users={users}
+                      user={user}
+                      pinnedGroupIds={pinnedGroupIds}
+                      archivedGroupIds={archivedGroupIds}
+                      mutedGroupIds={mutedGroupIds}
+                      onOpenGroup={onOpenGroup}
+                      onUpdateGroupPreference={updateGroupPreference}
+                      onQuickAdd={openQuickExpenseModal}
+                      onCopyInvite={handleCopyInvite}
+                      copiedCodeId={copiedCodeId}
+                    />
+                  )}
+
                   {/* RECENT TRANSACTIONS LEDGER PANEL */}
-                  <section className="liquid-glass rounded-3xl p-6">
+                  <section
+                    className={`liquid-glass rounded-3xl p-6 ${
+                      activeTab === 'groups' ? '' : 'hidden'
+                    }`}
+                  >
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/60 pb-3.5">
                       <div>
                         <h2 className="text-base font-extrabold tracking-tight text-slate-900">
@@ -1406,7 +1526,11 @@ export default function Dashboard({
                 </div>
 
                 {/* RIGHT 4 COLUMNS: Live Settlements + Monthly Breakdown + Activity + Profile */}
-                <div className="col-span-12 xl:col-span-4 space-y-6">
+                <div
+                  className={`col-span-12 xl:col-span-4 space-y-6 ${
+                    activeTab === 'groups' ? '' : 'hidden'
+                  }`}
+                >
                   {/* WIDGET 1: WHO OWES WHO / QUICK SETTLE */}
                   <section className="liquid-glass rounded-3xl p-5">
                     <div className="mb-3.5 flex items-center justify-between border-b border-slate-200/60 pb-3">
@@ -1511,51 +1635,6 @@ export default function Dashboard({
                     )}
                   </section>
 
-                  {/* WIDGET 3: LIVE ACTIVITY FEED */}
-                  <section className="liquid-glass rounded-3xl p-5">
-                    <div className="mb-3.5 flex items-center justify-between border-b border-slate-200/60 pb-3">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-extrabold text-slate-900">Recent Activity</h3>
-                        {unreadNotifications.length > 0 && (
-                          <span className="rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
-                            {unreadNotifications.length}
-                          </span>
-                        )}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleTabSwitch('notifications')}
-                        className="text-xs font-bold text-blue-600 hover:underline"
-                      >
-                        View all →
-                      </button>
-                    </div>
-
-                    {notifications.length === 0 ? (
-                      <p className="py-4 text-center text-xs text-slate-400">
-                        No recent alerts or notifications.
-                      </p>
-                    ) : (
-                      <div className="space-y-2">
-                        {notifications.slice(0, 3).map((notif) => (
-                          <div
-                            key={notif.id}
-                            onClick={() =>
-                              notif.groupId
-                                ? onOpenGroup(notif.groupId)
-                                : handleTabSwitch('notifications')
-                            }
-                            className="flex items-start gap-2.5 rounded-2xl bg-white/60 border border-white/80 p-2.5 hover:bg-white cursor-pointer transition-colors"
-                          >
-                            <Clock size={14} className="mt-0.5 flex-shrink-0 text-blue-600" />
-                            <p className="line-clamp-2 text-xs font-semibold text-slate-700 leading-snug">
-                              {notif.message}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </section>
 
                   {/* WIDGET 4: REIMBURSEMENT UPI HANDLE CARD */}
                   <section className="liquid-glass rounded-3xl p-4">
@@ -1591,7 +1670,7 @@ export default function Dashboard({
         {/* ============================== */}
         {/* OTHER TABS                     */}
         {/* ============================== */}
-        {activeTab !== 'groups' && (
+        {activeTab !== 'groups' && activeTab !== 'spaces' && (
           <div className="h-full">
             {activeTab === 'notifications' && (
               <ActivityTab
@@ -1610,6 +1689,7 @@ export default function Dashboard({
                 key={[user.id, user.username, user.email, user.upiId, user.photoDataUrl].join(':')}
                 user={user}
                 onUpdateUser={onUpdateUser}
+                onLogout={onLogout}
                 showToast={showToast}
               />
             )}

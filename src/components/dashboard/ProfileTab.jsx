@@ -11,6 +11,7 @@ import {
   KeyRound,
   Camera,
   Bell,
+  LogOut,
 } from 'lucide-react';
 import {
   EmailAuthProvider,
@@ -26,7 +27,7 @@ import { auth } from '../../firebase';
 import { Button, Input } from '../common/UI';
 import { requestNotificationPermission, triggerPushNotification } from '../../utils/notifications';
 
-export default function ProfileTab({ user, onUpdateUser, showToast }) {
+export default function ProfileTab({ user, onUpdateUser, onLogout, showToast }) {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(user?.username || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -251,17 +252,29 @@ export default function ProfileTab({ user, onUpdateUser, showToast }) {
             Profile Settings
           </h1>
         </div>
-        {!isEditing && (
-          <Button
-            onClick={() => {
-              setIsEditing(true);
-              setLocalError('');
-            }}
-            className="h-9 px-4 text-xs"
-          >
-            Edit Profile
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {onLogout && (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-100"
+            >
+              <LogOut size={14} />
+              <span>Sign out</span>
+            </button>
+          )}
+          {!isEditing && (
+            <Button
+              onClick={() => {
+                setIsEditing(true);
+                setLocalError('');
+              }}
+              className="h-9 px-4 text-xs"
+            >
+              Edit Profile
+            </Button>
+          )}
+        </div>
       </div>
 
       {!isEditing ? (
