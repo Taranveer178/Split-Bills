@@ -4,6 +4,7 @@ import {
   LogOut,
   PieChart,
   Plus,
+  Receipt,
   User,
   Users,
 } from 'lucide-react';
@@ -12,12 +13,15 @@ import roomsplitIcon from '../../assets/roomsplit-icon.webp';
 const ITEMS = [
   { id: 'groups', label: 'Overview', mobileLabel: 'Spaces', icon: LayoutGrid },
   { id: 'spaces', label: 'Spaces', mobileLabel: 'Spaces', icon: Users },
+  { id: 'transactions', label: 'Transactions', mobileLabel: 'Transactions', icon: Receipt },
   { id: 'notifications', label: 'Activity', mobileLabel: 'Activity', icon: Bell },
   { id: 'monthly', label: 'Analytics', mobileLabel: 'Monthly', icon: PieChart },
   { id: 'profile', label: 'Account', mobileLabel: 'Profile', icon: User },
 ];
 
-const MOBILE_ITEMS = ITEMS.filter(({ id }) => id !== 'spaces');
+const MOBILE_ITEMS = ITEMS.filter(
+  ({ id }) => id !== 'spaces' && id !== 'transactions'
+);
 
 export default function PrimaryNav({
   activeItem,

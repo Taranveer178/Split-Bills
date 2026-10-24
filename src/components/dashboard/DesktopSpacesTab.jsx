@@ -81,7 +81,7 @@ export default function DesktopSpacesTab({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {groups.map((group) => {
             const metrics = groupMetrics.byGroup[group.id] || {
               myNet: 0,

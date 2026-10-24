@@ -20,7 +20,6 @@ import {
   CheckCircle2,
   Copy,
   Check,
-  QrCode,
   X,
   IndianRupee,
   MessageSquare,
@@ -31,6 +30,7 @@ import ActivityTab from './ActivityTab';
 import MonthlyAnalyticsTab from './MonthlyAnalyticsTab';
 import ProfileTabView from './ProfileTab';
 import DesktopSpacesTab from './DesktopSpacesTab';
+import TransactionsTab from './TransactionsTab';
 import { calculateSettlements } from '../../utils/settlement';
 import { CATEGORIES, PAYMENT_METHODS } from '../../utils/constants';
 
@@ -60,7 +60,6 @@ export default function Dashboard({
   const [searchQuery, setSearchQuery] = useState('');
   const [ledgerFilter, setLedgerFilter] = useState('all'); // 'all' | 'mine' | 'settlements'
   const [mobileSection, setMobileSection] = useState('spaces'); // 'spaces' | 'dues' | 'recent'
-  const [showAllMobileSpaces, setShowAllMobileSpaces] = useState(false);
   const [copiedCodeId, setCopiedCodeId] = useState(null);
 
   // Quick Expense Modal State
@@ -253,7 +252,7 @@ export default function Dashboard({
       );
     }
 
-    return list.slice(0, 8);
+    return list;
   }, [expenses, myGroups, ledgerFilter, user.id, searchQuery]);
 
   const unreadNotifications = notifications.filter((notification) => !notification.read);
@@ -401,9 +400,7 @@ export default function Dashboard({
     }
   };
 
-  const mobileSpacesToDisplay = showAllMobileSpaces
-    ? visibleGroups
-    : visibleGroups.slice(0, 4);
+  const mobileSpacesToDisplay = visibleGroups.slice(0, 2);
 
   return (
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[#EEF2F9] font-sans md:flex-row">
@@ -460,7 +457,7 @@ export default function Dashboard({
 
       {/* --- MAIN CONTENT AREA --- */}
       <main className="relative z-10 min-w-0 flex-1 overscroll-y-contain overflow-y-auto pb-24 scrollbar-hide md:order-2 md:pb-8">
-        {(activeTab === 'groups' || activeTab === 'spaces') && (
+        {(activeTab === 'groups' || activeTab === 'spaces' || activeTab === 'transactions') && (
           <div className="mx-auto max-w-[1360px] p-3.5 sm:p-5 md:p-6 lg:p-8">
             {/* PWA Install Banner */}
             {activeTab === 'groups' && showInstallBanner && (
@@ -489,7 +486,7 @@ export default function Dashboard({
             {/* ===================================================================== */}
             <div
               className={`space-y-3.5 md:hidden ${
-                activeTab === 'spaces' ? 'hidden' : ''
+                activeTab !== 'groups' ? 'hidden' : ''
               }`}
             >
               {/* 1. Native Wallet Hero Card (Liquid Refractive Gradient Glass) */}
@@ -724,15 +721,14 @@ export default function Dashboard({
                         })}
                       </div>
 
-                      {visibleGroups.length > 4 && (
+                      {visibleGroups.length > 2 && (
                         <button
                           type="button"
-                          onClick={() => setShowAllMobileSpaces((v) => !v)}
+                          onClick={() => handleTabSwitch('spaces')}
                           className="liquid-glass-interactive w-full rounded-2xl py-2 text-center text-xs font-bold text-blue-600"
                         >
-                          {showAllMobileSpaces
-                            ? 'Show fewer spaces'
-                            : `View all ${visibleGroups.length} spaces`}
+                          Show more spaces
+                          <span aria-hidden="true"> →</span>
                         </button>
                       )}
                     </>
@@ -798,7 +794,7 @@ export default function Dashboard({
                       </p>
                     </div>
                   ) : (
-                    recentTransactions.slice(0, 5).map((exp) => {
+                    recentTransactions.slice(0, 4).map((exp) => {
                       const grp = myGroups.find((g) => g.id === exp.groupId);
                       const iPaid = exp.paidBy === user.id;
                       return (
@@ -822,9 +818,52 @@ export default function Dashboard({
                       );
                     })
                   )}
+                  <button
+                    type="button"
+                    onClick={() => handleTabSwitch('transactions')}
+                    className="liquid-glass-interactive w-full rounded-2xl py-2 text-center text-xs font-bold text-blue-600"
+                  >
+                    See all transactions
+                    <span aria-hidden="true"> →</span>
+                  </button>
                 </div>
               )}
             </div>
+
+            {activeTab === 'transactions' && (
+              <div className="md:hidden">
+                <TransactionsTab
+                  transactions={recentTransactions}
+                  groups={myGroups}
+                  user={user}
+                  getUserName={getUserName}
+                  onOpenGroup={onOpenGroup}
+                />
+              </div>
+            )}
+            {activeTab === 'spaces' && (
+              <div className="md:hidden">
+                <DesktopSpacesTab
+                  groups={visibleGroups}
+                  activeCount={activeGroups.length}
+                  pinnedCount={pinnedGroups.length}
+                  archivedCount={archivedGroups.length}
+                  spaceFilter={spaceFilter}
+                  onSpaceFilterChange={setSpaceFilter}
+                  groupMetrics={groupMetrics}
+                  users={users}
+                  user={user}
+                  pinnedGroupIds={pinnedGroupIds}
+                  archivedGroupIds={archivedGroupIds}
+                  mutedGroupIds={mutedGroupIds}
+                  onOpenGroup={onOpenGroup}
+                  onUpdateGroupPreference={updateGroupPreference}
+                  onQuickAdd={openQuickExpenseModal}
+                  onCopyInvite={handleCopyInvite}
+                  copiedCodeId={copiedCodeId}
+                />
+              </div>
+            )}
 
             {/* ===================================================================== */}
             {/* DESKTOP LIQUID GLASS COMMAND CENTER (md+): ALL FEATURES IN ONE VIEW   */}
@@ -1014,7 +1053,7 @@ export default function Dashboard({
                 {/* LEFT 8 COLUMNS: Spaces Directory + Recent Ledger */}
                 <div
                   className={
-                    activeTab === 'spaces'
+                    activeTab === 'spaces' || activeTab === 'transactions'
                       ? 'col-span-12 space-y-6'
                       : 'col-span-12 xl:col-span-8 space-y-6'
                   }
@@ -1022,7 +1061,7 @@ export default function Dashboard({
                   {/* SPACES DIRECTORY PANEL */}
                   <section
                     className={`liquid-glass rounded-3xl p-6 ${
-                      activeTab === 'spaces' ? 'hidden' : ''
+                      activeTab === 'groups' ? '' : 'hidden'
                     }`}
                   >
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/60 pb-3.5">
@@ -1094,7 +1133,10 @@ export default function Dashboard({
                           activeTab === 'groups' ? 'grid-cols-1 gap-2' : 'grid-cols-2'
                         }`}
                       >
-                        {visibleGroups.map((group) => {
+                        {(activeTab === 'groups'
+                          ? visibleGroups.slice(0, 2)
+                          : visibleGroups
+                        ).map((group) => {
                           const metrics = groupMetrics.byGroup[group.id] || {
                             myNet: 0,
                             roomSpend: 0,
@@ -1385,6 +1427,16 @@ export default function Dashboard({
                         })}
                       </div>
                     )}
+                    {activeTab === 'groups' && visibleGroups.length > 2 && (
+                      <button
+                        type="button"
+                        onClick={() => handleTabSwitch('spaces')}
+                        className="mt-3 w-full rounded-xl py-2 text-center text-xs font-bold text-blue-600 transition-colors hover:bg-blue-50"
+                      >
+                        Show more spaces
+                        <span aria-hidden="true"> →</span>
+                      </button>
+                    )}
                   </section>
 
                   {activeTab === 'spaces' && (
@@ -1412,38 +1464,52 @@ export default function Dashboard({
                   {/* RECENT TRANSACTIONS LEDGER PANEL */}
                   <section
                     className={`liquid-glass rounded-3xl p-6 ${
-                      activeTab === 'groups' ? '' : 'hidden'
+                      activeTab === 'groups' || activeTab === 'transactions' ? '' : 'hidden'
                     }`}
                   >
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/60 pb-3.5">
                       <div>
                         <h2 className="text-base font-extrabold tracking-tight text-slate-900">
-                          Recent Ledger Activity
+                          {activeTab === 'transactions' ? 'Transactions' : 'Recent Ledger Activity'}
                         </h2>
                         <p className="text-xs text-slate-500">
-                          Latest bills and settlements across all your rooms
+                          {activeTab === 'transactions'
+                            ? 'Bills and settlements across all your spaces'
+                            : 'Latest bills and settlements across all your rooms'}
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-1 rounded-2xl bg-slate-200/60 p-1">
-                        {[
-                          { id: 'all', label: 'All' },
-                          { id: 'mine', label: 'Paid by Me' },
-                          { id: 'settlements', label: 'Settlements' },
-                        ].map((tab) => (
+                      <div className="flex items-center gap-2">
+                        {activeTab === 'groups' && (
                           <button
-                            key={tab.id}
                             type="button"
-                            onClick={() => setLedgerFilter(tab.id)}
-                            className={`rounded-xl px-3 py-1 text-xs font-bold transition-all ${
-                              ledgerFilter === tab.id
-                                ? 'bg-white text-blue-600 shadow-sm'
-                                : 'text-slate-600 hover:text-slate-900'
-                            }`}
+                            onClick={() => handleTabSwitch('transactions')}
+                            className="rounded-xl px-3 py-1.5 text-xs font-bold text-blue-600 transition-colors hover:bg-blue-50"
                           >
-                            {tab.label}
+                            See all
+                            <span aria-hidden="true"> →</span>
                           </button>
-                        ))}
+                        )}
+                        <div className="flex items-center gap-1 rounded-2xl bg-slate-200/60 p-1">
+                          {[
+                            { id: 'all', label: 'All' },
+                            { id: 'mine', label: 'Paid by Me' },
+                            { id: 'settlements', label: 'Settlements' },
+                          ].map((tab) => (
+                            <button
+                              key={tab.id}
+                              type="button"
+                              onClick={() => setLedgerFilter(tab.id)}
+                              className={`rounded-xl px-3 py-1 text-xs font-bold transition-all ${
+                                ledgerFilter === tab.id
+                                  ? 'bg-white text-blue-600 shadow-sm'
+                                  : 'text-slate-600 hover:text-slate-900'
+                              }`}
+                            >
+                              {tab.label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
 
@@ -1454,7 +1520,10 @@ export default function Dashboard({
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        {recentTransactions.map((exp) => {
+                        {(activeTab === 'groups'
+                          ? recentTransactions.slice(0, 4)
+                          : recentTransactions
+                        ).map((exp) => {
                           const grp = myGroups.find((g) => g.id === exp.groupId);
                           const iPaid = exp.paidBy === user.id;
                           const myShare = parseFloat(exp.splits?.[user.id]) || 0;
@@ -1635,32 +1704,6 @@ export default function Dashboard({
                     )}
                   </section>
 
-
-                  {/* WIDGET 4: REIMBURSEMENT UPI HANDLE CARD */}
-                  <section className="liquid-glass rounded-3xl p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 border border-blue-100">
-                          <QrCode size={18} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                            Your UPI ID
-                          </p>
-                          <p className="truncate font-mono text-xs font-extrabold text-slate-900">
-                            {user.upiId || 'Not configured yet'}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleTabSwitch('profile')}
-                        className="rounded-xl border border-slate-200/80 bg-white/80 px-3 py-1.5 text-xs font-bold text-blue-600 hover:bg-white"
-                      >
-                        {user.upiId ? 'Edit' : 'Set UPI'}
-                      </button>
-                    </div>
-                  </section>
                 </div>
               </div>
             </div>
@@ -1670,7 +1713,9 @@ export default function Dashboard({
         {/* ============================== */}
         {/* OTHER TABS                     */}
         {/* ============================== */}
-        {activeTab !== 'groups' && activeTab !== 'spaces' && (
+        {activeTab !== 'groups' &&
+          activeTab !== 'spaces' &&
+          activeTab !== 'transactions' && (
           <div className="h-full">
             {activeTab === 'notifications' && (
               <ActivityTab
