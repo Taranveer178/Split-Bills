@@ -1,5 +1,4 @@
 import {
-  Bell,
   LayoutGrid,
   LogOut,
   PieChart,
@@ -11,23 +10,19 @@ import {
 import roomsplitIcon from '../../assets/roomsplit-icon.webp';
 
 const ITEMS = [
-  { id: 'groups', label: 'Overview', mobileLabel: 'Spaces', icon: LayoutGrid },
+  { id: 'groups', label: 'Overview', mobileLabel: 'Overview', icon: LayoutGrid },
   { id: 'spaces', label: 'Spaces', mobileLabel: 'Spaces', icon: Users },
   { id: 'transactions', label: 'Transactions', mobileLabel: 'Transactions', icon: Receipt },
-  { id: 'notifications', label: 'Activity', mobileLabel: 'Activity', icon: Bell },
   { id: 'monthly', label: 'Analytics', mobileLabel: 'Monthly', icon: PieChart },
   { id: 'profile', label: 'Account', mobileLabel: 'Profile', icon: User },
 ];
 
-const MOBILE_ITEMS = ITEMS.filter(
-  ({ id }) => id !== 'spaces' && id !== 'transactions'
-);
+const MOBILE_ITEMS = ITEMS.filter(({ id }) => id !== 'spaces');
 
 export default function PrimaryNav({
   activeItem,
   onNavigate,
   onQuickAction,
-  unreadCount = 0,
   onLogout,
   user,
   desktopOnly = false,
@@ -43,6 +38,7 @@ export default function PrimaryNav({
           className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 pointer-events-none md:hidden"
         >
           <div className="liquid-nav-dock pointer-events-auto mx-auto flex h-16 w-full max-w-[25rem] items-center justify-between gap-1 rounded-[28px] p-1.5">
+            {/* Left 2 items: Overview & Transactions */}
             {MOBILE_ITEMS.slice(0, 2).map(({ id, mobileLabel, icon: Icon }) => {
               const isActive = activeItem === id;
               return (
@@ -60,24 +56,13 @@ export default function PrimaryNav({
                 >
                   <span className="relative inline-flex items-center justify-center">
                     <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
-                    {id === 'notifications' && unreadCount > 0 && (
-                      <span
-                        className={`absolute -top-1 -right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-extrabold leading-none ring-2 ${
-                          isActive
-                            ? 'bg-white text-blue-600 ring-blue-600'
-                            : 'bg-rose-500 text-white ring-white'
-                        }`}
-                      >
-                        {unreadCount > 9 ? '9+' : unreadCount}
-                      </span>
-                    )}
                   </span>
                   <span className="text-[10px] leading-tight tracking-tight">{mobileLabel}</span>
                 </button>
               );
             })}
 
-            {/* Center Native Quick-Add Action Button (if handler provided) */}
+            {/* Center Quick-Add Action Button */}
             {onQuickAction && (
               <button
                 type="button"
@@ -89,6 +74,7 @@ export default function PrimaryNav({
               </button>
             )}
 
+            {/* Right 2 items: Analytics & Profile */}
             {MOBILE_ITEMS.slice(2).map(({ id, mobileLabel, icon: Icon }) => {
               const isActive = activeItem === id;
               return (
@@ -165,7 +151,7 @@ export default function PrimaryNav({
             </span>
           </div>
 
-          {/* Desktop Navigation Items */}
+          {/* Desktop Navigation Items (Activity excluded) */}
           <div className="space-y-1.5">
             {ITEMS.map(({ id, label, icon: Icon }) => {
               const isActive = activeItem === id;
@@ -187,18 +173,6 @@ export default function PrimaryNav({
                     className={isActive ? 'text-white' : 'text-slate-500 group-hover:text-blue-600'}
                   />
                   <span>{label}</span>
-
-                  {id === 'notifications' && unreadCount > 0 && (
-                    <span
-                      className={`ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[11px] font-extrabold leading-none ${
-                        isActive
-                          ? 'bg-white text-blue-600'
-                          : 'bg-rose-500 text-white shadow-sm'
-                      }`}
-                    >
-                      {unreadCount > 99 ? '99+' : unreadCount}
-                    </span>
-                  )}
                 </button>
               );
             })}

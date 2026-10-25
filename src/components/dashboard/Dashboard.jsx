@@ -23,21 +23,20 @@ import {
   X,
   IndianRupee,
   MessageSquare,
+  Trash2,
 } from 'lucide-react';
 import roomsplitIcon from '../../assets/roomsplit-icon.webp';
 import PrimaryNav from '../common/PrimaryNav';
-import ActivityTab from './ActivityTab';
 import MonthlyAnalyticsTab from './MonthlyAnalyticsTab';
 import ProfileTabView from './ProfileTab';
 import DesktopSpacesTab from './DesktopSpacesTab';
-import TransactionsTab from './TransactionsTab';
 import { calculateSettlements } from '../../utils/settlement';
 import { CATEGORIES, PAYMENT_METHODS } from '../../utils/constants';
 
 export default function Dashboard({
   user,
   users = [],
-  groups,
+  groups = [],
   notifications = [],
   expenses = [],
   onLogout,
@@ -62,6 +61,9 @@ export default function Dashboard({
   const [mobileSection, setMobileSection] = useState('spaces'); // 'spaces' | 'dues' | 'recent'
   const [copiedCodeId, setCopiedCodeId] = useState(null);
 
+  // Activity Drawer / Notification Center Popup State
+  const [isActivityOpen, setIsActivityOpen] = useState(false);
+
   // Quick Expense Modal State
   const [quickExpenseOpen, setQuickExpenseOpen] = useState(false);
   const [quickGroupId, setQuickGroupId] = useState('');
@@ -75,15 +77,129 @@ export default function Dashboard({
   const archivedGroupIds = user?.archivedGroupIds || [];
   const mutedGroupIds = user?.mutedGroupIds || [];
 
+  // Scoped notifications for this user
+  const userNotifications = useMemo(
+    () =>
+      notifications.filter(
+        (n) => !n.recipientId || n.recipientId === user?.id
+      ),
+    [notifications, user?.id]
+  );
+
+  const unreadNotifications = useMemo(
+    () => userNotifications.filter((n) => !n.read),
+    [userNotifications]
+  );
+
   const getUserName = (userId) => {
     if (userId === user?.id) return 'You';
     return users.find((u) => u.id === userId)?.username || 'Roommate';
   };
 
   const myGroups = useMemo(
-    () => groups.filter((group) => group.members && group.members.includes(user.id)),
-    [groups, user.id]
+    () => groups.filter((group) => group.members && group.members.includes(user?.id)),
+    [groups, user?.id]
   );
+
+  // Unread message & transaction count per space
+  const unreadMessagesByGroup = useMemo(() => {
+    const map = {};
+    myGroups.forEach((group) => {
+      let chatCount = 0;
+
+      if (typeof group.unreadCount === 'number') {
+        chatCount = group.unreadCount;
+      } else if (typeof group.unreadMessages === 'number') {
+        chatCount = group.unreadMessages;
+      } else if (
+        group.unreadCount &&
+        typeof group.unreadCount === 'object' &&
+        typeof group.unreadCount[user?.id] === 'number'
+      ) {
+        chatCount = group.unreadCount[user?.id];
+      } else if (
+        group.unreadBy &&
+        typeof group.unreadBy === 'object' &&
+        typeof group.unreadBy[user?.id] === 'number'
+      ) {
+        chatCount = group.unreadBy[user?.id];
+      } else if (Array.isArray(group.messages)) {
+        const lastReadTime =
+          group.lastReadBy?.[user?.id] || user?.lastReadGroupChat?.[group.id] || 0;
+        chatCount = group.messages.filter(
+          (m) =>
+            m.senderId &&
+            m.senderId !== user?.id &&
+            (!m.readBy || !m.readBy.includes(user?.id)) &&
+            (!lastReadTime || new Date(m.createdAt || 0) > new Date(lastReadTime))
+        ).length;
+      }
+
+      const groupUnreadNotifs = notifications.filter(
+        (n) =>
+          !n.read &&
+          n.groupId === group.id &&
+          (!n.recipientId || n.recipientId === user?.id)
+      );
+
+      const chatNotifs = groupUnreadNotifs.filter(
+        (n) =>
+          n.type === 'CHAT_MESSAGE' ||
+          n.type === 'NEW_MESSAGE' ||
+          n.type === 'MESSAGE' ||
+          n.category === 'chat' ||
+          /message|chat/i.test(n.type || '')
+      ).length;
+
+      const transactionNotifs = groupUnreadNotifs.filter(
+        (n) =>
+          n.type === 'EXPENSE_ADDED' ||
+          n.type === 'BILL_ADDED' ||
+          n.type === 'TRANSACTION' ||
+          n.type === 'SETTLEMENT' ||
+          n.category === 'expense' ||
+          /expense|bill|transaction|settle/i.test(n.type || '')
+      ).length;
+
+      const effectiveChatCount = Math.max(chatCount, chatNotifs);
+      map[group.id] = effectiveChatCount + transactionNotifs;
+    });
+    return map;
+  }, [myGroups, notifications, user?.id, user?.lastReadGroupChat]);
+
+  const totalUnreadSpacesCount = useMemo(
+    () => Object.values(unreadMessagesByGroup).reduce((sum, c) => sum + (c || 0), 0),
+    [unreadMessagesByGroup]
+  );
+
+  const handleOpenGroup = (groupId, subTab) => {
+    if (onMarkNotificationsRead) {
+      const groupUnread = notifications.filter(
+        (n) =>
+          !n.read &&
+          n.groupId === groupId &&
+          (!n.recipientId || n.recipientId === user?.id)
+      );
+      if (groupUnread.length > 0) {
+        onMarkNotificationsRead(groupUnread.map((n) => n.id));
+      }
+    }
+    onOpenGroup?.(groupId, subTab);
+  };
+
+  // Mark all notifications as read when the activity popup drawer opens
+  useEffect(() => {
+    if (isActivityOpen && unreadNotifications.length && onMarkNotificationsRead) {
+      onMarkNotificationsRead(unreadNotifications.map((n) => n.id));
+    }
+  }, [isActivityOpen, unreadNotifications, onMarkNotificationsRead]);
+
+  const handleClearAllActivity = () => {
+    if (onClearNotifications) {
+      onClearNotifications();
+      showToast?.('All activity notifications cleared');
+    }
+  };
 
   const groupMetrics = useMemo(() => {
     const map = {};
@@ -102,7 +218,7 @@ export default function Dashboard({
         0
       );
       const { balances, settlements } = calculateSettlements(grpExpenses, group.members || []);
-      const myNet = balances[user.id] || 0;
+      const myNet = balances[user?.id] || 0;
 
       if (!archivedGroupIds.includes(group.id)) {
         totalNetBalance += myNet;
@@ -111,7 +227,7 @@ export default function Dashboard({
       }
 
       settlements.forEach((s) => {
-        if (s.from === user.id || s.to === user.id) {
+        if (s.from === user?.id || s.to === user?.id) {
           allMySettlements.push({
             ...s,
             groupId: group.id,
@@ -133,6 +249,7 @@ export default function Dashboard({
         billCount: nonSettlements.length,
         latestExpense,
         settlements,
+        unreadCount: unreadMessagesByGroup[group.id] || 0,
       };
     });
 
@@ -143,7 +260,7 @@ export default function Dashboard({
       totalYouOwe: Math.round(totalYouOwe * 100) / 100,
       allMySettlements,
     };
-  }, [myGroups, expenses, user.id, archivedGroupIds]);
+  }, [myGroups, expenses, user?.id, archivedGroupIds, unreadMessagesByGroup]);
 
   const monthlySummary = useMemo(() => {
     const now = new Date();
@@ -163,8 +280,8 @@ export default function Dashboard({
 
     monthExpenses.forEach((e) => {
       const total = parseFloat(e.totalAmount) || 0;
-      if (e.paidBy === user.id) iPaid += total;
-      const share = parseFloat(e.splits?.[user.id]) || 0;
+      if (e.paidBy === user?.id) iPaid += total;
+      const share = parseFloat(e.splits?.[user?.id]) || 0;
       if (share > 0) {
         myShare += share;
         const cat = e.category || 'Other';
@@ -187,7 +304,7 @@ export default function Dashboard({
       billCount: monthExpenses.length,
       categories,
     };
-  }, [expenses, myGroups, user.id]);
+  }, [expenses, myGroups, user?.id]);
 
   const activeGroups = useMemo(
     () =>
@@ -239,7 +356,7 @@ export default function Dashboard({
       );
 
     if (ledgerFilter === 'mine') {
-      list = list.filter((e) => e.paidBy === user.id);
+      list = list.filter((e) => e.paidBy === user?.id);
     } else if (ledgerFilter === 'settlements') {
       list = list.filter((e) => e.isSettlement || e.category === 'Settlement');
     }
@@ -253,9 +370,7 @@ export default function Dashboard({
     }
 
     return list;
-  }, [expenses, myGroups, ledgerFilter, user.id, searchQuery]);
-
-  const unreadNotifications = notifications.filter((notification) => !notification.read);
+  }, [expenses, myGroups, ledgerFilter, user?.id, searchQuery]);
 
   const updateGroupPreference = async (groupId, preference, enabled) => {
     const currentIds = user?.[preference] || [];
@@ -264,17 +379,11 @@ export default function Dashboard({
       : currentIds.filter((id) => id !== groupId);
 
     try {
-      await onUpdateUser(user.id, { [preference]: nextIds });
+      await onUpdateUser(user?.id, { [preference]: nextIds });
     } catch {
       showToast?.('Could not update this group. Please try again.', 'error');
     }
   };
-
-  useEffect(() => {
-    if (activeTab === 'notifications' && unreadNotifications.length) {
-      onMarkNotificationsRead(unreadNotifications.map((notification) => notification.id));
-    }
-  }, [activeTab, notifications, unreadNotifications, onMarkNotificationsRead]);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e) => {
@@ -298,6 +407,7 @@ export default function Dashboard({
   };
 
   const handleTabSwitch = (tab) => {
+    if (window.innerWidth < 768 && tab === 'transactions') return;
     setActiveTab(tab);
     onTabChange(tab);
   };
@@ -340,13 +450,13 @@ export default function Dashboard({
 
     if (!onSaveExpense) {
       setQuickExpenseOpen(false);
-      onOpenGroup(targetGroup.id, 'add');
+      handleOpenGroup(targetGroup.id, 'add');
       return;
     }
 
     setSavingQuick(true);
     try {
-      const members = targetGroup.members?.length ? targetGroup.members : [user.id];
+      const members = targetGroup.members?.length ? targetGroup.members : [user?.id];
       const share = (numAmount / members.length).toFixed(2);
       const splits = {};
       members.forEach((mId) => {
@@ -363,7 +473,7 @@ export default function Dashboard({
         groupId: targetGroup.id,
         title: quickTitle.trim(),
         totalAmount: numAmount.toFixed(2),
-        paidBy: user.id,
+        paidBy: user?.id,
         paymentMethod: quickMethod,
         category: quickCategory,
         date: today,
@@ -374,16 +484,16 @@ export default function Dashboard({
       await onSaveExpense(newExpense);
 
       if (onSendNotification) {
-        const others = members.filter((id) => id !== user.id);
+        const others = members.filter((id) => id !== user?.id);
         const notifs = others.map((memberId) => ({
           id: `notif_${Date.now()}_${memberId}`,
           recipientId: memberId,
-          senderId: user.id,
-          createdBy: user.id,
-          createdByName: user.username || 'Roommate',
+          senderId: user?.id,
+          createdBy: user?.id,
+          createdByName: user?.username || 'Roommate',
           groupId: targetGroup.id,
           type: 'EXPENSE_ADDED',
-          message: `${user.username} added "${newExpense.title}" for ₹${newExpense.totalAmount} (Your share: ₹${share}).`,
+          message: `${user?.username} added "${newExpense.title}" for ₹${newExpense.totalAmount} (Your share: ₹${share}).`,
           expenseId: newExpense.id,
           createdAt: new Date().toISOString(),
           read: false,
@@ -399,8 +509,6 @@ export default function Dashboard({
       setSavingQuick(false);
     }
   };
-
-  const mobileSpacesToDisplay = visibleGroups.slice(0, 2);
 
   return (
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[#EEF2F9] font-sans md:flex-row">
@@ -427,30 +535,53 @@ export default function Dashboard({
               RoomSplit
             </span>
             <span className="mt-0.5 block text-[10px] font-semibold text-blue-600 leading-none">
-              Hi, {user.username}
+              Hi, {user?.username}
             </span>
           </div>
         </button>
 
+        {/* Top Right Mobile Header: Join, Space, and Activity Popover Trigger */}
         <div className="flex items-center gap-1.5">
           <button
             type="button"
-            onClick={onCreateGroup}
-            title="New space"
-            aria-label="Create space"
-            className="liquid-glass-interactive flex h-9 items-center gap-1 rounded-xl px-2.5 text-xs font-bold text-slate-800"
+            onClick={onJoinGroup}
+            title="Join space with code"
+            aria-label="Join space with code"
+            className="liquid-glass-interactive flex h-8 items-center gap-1 rounded-xl border border-blue-200/70 bg-white/90 px-2 text-[11px] font-semibold text-slate-700 shadow-sm active:scale-95 transition-transform"
           >
-            <Plus size={14} className="text-blue-600" />
+            <UserPlus size={13} className="text-blue-600" />
+            <span>Join</span>
+          </button>
+          <button
+            type="button"
+            onClick={onCreateGroup}
+            title="Create new space"
+            aria-label="Create space"
+            className="flex h-8 items-center gap-1 rounded-xl bg-gradient-to-b from-blue-600 to-indigo-600 px-2 text-[11px] font-semibold text-white shadow-sm shadow-blue-600/20 active:scale-95 transition-transform"
+          >
+            <Plus size={13} strokeWidth={2.5} />
             <span>Space</span>
           </button>
           <button
             type="button"
-            onClick={onJoinGroup}
-            title="Join with code"
-            aria-label="Join group"
-            className="liquid-glass-interactive flex h-9 w-9 items-center justify-center rounded-xl text-slate-700"
+            onClick={() => setIsActivityOpen((prev) => !prev)}
+            title="Activity notifications"
+            aria-label="Activity notifications"
+            className={`relative flex h-8 w-8 items-center justify-center rounded-xl border transition-all active:scale-95 ${
+              isActivityOpen
+                ? 'border-blue-500 bg-blue-50 text-blue-600 shadow-sm'
+                : 'border-blue-200/70 bg-white/90 text-slate-700 shadow-sm'
+            }`}
           >
-            <UserPlus size={15} />
+            <Bell
+              size={14}
+              className={isActivityOpen ? 'fill-blue-600/20 text-blue-600' : 'text-slate-600'}
+            />
+            {unreadNotifications.length > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[9px] font-extrabold text-white leading-none shadow-sm animate-pulse">
+                {unreadNotifications.length > 99 ? '99+' : unreadNotifications.length}
+              </span>
+            )}
           </button>
         </div>
       </header>
@@ -468,7 +599,9 @@ export default function Dashboard({
                   </div>
                   <div>
                     <h3 className="text-xs font-bold text-slate-900">Install RoomSplit App</h3>
-                    <p className="text-[11px] text-slate-500">Add to home screen for native full-screen experience.</p>
+                    <p className="text-[11px] text-slate-500">
+                      Add to home screen for native full-screen experience.
+                    </p>
                   </div>
                 </div>
                 <button
@@ -482,14 +615,14 @@ export default function Dashboard({
             )}
 
             {/* ===================================================================== */}
-            {/* NATIVE MOBILE APP DASHBOARD (< md): COMPACT, LIQUID GLASS, NOT LONG   */}
+            {/* NATIVE MOBILE APP DASHBOARD (< md)                                    */}
             {/* ===================================================================== */}
             <div
               className={`space-y-3.5 md:hidden ${
                 activeTab !== 'groups' ? 'hidden' : ''
               }`}
             >
-              {/* 1. Native Wallet Hero Card (Liquid Refractive Gradient Glass) */}
+              {/* 1. Native Wallet Hero Card */}
               <div className="relative overflow-hidden rounded-[26px] border border-white/30 bg-gradient-to-br from-blue-600 via-indigo-600 to-slate-900 p-4 text-white shadow-lg shadow-blue-600/20">
                 <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
                 <div className="relative z-10 flex items-center justify-between">
@@ -560,18 +693,23 @@ export default function Dashboard({
                   <button
                     type="button"
                     onClick={() => setMobileSection('spaces')}
-                    className={`rounded-xl py-1.5 text-xs font-bold transition-all duration-200 ${
+                    className={`relative flex items-center justify-center gap-1.5 rounded-xl py-1.5 text-xs font-semibold transition-all duration-200 ${
                       mobileSection === 'spaces'
                         ? 'bg-gradient-to-b from-blue-600 to-indigo-600 text-white shadow-sm'
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    Spaces ({activeGroups.length})
+                    <span>Spaces ({activeGroups.length})</span>
+                    {totalUnreadSpacesCount > 0 && (
+                      <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[9px] font-extrabold text-white leading-none">
+                        {totalUnreadSpacesCount > 99 ? '99+' : totalUnreadSpacesCount}
+                      </span>
+                    )}
                   </button>
                   <button
                     type="button"
                     onClick={() => setMobileSection('dues')}
-                    className={`rounded-xl py-1.5 text-xs font-bold transition-all duration-200 ${
+                    className={`rounded-xl py-1.5 text-xs font-semibold transition-all duration-200 ${
                       mobileSection === 'dues'
                         ? 'bg-gradient-to-b from-blue-600 to-indigo-600 text-white shadow-sm'
                         : 'text-slate-600 hover:text-slate-900'
@@ -582,7 +720,7 @@ export default function Dashboard({
                   <button
                     type="button"
                     onClick={() => setMobileSection('recent')}
-                    className={`rounded-xl py-1.5 text-xs font-bold transition-all duration-200 ${
+                    className={`rounded-xl py-1.5 text-xs font-semibold transition-all duration-200 ${
                       mobileSection === 'recent'
                         ? 'bg-gradient-to-b from-blue-600 to-indigo-600 text-white shadow-sm'
                         : 'text-slate-600 hover:text-slate-900'
@@ -598,7 +736,7 @@ export default function Dashboard({
                     onClick={() =>
                       setSpaceFilter((curr) => (curr === 'archived' ? 'active' : 'archived'))
                     }
-                    className={`liquid-glass-interactive flex h-9 items-center gap-1 rounded-2xl px-2.5 text-[11px] font-bold ${
+                    className={`liquid-glass-interactive flex h-9 items-center gap-1 rounded-2xl px-2.5 text-[11px] font-semibold ${
                       spaceFilter === 'archived' ? 'text-blue-600' : 'text-slate-600'
                     }`}
                   >
@@ -608,130 +746,109 @@ export default function Dashboard({
                 )}
               </div>
 
-              {/* 3A. Mobile Section: Spaces (Compact Liquid Glass Cards, Max 4) */}
+              {/* 3A. Mobile Section: Spaces */}
               {mobileSection === 'spaces' && (
                 <div className="space-y-2">
                   {visibleGroups.length === 0 ? (
-                    <div className="liquid-glass rounded-2xl px-4 py-8 text-center">
+                    <div className="liquid-glass rounded-2xl px-4 py-7 text-center">
                       <p className="text-sm font-bold text-slate-800">
                         {spaceFilter === 'archived' ? 'No archived spaces' : 'No spaces yet'}
                       </p>
                       <p className="mt-1 text-xs text-slate-500">
-                        Tap + Space above or Join with an invite code.
+                        Create a new shared room or join an existing flat with a code.
                       </p>
                     </div>
                   ) : (
-                    <>
-                      <div className="space-y-2">
-                        {mobileSpacesToDisplay.map((group) => {
-                          const metrics = groupMetrics.byGroup[group.id] || {
-                            myNet: 0,
-                            roomSpend: 0,
-                          };
-                          const isPinned = pinnedGroupIds.includes(group.id);
-                          const isMuted = mutedGroupIds.includes(group.id);
-                          const isArchived = archivedGroupIds.includes(group.id);
+                    <div className="space-y-2">
+                      {visibleGroups.map((group) => {
+                        const metrics = groupMetrics.byGroup[group.id] || {
+                          myNet: 0,
+                          roomSpend: 0,
+                          unreadCount: 0,
+                        };
+                        const unreadCount = unreadMessagesByGroup[group.id] || 0;
+                        const isPinned = pinnedGroupIds.includes(group.id);
+                        const isMuted = mutedGroupIds.includes(group.id);
 
-                          return (
-                            <div
-                              key={group.id}
-                              onClick={() => onOpenGroup(group.id)}
-                              className="liquid-glass-interactive flex items-center justify-between gap-2.5 rounded-2xl p-3 cursor-pointer"
-                            >
-                              <div className="flex min-w-0 items-center gap-3">
-                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-sm font-extrabold text-white shadow-sm">
-                                  {group.imageDataUrl ? (
-                                    <img
-                                      src={group.imageDataUrl}
-                                      alt=""
-                                      className="h-full w-full object-cover"
-                                    />
-                                  ) : (
-                                    group.name.charAt(0).toUpperCase()
+                        return (
+                          <div
+                            key={group.id}
+                            onClick={() => handleOpenGroup(group.id)}
+                            className="liquid-glass-interactive flex items-center justify-between gap-2.5 rounded-2xl px-3.5 py-2.5 cursor-pointer shadow-sm"
+                          >
+                            <div className="flex min-w-0 items-center gap-3">
+                              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-sm">
+                                {group.imageDataUrl ? (
+                                  <img
+                                    src={group.imageDataUrl}
+                                    alt=""
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  group.name.charAt(0).toUpperCase()
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <h3 className="truncate text-xs font-semibold text-slate-900">
+                                    {group.name}
+                                  </h3>
+                                  {isPinned && (
+                                    <Pin size={10} className="flex-shrink-0 text-blue-600" />
+                                  )}
+                                  {isMuted && (
+                                    <BellOff size={10} className="flex-shrink-0 text-amber-500" />
                                   )}
                                 </div>
-                                <div className="min-w-0">
-                                  <div className="flex items-center gap-1.5">
-                                    <h3 className="truncate text-sm font-bold text-slate-900">
-                                      {group.name}
-                                    </h3>
-                                    {isPinned && (
-                                      <Pin size={11} className="flex-shrink-0 text-blue-600" />
-                                    )}
-                                    {isMuted && (
-                                      <BellOff size={11} className="flex-shrink-0 text-amber-500" />
-                                    )}
-                                  </div>
-                                  <p className="truncate text-[11px] font-medium text-slate-500">
-                                    {group.members.length} members · ₹{metrics.roomSpend.toFixed(0)} spent
-                                  </p>
+                                <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                                  <span>{group.members.length} members</span>
+                                  <span>·</span>
+                                  <span>₹{metrics.roomSpend.toFixed(0)}</span>
                                 </div>
                               </div>
-
-                              <div className="flex flex-shrink-0 items-center gap-1.5">
-                                <span
-                                  className={`rounded-xl px-2.5 py-1 font-mono text-xs font-extrabold border ${
-                                    metrics.myNet > 0.01
-                                      ? 'bg-emerald-50/90 text-emerald-700 border-emerald-200/80'
-                                      : metrics.myNet < -0.01
-                                        ? 'bg-rose-50/90 text-rose-600 border-rose-200/80'
-                                        : 'bg-slate-100/80 text-slate-600 border-slate-200/60'
-                                  }`}
-                                >
-                                  {metrics.myNet > 0.01
-                                    ? `+₹${metrics.myNet.toFixed(0)}`
-                                    : metrics.myNet < -0.01
-                                      ? `-₹${Math.abs(metrics.myNet).toFixed(0)}`
-                                      : 'Settled'}
-                                </span>
-
-                                <button
-                                  type="button"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    updateGroupPreference(group.id, 'pinnedGroupIds', !isPinned);
-                                  }}
-                                  className={`flex h-7 w-7 items-center justify-center rounded-xl ${
-                                    isPinned ? 'bg-blue-50 text-blue-600' : 'text-slate-400'
-                                  }`}
-                                  aria-label={isPinned ? `Unpin ${group.name}` : `Pin ${group.name}`}
-                                >
-                                  <Pin size={13} />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    updateGroupPreference(
-                                      group.id,
-                                      'archivedGroupIds',
-                                      !isArchived
-                                    );
-                                  }}
-                                  className="flex h-7 w-7 items-center justify-center rounded-xl text-slate-400"
-                                  aria-label={
-                                    isArchived ? `Restore ${group.name}` : `Archive ${group.name}`
-                                  }
-                                >
-                                  {isArchived ? <ArchiveRestore size={13} /> : <Archive size={13} />}
-                                </button>
-                              </div>
                             </div>
-                          );
-                        })}
-                      </div>
 
-                      {visibleGroups.length > 2 && (
-                        <button
-                          type="button"
-                          onClick={() => handleTabSwitch('spaces')}
-                          className="liquid-glass-interactive w-full rounded-2xl py-2 text-center text-xs font-bold text-blue-600"
-                        >
-                          Show more spaces
-                          <span aria-hidden="true"> →</span>
-                        </button>
-                      )}
-                    </>
+                            <div className="flex flex-shrink-0 items-center gap-2">
+                              {unreadCount > 0 && (
+                                <span className="flex h-5 min-w-[18px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-extrabold text-white leading-none">
+                                  {unreadCount > 99 ? '99+' : unreadCount}
+                                </span>
+                              )}
+
+                              <span
+                                className={`rounded-xl px-2 py-0.5 font-mono text-[11px] font-semibold border ${
+                                  metrics.myNet > 0.01
+                                    ? 'bg-emerald-50/90 text-emerald-700 border-emerald-200/80'
+                                    : metrics.myNet < -0.01
+                                      ? 'bg-rose-50/90 text-rose-600 border-rose-200/80'
+                                      : 'bg-slate-100/80 text-slate-600 border-slate-200/60'
+                                }`}
+                              >
+                                {metrics.myNet > 0.01
+                                  ? `+₹${metrics.myNet.toFixed(0)}`
+                                  : metrics.myNet < -0.01
+                                    ? `-₹${Math.abs(metrics.myNet).toFixed(0)}`
+                                    : 'Settled'}
+                              </span>
+
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  updateGroupPreference(group.id, 'pinnedGroupIds', !isPinned);
+                                }}
+                                className={`flex h-6 w-6 items-center justify-center rounded-lg ${
+                                  isPinned ? 'bg-blue-50 text-blue-600' : 'text-slate-400'
+                                }`}
+                                aria-label={isPinned ? `Unpin ${group.name}` : `Pin ${group.name}`}
+                              >
+                                <Pin size={11} />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               )}
@@ -749,12 +866,12 @@ export default function Dashboard({
                     </div>
                   ) : (
                     groupMetrics.allMySettlements.slice(0, 5).map((item, idx) => {
-                      const iOwe = item.from === user.id;
+                      const iOwe = item.from === user?.id;
                       const otherName = getUserName(iOwe ? item.to : item.from);
                       return (
                         <div
                           key={`${item.groupId}-${idx}`}
-                          onClick={() => onOpenGroup(item.groupId, 'balances')}
+                          onClick={() => handleOpenGroup(item.groupId, 'balances')}
                           className="liquid-glass-interactive flex items-center justify-between gap-3 rounded-2xl p-3 cursor-pointer"
                         >
                           <div className="min-w-0">
@@ -796,11 +913,11 @@ export default function Dashboard({
                   ) : (
                     recentTransactions.slice(0, 4).map((exp) => {
                       const grp = myGroups.find((g) => g.id === exp.groupId);
-                      const iPaid = exp.paidBy === user.id;
+                      const iPaid = exp.paidBy === user?.id;
                       return (
                         <div
                           key={exp.id}
-                          onClick={() => onOpenGroup(exp.groupId, 'expenses')}
+                          onClick={() => handleOpenGroup(exp.groupId, 'expenses')}
                           className="liquid-glass-interactive flex items-center justify-between gap-3 rounded-2xl p-3 cursor-pointer"
                         >
                           <div className="min-w-0">
@@ -818,29 +935,11 @@ export default function Dashboard({
                       );
                     })
                   )}
-                  <button
-                    type="button"
-                    onClick={() => handleTabSwitch('transactions')}
-                    className="liquid-glass-interactive w-full rounded-2xl py-2 text-center text-xs font-bold text-blue-600"
-                  >
-                    See all transactions
-                    <span aria-hidden="true"> →</span>
-                  </button>
                 </div>
               )}
             </div>
 
-            {activeTab === 'transactions' && (
-              <div className="md:hidden">
-                <TransactionsTab
-                  transactions={recentTransactions}
-                  groups={myGroups}
-                  user={user}
-                  getUserName={getUserName}
-                  onOpenGroup={onOpenGroup}
-                />
-              </div>
-            )}
+            {/* Desktop Spaces View */}
             {activeTab === 'spaces' && (
               <div className="md:hidden">
                 <DesktopSpacesTab
@@ -851,12 +950,13 @@ export default function Dashboard({
                   spaceFilter={spaceFilter}
                   onSpaceFilterChange={setSpaceFilter}
                   groupMetrics={groupMetrics}
+                  unreadMessagesByGroup={unreadMessagesByGroup}
                   users={users}
                   user={user}
                   pinnedGroupIds={pinnedGroupIds}
                   archivedGroupIds={archivedGroupIds}
                   mutedGroupIds={mutedGroupIds}
-                  onOpenGroup={onOpenGroup}
+                  onOpenGroup={handleOpenGroup}
                   onUpdateGroupPreference={updateGroupPreference}
                   onQuickAdd={openQuickExpenseModal}
                   onCopyInvite={handleCopyInvite}
@@ -866,16 +966,16 @@ export default function Dashboard({
             )}
 
             {/* ===================================================================== */}
-            {/* DESKTOP LIQUID GLASS COMMAND CENTER (md+): ALL FEATURES IN ONE VIEW   */}
+            {/* DESKTOP LIQUID GLASS COMMAND CENTER (md+)                             */}
             {/* ===================================================================== */}
             <div className="hidden md:block space-y-6">
-              {/* 1. Desktop Top Command Bar */}
+              {/* 1. Desktop Top Command Bar with Activity on Top Right */}
               <div
-                className={`liquid-glass flex flex-col gap-4 rounded-3xl p-5 lg:flex-row lg:items-center lg:justify-between ${
+                className={`liquid-glass flex flex-col gap-3 rounded-3xl p-4 lg:flex-row lg:items-center lg:justify-between lg:px-5 ${
                   activeTab === 'groups' ? '' : 'hidden'
                 }`}
               >
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-blue-600">
                     <span>Command Center</span>
                     <span>·</span>
@@ -887,29 +987,30 @@ export default function Dashboard({
                       })}
                     </span>
                   </div>
-                  <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900 lg:text-3xl">
-                    Welcome back, {user.username}
+                  <h1 className="mt-0.5 truncate text-xl font-extrabold tracking-tight text-slate-900 xl:text-2xl">
+                    Welcome back, {user?.username}
                   </h1>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <div className="relative w-56 lg:w-64">
+                <div className="flex flex-shrink-0 flex-nowrap items-center gap-2">
+                  <div className="relative w-36 lg:w-40 xl:w-48">
                     <Search
-                      size={15}
-                      className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                      size={14}
+                      strokeWidth={2.5}
+                      className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-slate-500"
                     />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Filter spaces or bills..."
-                      className="h-10 w-full rounded-2xl border border-white/90 bg-white/80 pl-9 pr-7 text-xs font-semibold text-slate-900 placeholder:text-slate-400 shadow-inner backdrop-blur-md focus:border-blue-500 focus:bg-white focus:outline-none"
+                      placeholder="Search spaces..."
+                      className="relative z-0 h-9 w-full rounded-xl border border-slate-200/90 bg-white/90 pl-8 pr-6 text-xs font-semibold text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-blue-500 focus:bg-white focus:outline-none"
                     />
                     {searchQuery && (
                       <button
                         type="button"
                         onClick={() => setSearchQuery('')}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                        className="absolute right-2 top-1/2 z-10 -translate-y-1/2 text-slate-400 hover:text-slate-700"
                       >
                         <X size={13} />
                       </button>
@@ -920,9 +1021,9 @@ export default function Dashboard({
                     <button
                       type="button"
                       onClick={() => openQuickExpenseModal()}
-                      className="inline-flex h-10 items-center gap-1.5 rounded-2xl bg-gradient-to-b from-emerald-500 to-emerald-600 px-4 text-xs font-bold text-white shadow-md shadow-emerald-600/20 transition-all hover:from-emerald-500 hover:to-emerald-700 active:scale-95"
+                      className="inline-flex h-9 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 px-3 text-xs font-semibold text-white shadow-sm shadow-emerald-600/20 transition-all hover:from-emerald-500 hover:to-emerald-700 active:scale-95"
                     >
-                      <Receipt size={14} />
+                      <Receipt size={13} />
                       <span>Quick Expense</span>
                     </button>
                   )}
@@ -930,19 +1031,49 @@ export default function Dashboard({
                   <button
                     type="button"
                     onClick={onJoinGroup}
-                    className="liquid-glass-interactive inline-flex h-10 items-center gap-1.5 rounded-2xl px-4 text-xs font-bold text-slate-700"
+                    className="liquid-glass-interactive inline-flex h-9 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-xs font-semibold text-slate-700"
                   >
-                    <UserPlus size={14} className="text-blue-600" />
+                    <UserPlus size={13} className="text-blue-600" />
                     <span>Join with Code</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={onCreateGroup}
-                    className="inline-flex h-10 items-center gap-1.5 rounded-2xl bg-gradient-to-b from-blue-600 to-indigo-600 px-4 text-xs font-bold text-white shadow-md shadow-blue-600/25 transition-all hover:from-blue-500 hover:to-indigo-600 active:scale-95"
+                    className="inline-flex h-9 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-gradient-to-b from-blue-600 to-indigo-600 px-3.5 text-xs font-semibold text-white shadow-sm shadow-blue-600/25 transition-all hover:from-blue-500 hover:to-indigo-600 active:scale-95"
                   >
-                    <Plus size={15} />
+                    <Plus size={14} />
                     <span>New Space</span>
+                  </button>
+
+                  {/* Desktop Top-Right Activity Popover Button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsActivityOpen((prev) => !prev)}
+                    title="Activity & Notifications"
+                    aria-label="Activity & Notifications"
+                    className={`relative inline-flex h-9 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border px-3 text-xs font-semibold shadow-sm transition-all active:scale-95 ${
+                      isActivityOpen
+                        ? 'border-blue-400 bg-blue-50 text-blue-600'
+                        : 'border-slate-200/90 bg-white/90 text-slate-700 hover:bg-white hover:text-blue-600'
+                    }`}
+                  >
+                    <Bell
+                      size={14}
+                      className={
+                        isActivityOpen
+                          ? 'fill-blue-600/20 text-blue-600'
+                          : unreadNotifications.length > 0
+                            ? 'text-blue-600'
+                            : 'text-slate-500'
+                      }
+                    />
+                    <span>Activity</span>
+                    {unreadNotifications.length > 0 && (
+                      <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[9px] font-extrabold text-white leading-none shadow-sm animate-pulse">
+                        {unreadNotifications.length > 99 ? '99+' : unreadNotifications.length}
+                      </span>
+                    )}
                   </button>
                 </div>
               </div>
@@ -1048,9 +1179,10 @@ export default function Dashboard({
                   </p>
                 </div>
               </div>
+
               {/* 3. Main 12-Column Desktop Bento Grid */}
               <div className="grid grid-cols-12 gap-6 items-start">
-                {/* LEFT 8 COLUMNS: Spaces Directory + Recent Ledger */}
+                {/* LEFT 8 COLUMNS: Recent Ledger (and Spaces Tab on Desktop) */}
                 <div
                   className={
                     activeTab === 'spaces' || activeTab === 'transactions'
@@ -1058,387 +1190,6 @@ export default function Dashboard({
                       : 'col-span-12 xl:col-span-8 space-y-6'
                   }
                 >
-                  {/* SPACES DIRECTORY PANEL */}
-                  <section
-                    className={`liquid-glass rounded-3xl p-6 ${
-                      activeTab === 'groups' ? '' : 'hidden'
-                    }`}
-                  >
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/60 pb-3.5">
-                      <div className="flex items-center gap-2">
-                        <h2 className="text-base font-extrabold tracking-tight text-slate-900">
-                          Shared Spaces
-                        </h2>
-                        <span className="rounded-lg bg-blue-50 border border-blue-200/60 px-2 py-0.5 font-mono text-xs font-bold text-blue-700">
-                          {visibleGroups.length}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1 rounded-2xl bg-slate-200/60 p-1">
-                        <button
-                          type="button"
-                          onClick={() => setSpaceFilter('active')}
-                          className={`rounded-xl px-3 py-1 text-xs font-bold transition-all ${
-                            spaceFilter === 'active'
-                              ? 'bg-white text-blue-600 shadow-sm'
-                              : 'text-slate-600 hover:text-slate-900'
-                          }`}
-                        >
-                          Active ({activeGroups.length})
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setSpaceFilter('pinned')}
-                          className={`rounded-xl px-3 py-1 text-xs font-bold transition-all ${
-                            spaceFilter === 'pinned'
-                              ? 'bg-white text-blue-600 shadow-sm'
-                              : 'text-slate-600 hover:text-slate-900'
-                          }`}
-                        >
-                          Pinned ({pinnedGroups.length})
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setSpaceFilter('archived')}
-                          className={`rounded-xl px-3 py-1 text-xs font-bold transition-all ${
-                            spaceFilter === 'archived'
-                              ? 'bg-white text-blue-600 shadow-sm'
-                              : 'text-slate-600 hover:text-slate-900'
-                          }`}
-                        >
-                          Archived ({archivedGroups.length})
-                        </button>
-                      </div>
-                    </div>
-
-                    {visibleGroups.length === 0 ? (
-                      <div className="rounded-2xl border border-dashed border-slate-300 bg-white/40 px-6 py-10 text-center">
-                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-                          <Users size={22} />
-                        </div>
-                        <p className="text-sm font-bold text-slate-800">
-                          {spaceFilter === 'archived'
-                            ? 'No archived spaces'
-                            : spaceFilter === 'pinned'
-                              ? 'No pinned spaces yet'
-                              : 'No active spaces found'}
-                        </p>
-                        <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500">
-                          Create a new room or join an existing flat using a 6-digit invite code.
-                        </p>
-                      </div>
-                    ) : (
-                      <div
-                        className={`grid gap-4 ${
-                          activeTab === 'groups' ? 'grid-cols-1 gap-2' : 'grid-cols-2'
-                        }`}
-                      >
-                        {(activeTab === 'groups'
-                          ? visibleGroups.slice(0, 2)
-                          : visibleGroups
-                        ).map((group) => {
-                          const metrics = groupMetrics.byGroup[group.id] || {
-                            myNet: 0,
-                            roomSpend: 0,
-                            billCount: 0,
-                            latestExpense: null,
-                          };
-                          const isPinned = pinnedGroupIds.includes(group.id);
-                          const isMuted = mutedGroupIds.includes(group.id);
-                          const isArchived = archivedGroupIds.includes(group.id);
-
-                          return (
-                            <div
-                              key={group.id}
-                              onClick={() => onOpenGroup(group.id)}
-                              className={`liquid-glass-interactive group rounded-2xl cursor-pointer ${
-                                activeTab === 'groups'
-                                  ? 'flex items-center gap-3 px-3 py-2.5'
-                                  : 'flex flex-col justify-between p-4'
-                              }`}
-                            >
-                              <div
-                                className={`${
-                                  activeTab === 'groups'
-                                    ? 'flex min-w-0 flex-1 items-center'
-                                    : ''
-                                }`}
-                              >
-                                <div
-                                  className={`flex justify-between gap-3 ${
-                                    activeTab === 'groups'
-                                      ? 'w-full items-center'
-                                      : 'items-start'
-                                  }`}
-                                >
-                                  <div className="flex min-w-0 items-center gap-3">
-                                    <div
-                                      className={`flex flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 font-extrabold text-white shadow-sm ${
-                                        activeTab === 'groups' ? 'h-10 w-10 text-sm' : 'h-11 w-11 text-base'
-                                      }`}
-                                    >
-                                      {group.imageDataUrl ? (
-                                        <img
-                                          src={group.imageDataUrl}
-                                          alt=""
-                                          className="h-full w-full object-cover"
-                                        />
-                                      ) : (
-                                        group.name.charAt(0).toUpperCase()
-                                      )}
-                                    </div>
-                                    <div className="min-w-0">
-                                      <div className="flex items-center gap-1.5">
-                                        <h3 className="truncate text-sm font-extrabold text-slate-900 group-hover:text-blue-600 transition-colors">
-                                          {group.name}
-                                        </h3>
-                                        {isPinned && (
-                                          <Pin size={12} className="text-blue-600 flex-shrink-0" />
-                                        )}
-                                        {activeTab === 'groups' && isMuted && (
-                                          <BellOff size={12} className="flex-shrink-0 text-amber-500" />
-                                        )}
-                                      </div>
-                                      <p className="truncate text-[11px] font-medium text-slate-500">
-                                        {activeTab === 'groups'
-                                          ? `${group.members.length} members · ₹${metrics.roomSpend.toFixed(0)} spent`
-                                          : group.description || `${group.members.length} members`}
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  <div className="flex flex-shrink-0 items-center gap-1.5">
-                                    <span
-                                      className={`rounded-xl px-2.5 py-1 font-mono text-xs font-extrabold border ${
-                                        metrics.myNet > 0.01
-                                          ? 'bg-emerald-50/90 text-emerald-700 border-emerald-200/80'
-                                          : metrics.myNet < -0.01
-                                            ? 'bg-rose-50/90 text-rose-700 border-rose-200/80'
-                                            : 'bg-slate-100/80 text-slate-600 border-slate-200/60'
-                                      }`}
-                                    >
-                                      {metrics.myNet > 0.01
-                                        ? `+₹${metrics.myNet.toFixed(activeTab === 'groups' ? 0 : 2)}`
-                                        : metrics.myNet < -0.01
-                                          ? `-₹${Math.abs(metrics.myNet).toFixed(activeTab === 'groups' ? 0 : 2)}`
-                                          : 'Settled'}
-                                    </span>
-                                    {activeTab === 'groups' && (
-                                      <>
-                                        <button
-                                          type="button"
-                                          onClick={(event) => {
-                                            event.stopPropagation();
-                                            updateGroupPreference(
-                                              group.id,
-                                              'pinnedGroupIds',
-                                              !isPinned
-                                            );
-                                          }}
-                                          className={`flex h-8 w-8 items-center justify-center rounded-xl ${
-                                            isPinned
-                                              ? 'bg-blue-50 text-blue-600'
-                                              : 'text-slate-400 hover:bg-white'
-                                          }`}
-                                          aria-label={isPinned ? `Unpin ${group.name}` : `Pin ${group.name}`}
-                                        >
-                                          <Pin size={14} />
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={(event) => {
-                                            event.stopPropagation();
-                                            updateGroupPreference(
-                                              group.id,
-                                              'archivedGroupIds',
-                                              !isArchived
-                                            );
-                                          }}
-                                          className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 hover:bg-white"
-                                          aria-label={
-                                            isArchived ? `Restore ${group.name}` : `Archive ${group.name}`
-                                          }
-                                        >
-                                          {isArchived ? (
-                                            <ArchiveRestore size={14} />
-                                          ) : (
-                                            <Archive size={14} />
-                                          )}
-                                        </button>
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
-
-                                <div
-                                  className={`mt-3.5 grid grid-cols-2 gap-2 rounded-xl bg-white/60 border border-white/80 px-3 py-2 text-xs ${
-                                    activeTab === 'spaces' ? '' : 'hidden'
-                                  }`}
-                                >
-                                  <div>
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                                      Room Spend
-                                    </span>
-                                    <span className="font-mono font-extrabold text-slate-800">
-                                      ₹{metrics.roomSpend.toFixed(2)}
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                                      Latest Bill
-                                    </span>
-                                    <span className="truncate font-semibold text-slate-700 block">
-                                      {metrics.latestExpense
-                                        ? metrics.latestExpense.title
-                                        : 'No bills yet'}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div
-                                className={`mt-3.5 flex items-center justify-between border-t border-slate-200/50 pt-3 ${
-                                  activeTab === 'spaces' ? '' : 'hidden'
-                                }`}
-                              >
-                                <div className="flex items-center gap-2">
-                                  <div className="flex -space-x-1.5 overflow-hidden">
-                                    {group.members.slice(0, 4).map((mId) => {
-                                      const member = users.find((u) => u.id === mId);
-                                      const label =
-                                        mId === user.id
-                                          ? user.username
-                                          : member?.username || 'M';
-                                      return (
-                                        <span
-                                          key={mId}
-                                          title={label}
-                                          className="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-blue-100 text-[10px] font-extrabold text-blue-700"
-                                        >
-                                          {(label || 'M').charAt(0).toUpperCase()}
-                                        </span>
-                                      );
-                                    })}
-                                  </div>
-                                  {group.inviteCode && (
-                                    <button
-                                      type="button"
-                                      onClick={(e) => handleCopyInvite(e, group)}
-                                      title="Copy invite code"
-                                      className="inline-flex items-center gap-1 rounded-lg border border-slate-200/80 bg-white/80 px-2 py-0.5 font-mono text-[10px] font-bold text-slate-600 hover:bg-white"
-                                    >
-                                      {copiedCodeId === group.id ? (
-                                        <Check size={10} className="text-emerald-600" />
-                                      ) : (
-                                        <Copy size={10} />
-                                      )}
-                                      <span>{group.inviteCode}</span>
-                                    </button>
-                                  )}
-                                </div>
-
-                                <div className="flex items-center gap-1">
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      openQuickExpenseModal(group.id);
-                                    }}
-                                    title="Quick add bill to this space"
-                                    className="inline-flex h-7 items-center gap-1 rounded-xl bg-gradient-to-b from-blue-600 to-indigo-600 px-2.5 text-[11px] font-bold text-white shadow-sm hover:opacity-95"
-                                  >
-                                    <Plus size={12} />
-                                    <span>Bill</span>
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onOpenGroup(group.id, 'chat');
-                                    }}
-                                    title="Open group chat"
-                                    className="flex h-7 w-7 items-center justify-center rounded-xl text-slate-400 hover:bg-white hover:text-blue-600"
-                                  >
-                                    <MessageSquare size={14} />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={(event) => {
-                                      event.stopPropagation();
-                                      updateGroupPreference(
-                                        group.id,
-                                        'mutedGroupIds',
-                                        !isMuted
-                                      );
-                                    }}
-                                    className={`flex h-7 w-7 items-center justify-center rounded-xl transition-colors ${
-                                      isMuted
-                                        ? 'bg-amber-50 text-amber-700'
-                                        : 'text-slate-400 hover:bg-white hover:text-slate-700'
-                                    }`}
-                                    aria-label={isMuted ? `Unmute ${group.name}` : `Mute ${group.name}`}
-                                  >
-                                    {isMuted ? <BellOff size={14} /> : <Bell size={14} />}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={(event) => {
-                                      event.stopPropagation();
-                                      updateGroupPreference(
-                                        group.id,
-                                        'pinnedGroupIds',
-                                        !isPinned
-                                      );
-                                    }}
-                                    className={`flex h-7 w-7 items-center justify-center rounded-xl transition-colors ${
-                                      isPinned
-                                        ? 'bg-blue-50 text-blue-600'
-                                        : 'text-slate-400 hover:bg-white hover:text-slate-700'
-                                    }`}
-                                    aria-label={isPinned ? `Unpin ${group.name}` : `Pin ${group.name}`}
-                                  >
-                                    {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={(event) => {
-                                      event.stopPropagation();
-                                      updateGroupPreference(
-                                        group.id,
-                                        'archivedGroupIds',
-                                        !isArchived
-                                      );
-                                    }}
-                                    className="flex h-7 w-7 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-white hover:text-slate-700"
-                                    aria-label={
-                                      isArchived ? `Restore ${group.name}` : `Archive ${group.name}`
-                                    }
-                                  >
-                                    {isArchived ? (
-                                      <ArchiveRestore size={14} />
-                                    ) : (
-                                      <Archive size={14} />
-                                    )}
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                    {activeTab === 'groups' && visibleGroups.length > 2 && (
-                      <button
-                        type="button"
-                        onClick={() => handleTabSwitch('spaces')}
-                        className="mt-3 w-full rounded-xl py-2 text-center text-xs font-bold text-blue-600 transition-colors hover:bg-blue-50"
-                      >
-                        Show more spaces
-                        <span aria-hidden="true"> →</span>
-                      </button>
-                    )}
-                  </section>
-
                   {activeTab === 'spaces' && (
                     <DesktopSpacesTab
                       groups={visibleGroups}
@@ -1448,12 +1199,13 @@ export default function Dashboard({
                       spaceFilter={spaceFilter}
                       onSpaceFilterChange={setSpaceFilter}
                       groupMetrics={groupMetrics}
+                      unreadMessagesByGroup={unreadMessagesByGroup}
                       users={users}
                       user={user}
                       pinnedGroupIds={pinnedGroupIds}
                       archivedGroupIds={archivedGroupIds}
                       mutedGroupIds={mutedGroupIds}
-                      onOpenGroup={onOpenGroup}
+                      onOpenGroup={handleOpenGroup}
                       onUpdateGroupPreference={updateGroupPreference}
                       onQuickAdd={openQuickExpenseModal}
                       onCopyInvite={handleCopyInvite}
@@ -1484,7 +1236,7 @@ export default function Dashboard({
                           <button
                             type="button"
                             onClick={() => handleTabSwitch('transactions')}
-                            className="rounded-xl px-3 py-1.5 text-xs font-bold text-blue-600 transition-colors hover:bg-blue-50"
+                            className="rounded-xl px-3 py-1.5 text-xs font-semibold text-blue-600 transition-colors hover:bg-blue-50"
                           >
                             See all
                             <span aria-hidden="true"> →</span>
@@ -1500,7 +1252,7 @@ export default function Dashboard({
                               key={tab.id}
                               type="button"
                               onClick={() => setLedgerFilter(tab.id)}
-                              className={`rounded-xl px-3 py-1 text-xs font-bold transition-all ${
+                              className={`rounded-xl px-3 py-1 text-xs font-semibold transition-all ${
                                 ledgerFilter === tab.id
                                   ? 'bg-white text-blue-600 shadow-sm'
                                   : 'text-slate-600 hover:text-slate-900'
@@ -1525,15 +1277,15 @@ export default function Dashboard({
                           : recentTransactions
                         ).map((exp) => {
                           const grp = myGroups.find((g) => g.id === exp.groupId);
-                          const iPaid = exp.paidBy === user.id;
-                          const myShare = parseFloat(exp.splits?.[user.id]) || 0;
+                          const iPaid = exp.paidBy === user?.id;
+                          const myShare = parseFloat(exp.splits?.[user?.id]) || 0;
                           const total = parseFloat(exp.totalAmount) || 0;
                           const myImpact = iPaid ? total - myShare : -myShare;
 
                           return (
                             <div
                               key={exp.id}
-                              onClick={() => onOpenGroup(exp.groupId, 'expenses')}
+                              onClick={() => handleOpenGroup(exp.groupId, 'expenses')}
                               className="flex items-center justify-between gap-4 rounded-2xl border border-white/80 bg-white/60 px-3.5 py-3 hover:bg-white/95 transition-all cursor-pointer"
                             >
                               <div className="flex min-w-0 items-center gap-3">
@@ -1594,20 +1346,116 @@ export default function Dashboard({
                   </section>
                 </div>
 
-                {/* RIGHT 4 COLUMNS: Live Settlements + Monthly Breakdown + Activity + Profile */}
+                {/* RIGHT 4 COLUMNS: Pinned Spaces + Live Settlements + Monthly Breakdown */}
                 <div
                   className={`col-span-12 xl:col-span-4 space-y-6 ${
                     activeTab === 'groups' ? '' : 'hidden'
                   }`}
                 >
-                  {/* WIDGET 1: WHO OWES WHO / QUICK SETTLE */}
+                  {/* PINNED SPACES WIDGET (Desktop Right Column) */}
+                  <section className="liquid-glass rounded-3xl p-5">
+                    <div className="mb-3.5 flex items-center justify-between border-b border-slate-200/60 pb-3">
+                      <div>
+                        <h3 className="text-sm font-extrabold text-slate-900">
+                          Pinned Spaces
+                        </h3>
+                        <p className="text-[11px] text-slate-500">Quick access to your rooms</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {totalUnreadSpacesCount > 0 && (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 border border-rose-200 px-2 py-0.5 text-[10px] font-semibold text-rose-700">
+                            <span className="h-1.5 w-1.5 rounded-full bg-rose-600 animate-pulse" />
+                            {totalUnreadSpacesCount > 99 ? '99+' : totalUnreadSpacesCount} unread
+                          </span>
+                        )}
+                        <span className="rounded-lg bg-blue-50 px-2 py-0.5 font-mono text-xs font-bold text-blue-700">
+                          {pinnedGroups.length}
+                        </span>
+                      </div>
+                    </div>
+
+                    {pinnedGroups.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-slate-300 bg-white/40 px-4 py-8 text-center">
+                        <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                          <Pin size={18} />
+                        </div>
+                        <p className="text-xs font-bold text-slate-800">
+                          No pinned spaces
+                        </p>
+                        <p className="mx-auto mt-1 max-w-[200px] text-[10px] text-slate-500">
+                          Pin spaces from the directory to see them here.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-2.5">
+                        {pinnedGroups.map((group) => {
+                          const unreadCount = unreadMessagesByGroup[group.id] || 0;
+
+                          return (
+                            <div
+                              key={group.id}
+                              onClick={() => handleOpenGroup(group.id)}
+                              className="liquid-glass-interactive group flex items-center justify-between gap-3 rounded-2xl cursor-pointer px-3.5 py-3 shadow-sm"
+                            >
+                              <div className="flex min-w-0 items-center gap-3">
+                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-sm font-extrabold text-white shadow-sm">
+                                  {group.imageDataUrl ? (
+                                    <img
+                                      src={group.imageDataUrl}
+                                      alt=""
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    group.name.charAt(0).toUpperCase()
+                                  )}
+                                </div>
+
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <h3 className="truncate text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
+                                      {group.name}
+                                    </h3>
+                                    {unreadCount > 0 && (
+                                      <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[9px] font-extrabold text-white leading-none">
+                                        {unreadCount > 99 ? '99+' : unreadCount} new
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenGroup(group.id, 'chat');
+                                }}
+                                title="Open group chat"
+                                className={`relative flex h-8 w-8 items-center justify-center rounded-xl transition-colors ${
+                                  unreadCount > 0
+                                    ? 'bg-rose-50 text-rose-600'
+                                    : 'text-slate-400 hover:bg-white hover:text-blue-600'
+                                }`}
+                              >
+                                <MessageSquare size={16} />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </section>
+
+                  {/* BALANCES & SETTLEMENTS */}
                   <section className="liquid-glass rounded-3xl p-5">
                     <div className="mb-3.5 flex items-center justify-between border-b border-slate-200/60 pb-3">
                       <div>
                         <h3 className="text-sm font-extrabold text-slate-900">
                           Balances & Settlements
                         </h3>
-                        <p className="text-[11px] text-slate-500">Smart optimized dues across spaces</p>
+                        <p className="text-[11px] text-slate-500">
+                          Smart optimized dues across spaces
+                        </p>
                       </div>
                       <span className="rounded-lg bg-blue-50 px-2 py-0.5 font-mono text-xs font-bold text-blue-700">
                         {groupMetrics.allMySettlements.length}
@@ -1622,12 +1470,12 @@ export default function Dashboard({
                     ) : (
                       <div className="space-y-2.5">
                         {groupMetrics.allMySettlements.slice(0, 5).map((s, idx) => {
-                          const iOwe = s.from === user.id;
+                          const iOwe = s.from === user?.id;
                           const counterparty = getUserName(iOwe ? s.to : s.from);
                           return (
                             <div
                               key={`${s.groupId}-${idx}`}
-                              onClick={() => onOpenGroup(s.groupId, 'balances')}
+                              onClick={() => handleOpenGroup(s.groupId, 'balances')}
                               className="flex items-center justify-between gap-3 rounded-2xl border border-white/90 bg-white/70 p-3 hover:bg-white transition-all cursor-pointer shadow-sm"
                             >
                               <div className="min-w-0">
@@ -1657,7 +1505,7 @@ export default function Dashboard({
                     )}
                   </section>
 
-                  {/* WIDGET 2: MONTHLY SPENDING SNAPSHOT */}
+                  {/* MONTHLY BREAKDOWN */}
                   <section className="liquid-glass rounded-3xl p-5">
                     <div className="mb-3.5 flex items-center justify-between border-b border-slate-200/60 pb-3">
                       <div>
@@ -1703,7 +1551,6 @@ export default function Dashboard({
                       </div>
                     )}
                   </section>
-
                 </div>
               </div>
             </div>
@@ -1716,33 +1563,134 @@ export default function Dashboard({
         {activeTab !== 'groups' &&
           activeTab !== 'spaces' &&
           activeTab !== 'transactions' && (
-          <div className="h-full">
-            {activeTab === 'notifications' && (
-              <ActivityTab
-                notifications={notifications}
-                user={user}
-                onOpenGroup={onOpenGroup}
-                onClearNotifications={onClearNotifications}
-                showToast={showToast}
-              />
-            )}
-            {activeTab === 'monthly' && (
-              <MonthlyAnalyticsTab user={user} expenses={expenses} groups={groups} />
-            )}
-            {activeTab === 'profile' && (
-              <ProfileTabView
-                key={[user.id, user.username, user.email, user.upiId, user.photoDataUrl].join(':')}
-                user={user}
-                onUpdateUser={onUpdateUser}
-                onLogout={onLogout}
-                showToast={showToast}
-              />
-            )}
-          </div>
-        )}
+            <div className="h-full">
+              {activeTab === 'monthly' && (
+                <MonthlyAnalyticsTab user={user} expenses={expenses} groups={groups} />
+              )}
+              {activeTab === 'profile' && (
+                <ProfileTabView
+                  key={[user?.id, user?.username, user?.email, user?.upiId, user?.photoDataUrl].join(':')}
+                  user={user}
+                  onUpdateUser={onUpdateUser}
+                  onLogout={onLogout}
+                  showToast={showToast}
+                />
+              )}
+            </div>
+          )}
       </main>
 
-      {/* --- NATIVE BOTTOM SHEET / LIQUID GLASS QUICK EXPENSE MODAL --- */}
+      {/* --- NOTIFICATION CENTER / ACTIVITY RIGHT POPUP FLYOUT DRAWER --- */}
+      {isActivityOpen && (
+        <div
+          className="fixed inset-0 z-[80] flex justify-end bg-slate-900/30 backdrop-blur-sm transition-opacity"
+          onClick={() => setIsActivityOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="flex h-full w-full max-w-sm sm:max-w-md flex-col border-l border-white/80 bg-white/95 p-5 shadow-2xl backdrop-blur-2xl transition-transform animate-in slide-in-from-right"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-200/70 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                  <Bell size={18} />
+                </div>
+                <div>
+                  <h2 className="text-base font-extrabold text-slate-900 leading-tight">
+                    Activity & Alerts
+                  </h2>
+                  <p className="text-[11px] text-slate-500">
+                    {userNotifications.length} notification{userNotifications.length === 1 ? '' : 's'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {userNotifications.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearAllActivity}
+                    className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors shadow-sm"
+                  >
+                    <Trash2 size={12} />
+                    <span>Clear all</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsActivityOpen(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Notification Stream */}
+            <div className="flex-1 overflow-y-auto py-3 space-y-2.5 scrollbar-hide">
+              {userNotifications.length === 0 ? (
+                <div className="flex h-full flex-col items-center justify-center py-16 text-center">
+                  <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 border border-blue-100">
+                    <CheckCircle2 size={26} />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-800">You're all caught up!</h3>
+                  <p className="mt-1 max-w-[220px] text-xs text-slate-500">
+                    No new activity or dues notifications right now.
+                  </p>
+                </div>
+              ) : (
+                userNotifications.map((n) => {
+                  const grp = myGroups.find((g) => g.id === n.groupId);
+                  const isChat = /chat|message/i.test(n.type || n.category || '');
+                  return (
+                    <div
+                      key={n.id}
+                      onClick={() => {
+                        if (n.groupId) {
+                          handleOpenGroup(n.groupId, isChat ? 'chat' : 'expenses');
+                          setIsActivityOpen(false);
+                        }
+                      }}
+                      className={`liquid-glass-interactive group relative flex items-start justify-between gap-3 rounded-2xl p-3 cursor-pointer border ${
+                        !n.read ? 'border-blue-200/90 bg-blue-50/40' : 'border-slate-200/60 bg-white/80'
+                      }`}
+                    >
+                      <div className="flex items-start gap-2.5 min-w-0">
+                        <div className={`mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg ${
+                          isChat ? 'bg-indigo-50 text-indigo-600' : 'bg-emerald-50 text-emerald-600'
+                        }`}>
+                          {isChat ? <MessageSquare size={13} /> : <Receipt size={13} />}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-slate-900 leading-snug">
+                            {n.message || 'New activity in your space'}
+                          </p>
+                          <div className="mt-1 flex items-center gap-2 text-[10px] text-slate-500">
+                            {grp && <span className="font-semibold text-blue-600">{grp.name}</span>}
+                            {grp && <span>·</span>}
+                            <span>
+                              {n.createdAt
+                                ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                : 'Just now'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {!n.read && (
+                        <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-blue-600 ring-2 ring-white" />
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- QUICK EXPENSE MODAL --- */}
       {quickExpenseOpen && (
         <div
           className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-slate-900/40 p-0 sm:p-4 backdrop-blur-md"
@@ -1756,7 +1704,9 @@ export default function Dashboard({
             <div className="flex items-center justify-between border-b border-slate-200/60 pb-3.5">
               <div>
                 <h3 className="text-base font-extrabold text-slate-900">Quick Log Expense</h3>
-                <p className="text-xs text-slate-500">Split equally across all members of the selected space</p>
+                <p className="text-xs text-slate-500">
+                  Split equally across all members of the selected space
+                </p>
               </div>
               <button
                 type="button"
@@ -1858,7 +1808,7 @@ export default function Dashboard({
                   onClick={() => {
                     const gId = quickGroupId;
                     setQuickExpenseOpen(false);
-                    if (gId) onOpenGroup(gId, 'add');
+                    if (gId) handleOpenGroup(gId, 'add');
                   }}
                   className="text-xs font-bold text-blue-600 hover:underline"
                 >
@@ -1891,7 +1841,7 @@ export default function Dashboard({
         activeItem={activeTab}
         onNavigate={handleTabSwitch}
         onQuickAction={() => openQuickExpenseModal()}
-        unreadCount={unreadNotifications.length}
+        unreadSpacesCount={totalUnreadSpacesCount}
         onLogout={onLogout}
         user={user}
       />
