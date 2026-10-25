@@ -2,13 +2,11 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   Plus,
   UserPlus,
-  Users,
   Download,
   ChevronRight,
   Archive,
   ArchiveRestore,
   Pin,
-  PinOff,
   Bell,
   BellOff,
   Search,
@@ -18,8 +16,6 @@ import {
   Wallet,
   PieChart,
   CheckCircle2,
-  Copy,
-  Check,
   X,
   IndianRupee,
   MessageSquare,
@@ -519,34 +515,37 @@ export default function Dashboard({
       </div>
 
       {/* --- NATIVE MOBILE APP TOP BAR (< md) --- */}
-      <header className="relative z-30 flex h-14 flex-shrink-0 items-center justify-between border-b border-white/80 bg-white/75 px-4 backdrop-blur-2xl shadow-sm md:hidden">
+      <header
+        className={`relative z-30 flex h-14 flex-shrink-0 items-center justify-between gap-2 bg-transparent px-3 md:hidden ${
+          ['profile', 'transactions', 'monthly'].includes(activeTab) ? 'hidden' : ''
+        }`}
+      >
         <button
           type="button"
           onClick={() => handleTabSwitch('groups')}
           aria-label="Go to RoomSplit home"
-          className="flex items-center gap-2.5 text-left focus-visible:outline-none"
+          className="liquid-glass-interactive flex min-w-0 items-center gap-2 rounded-full border border-white/90 bg-white/80 py-1 pl-1 pr-3 text-left shadow-sm focus-visible:outline-none"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/90 bg-white p-1 shadow-sm">
+          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/90 bg-white p-1 shadow-sm">
             <img src={roomsplitIcon} alt="" className="h-full w-full object-contain" />
           </span>
-          <div>
-            <span className="block text-sm font-extrabold tracking-tight text-slate-900 leading-none">
+          <div className="min-w-0">
+            <span className="block truncate text-xs font-extrabold tracking-tight text-slate-900 leading-none">
               RoomSplit
             </span>
-            <span className="mt-0.5 block text-[10px] font-semibold text-blue-600 leading-none">
+            <span className="mt-0.5 block truncate text-[9px] font-semibold text-blue-600 leading-none">
               Hi, {user?.username}
             </span>
           </div>
         </button>
 
-        {/* Top Right Mobile Header: Join, Space, and Activity Popover Trigger */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-shrink-0 items-center gap-1.5">
           <button
             type="button"
             onClick={onJoinGroup}
             title="Join space with code"
             aria-label="Join space with code"
-            className="liquid-glass-interactive flex h-8 items-center gap-1 rounded-xl border border-blue-200/70 bg-white/90 px-2 text-[11px] font-semibold text-slate-700 shadow-sm active:scale-95 transition-transform"
+            className="liquid-glass-interactive flex h-9 items-center gap-1 rounded-full border border-blue-200/70 bg-white/90 px-3 text-[11px] font-bold text-slate-700 shadow-sm transition-transform active:scale-95"
           >
             <UserPlus size={13} className="text-blue-600" />
             <span>Join</span>
@@ -556,28 +555,35 @@ export default function Dashboard({
             onClick={onCreateGroup}
             title="Create new space"
             aria-label="Create space"
-            className="flex h-8 items-center gap-1 rounded-xl bg-gradient-to-b from-blue-600 to-indigo-600 px-2 text-[11px] font-semibold text-white shadow-sm shadow-blue-600/20 active:scale-95 transition-transform"
+            className="flex h-9 items-center gap-1 rounded-full bg-gradient-to-b from-blue-600 to-indigo-600 px-3 text-[11px] font-bold text-white shadow-sm shadow-blue-600/20 transition-transform active:scale-95"
           >
             <Plus size={13} strokeWidth={2.5} />
-            <span>Space</span>
+            <span>Create</span>
           </button>
           <button
             type="button"
-            onClick={() => setIsActivityOpen((prev) => !prev)}
+            onClick={() => setIsActivityOpen((previous) => !previous)}
             title="Activity notifications"
             aria-label="Activity notifications"
-            className={`relative flex h-8 w-8 items-center justify-center rounded-xl border transition-all active:scale-95 ${
+            aria-expanded={isActivityOpen}
+            className={`relative flex h-9 w-9 items-center justify-center rounded-full border shadow-sm transition-all active:scale-95 ${
               isActivityOpen
-                ? 'border-blue-500 bg-blue-50 text-blue-600 shadow-sm'
-                : 'border-blue-200/70 bg-white/90 text-slate-700 shadow-sm'
+                ? 'border-blue-500 bg-blue-50 text-blue-600'
+                : 'border-white/80 bg-white/80 text-slate-600 hover:text-blue-600'
             }`}
           >
             <Bell
-              size={14}
-              className={isActivityOpen ? 'fill-blue-600/20 text-blue-600' : 'text-slate-600'}
+              size={15}
+              className={
+                isActivityOpen
+                  ? 'fill-blue-600/20 text-blue-600'
+                  : unreadNotifications.length > 0
+                    ? 'text-blue-600'
+                    : 'text-slate-600'
+              }
             />
             {unreadNotifications.length > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[9px] font-extrabold text-white leading-none shadow-sm animate-pulse">
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[9px] font-extrabold leading-none text-white shadow-sm">
                 {unreadNotifications.length > 99 ? '99+' : unreadNotifications.length}
               </span>
             )}
