@@ -124,6 +124,12 @@ export default function ExpensesTab({
     return Object.keys(exp.splits).filter((id) => parseFloat(exp.splits[id]) > 0);
   };
 
+  const getMemberName = (memberId) => (
+    users.find((member) => member.id === memberId)?.username ||
+    (memberId === currentUser.id ? currentUser.username : getUserName(memberId)) ||
+    'Roommate'
+  );
+
   const getExpenseTitle = (exp) => {
     if (exp.category !== 'Settlement') return exp.title;
 
@@ -292,7 +298,10 @@ export default function ExpensesTab({
                       <span className="font-bold text-slate-900 font-mono">
                         {formatCurrency(exp.totalAmount, currency)}
                       </span>{' '}
-                      · {participants.length} split
+                    </p>
+                    <p className="mt-0.5 max-w-[min(65vw,28rem)] truncate text-[11px] text-slate-500">
+                      <span className="font-semibold text-slate-600">Split: </span>
+                      {participants.map(getMemberName).join(', ')}
                     </p>
                   </div>
                 </div>
@@ -437,7 +446,7 @@ export default function ExpensesTab({
                     <span>Split</span>
                   </div>
                   <div className="font-bold text-slate-900">
-                    {getParticipantsList(detailExpense).length} members
+                    Split · {getParticipantsList(detailExpense).length} members
                   </div>
                 </div>
               </div>
@@ -446,18 +455,36 @@ export default function ExpensesTab({
                 <span className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   Member Shares
                 </span>
-                <div className="max-h-36 space-y-1.5 overflow-y-auto scrollbar-hide">
+                <div className="max-h-48 space-y-1.5 overflow-y-auto scrollbar-hide">
                   {Object.entries(detailExpense.splits || {}).map(([memberId, shareAmount]) => {
                     const numShare = parseFloat(shareAmount);
                     if (numShare <= 0) return null;
                     const isUser = memberId === currentUser.id;
+                    const member = users.find((item) => item.id === memberId);
+                    const memberName = getMemberName(memberId);
                     return (
                       <div
                         key={memberId}
                         className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-xs"
                       >
-                        <span className="font-semibold text-slate-800">
-                          {isUser ? 'You' : getUserName(memberId)}
+                        <span className="flex min-w-0 items-center gap-2.5">
+                          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-br from-blue-100 to-indigo-100 text-[11px] font-extrabold text-blue-700 shadow-sm">
+                            {member?.photoDataUrl || (isUser && currentUser.photoDataUrl) ? (
+                              <img
+                                src={member?.photoDataUrl || currentUser.photoDataUrl}
+                                alt=""
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              memberName.charAt(0).toUpperCase()
+                            )}
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block truncate font-semibold text-slate-800">
+                              {memberName}
+                            </span>
+                            {isUser && <span className="block text-[10px] text-slate-400">You</span>}
+                          </span>
                         </span>
                         <span className="font-bold font-mono text-slate-900">
                           {formatCurrency(numShare, currency)}

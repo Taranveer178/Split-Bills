@@ -415,10 +415,10 @@ export default function BalancesTab({
                         <img
                           src={avatarMember.photoDataUrl}
                           alt={`${avatarName} profile`}
-                          className="h-10 w-10 rounded-xl object-cover border border-slate-200"
+                          className="h-10 w-10 rounded-full object-cover border border-slate-200"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center font-bold text-white text-sm">
+                        <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center font-bold text-white text-sm">
                           {avatarName.charAt(0).toUpperCase()}
                         </div>
                       )}

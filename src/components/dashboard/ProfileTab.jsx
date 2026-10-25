@@ -49,6 +49,8 @@ export default function ProfileTab({
   const [fallbackToast, setFallbackToast] = useState(false);
   const [testPushStatus, setTestPushStatus] = useState('');
   const [testingPush, setTestingPush] = useState(false);
+  const canViewPushDiagnostics =
+    user?.email?.trim().toLowerCase() === 'staranveer178@gmail.com';
 
   const handleTestPush = async () => {
     setTestingPush(true);
@@ -269,42 +271,46 @@ export default function ProfileTab({
 
   return (
     <div className="mx-auto w-full max-w-4xl p-4 sm:p-6 lg:p-8 pb-20">
-      <div className="mb-5 flex items-center justify-between border-b border-slate-200/90 pb-4">
-        <div>
-          <p className="text-xs font-medium text-slate-500">Account & Payment Preferences</p>
-          <h1 className="mt-0.5 text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+      <div className="mb-5 flex items-center justify-between gap-2.5">
+        <div className="flex min-w-0 items-center gap-2.5 rounded-full border border-white/90 bg-white/75 p-2 pr-4 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
+          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-sm">
+            {photoDataUrl ? (
+              <img src={photoDataUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              getInitials()
+            )}
+          </span>
+          <h1 className="truncate text-sm font-extrabold tracking-tight text-slate-900">
             Profile Settings
           </h1>
         </div>
-        <div className="flex items-center gap-2">
-          {!isEditing && (
-            <>
-              {onLogout && (
-                <button
-                  type="button"
-                  onClick={onLogout}
-                  aria-label="Sign out"
-                  title="Sign out"
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-100 hover:text-rose-700 hover:shadow-md active:translate-y-0"
-                >
-                  <LogOut size={16} />
-                </button>
-              )}
+        {!isEditing && (
+          <div className="flex flex-shrink-0 items-center gap-1 rounded-full border border-white/90 bg-white/75 p-1.5 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
+            {onLogout && (
               <button
                 type="button"
-                onClick={() => {
-                  setIsEditing(true);
-                  setLocalError('');
-                }}
-                aria-label="Edit profile"
-                title="Edit profile"
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 hover:shadow-md active:translate-y-0"
+                onClick={onLogout}
+                aria-label="Sign out"
+                title="Sign out"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700"
               >
-                <Edit2 size={16} />
+                <LogOut size={16} />
               </button>
-            </>
-          )}
-        </div>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditing(true);
+                setLocalError('');
+              }}
+              aria-label="Edit profile"
+              title="Edit profile"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
+            >
+              <Edit2 size={16} />
+            </button>
+          </div>
+        )}
       </div>
 
       {!isEditing ? (
@@ -336,10 +342,10 @@ export default function ProfileTab({
                   <img
                     src={photoDataUrl}
                     alt={`${user?.username || 'User'} profile`}
-                    className="h-20 w-20 rounded-2xl object-cover border border-slate-200"
+                    className="h-20 w-20 rounded-full object-cover border border-slate-200"
                   />
                 ) : (
-                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-900 text-2xl font-bold text-white">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-900 text-2xl font-bold text-white">
                     {getInitials()}
                   </div>
                 )}
@@ -394,43 +400,45 @@ export default function ProfileTab({
               </div>
             </div>
 
-            <div className="mt-4 rounded-xl border border-slate-200/80 bg-slate-50/70 p-4 space-y-2.5">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-700">
-                    <Bell size={17} />
+            {canViewPushDiagnostics && (
+              <div className="mt-4 rounded-xl border border-slate-200/80 bg-slate-50/70 p-4 space-y-2.5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-700">
+                      <Bell size={17} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">Push Notification Diagnostics</p>
+                      <p className="text-[11px] text-slate-500">
+                        Verify FCM delivery & device permissions
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-900">Push Notification Diagnostics</p>
-                    <p className="text-[11px] text-slate-500">
-                      Verify FCM delivery & device permissions
-                    </p>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleTestPush}
+                    disabled={testingPush}
+                    className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+                  >
+                    {testingPush ? 'Testing...' : 'Test Push'}
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleTestPush}
-                  disabled={testingPush}
-                  className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
-                >
-                  {testingPush ? 'Testing...' : 'Test Push'}
-                </button>
+                {testPushStatus && (
+                  <p
+                    className={`rounded-lg p-2.5 font-mono text-xs break-all ${
+                      testPushStatus.startsWith('Success')
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : testPushStatus.startsWith('Error') ||
+                            testPushStatus.startsWith('Trigger Error')
+                          ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                          : 'bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    {testPushStatus}
+                  </p>
+                )}
               </div>
-              {testPushStatus && (
-                <p
-                  className={`rounded-lg p-2.5 font-mono text-xs break-all ${
-                    testPushStatus.startsWith('Success')
-                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      : testPushStatus.startsWith('Error') ||
-                          testPushStatus.startsWith('Trigger Error')
-                        ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                        : 'bg-slate-100 text-slate-700'
-                  }`}
-                >
-                  {testPushStatus}
-                </p>
-              )}
-            </div>
+            )}
 
             <div className="mt-4 flex items-center gap-2 rounded-xl bg-slate-50 px-3.5 py-2.5 text-xs text-slate-500">
               <ShieldCheck size={15} className="text-emerald-600 flex-shrink-0" />
@@ -455,10 +463,10 @@ export default function ProfileTab({
                 <img
                   src={photoDataUrl}
                   alt="Profile preview"
-                  className="h-16 w-16 rounded-xl object-cover border border-slate-200"
+                  className="h-16 w-16 rounded-full object-cover border border-slate-200"
                 />
               ) : (
-                <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-slate-900 text-xl font-bold text-white">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-900 text-xl font-bold text-white">
                   {getInitials()}
                 </div>
               )}

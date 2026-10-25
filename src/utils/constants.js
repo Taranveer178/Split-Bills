@@ -24,17 +24,4 @@ export const INITIAL_GROUPS = [
   },
 ];
 
-export const INITIAL_EXPENSES = [
-  {
-    id: 'exp_1',
-    groupId: 'grp_room302',
-    title: 'Pizza Dinner',
-    totalAmount: '900.00',
-    paidBy: 'usr_taran',
-    paymentMethod: 'UPI',
-    category: 'Food',
-    date: new Date().toISOString().split('T')[0],
-    splits: { usr_taran: '300.00', usr_sushant: '300.00', usr_tushar: '300.00' },
-    createdAt: new Date().toISOString(),
-  },
-];
+export const INITIAL_EXPENSES = [];

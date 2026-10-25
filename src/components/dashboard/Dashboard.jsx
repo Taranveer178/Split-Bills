@@ -4,6 +4,7 @@ import {
   UserPlus,
   Download,
   ChevronRight,
+  ChevronDown,
   Archive,
   ArchiveRestore,
   Pin,
@@ -59,7 +60,7 @@ export default function Dashboard({
   const [spaceFilter, setSpaceFilter] = useState('active'); // 'active' | 'pinned' | 'archived'
   const [searchQuery, setSearchQuery] = useState('');
   const [ledgerFilter, setLedgerFilter] = useState('all'); // 'all' | 'mine' | 'settlements'
-  const [mobileSection, setMobileSection] = useState('spaces'); // 'spaces' | 'dues' | 'recent'
+  const [mobileSection, setMobileSection] = useState('spaces'); // 'spaces' | 'dues'
   const [copiedCodeId, setCopiedCodeId] = useState(null);
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -698,9 +699,9 @@ export default function Dashboard({
                       </span>
                       <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-semibold text-blue-100 backdrop-blur-md">
                         {groupMetrics.totalNetBalance > 0.01
-                          ? 'Owed to you'
+                          ? 'To receive'
                           : groupMetrics.totalNetBalance < -0.01
-                            ? 'You owe'
+                            ? 'To pay'
                             : 'Settled'}
                       </span>
                     </div>
@@ -746,8 +747,8 @@ export default function Dashboard({
               </div>
 
               {/* 2. Native iOS Segmented Glass Control with Active / Archived Toggle */}
-              <div className="flex items-center gap-2">
-                <div className="liquid-glass grid flex-1 grid-cols-3 rounded-2xl p-1">
+              <div className="grid grid-cols-3 gap-2">
+                <div className="liquid-glass col-span-2 grid grid-cols-2 rounded-2xl p-1">
                   <button
                     type="button"
                     onClick={() => setMobileSection('spaces')}
@@ -758,9 +759,7 @@ export default function Dashboard({
                     }`}
                   >
                     <span>
-                      {spaceFilter === 'archived'
-                        ? `Archived (${archivedGroups.length})`
-                        : `Spaces (${activeGroups.length})`}
+                      {spaceFilter === 'archived' ? 'Archived' : 'Spaces'}
                     </span>
                   </button>
                   <button
@@ -774,45 +773,32 @@ export default function Dashboard({
                   >
                     Dues ({groupMetrics.allMySettlements.length})
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setMobileSection('recent')}
-                    className={`rounded-xl py-1.5 text-xs font-semibold transition-all duration-200 ${
-                      mobileSection === 'recent'
-                        ? 'bg-gradient-to-b from-blue-600 to-indigo-600 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    Recent ({recentTransactions.length})
-                  </button>
                 </div>
 
-                {mobileSection === 'spaces' && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setSpaceFilter((curr) => (curr === 'archived' ? 'active' : 'archived'))
-                    }
-                    title={spaceFilter === 'archived' ? 'View active spaces' : 'View archived spaces'}
-                    className={`liquid-glass-interactive flex h-9 items-center gap-1 rounded-2xl px-2.5 text-[11px] font-semibold border ${
-                      spaceFilter === 'archived'
-                        ? 'border-blue-400 bg-blue-50 text-blue-600 shadow-sm'
-                        : 'border-slate-200/80 text-slate-600'
-                    }`}
-                  >
-                    {spaceFilter === 'archived' ? (
-                      <>
-                        <ArchiveRestore size={13} className="text-blue-600" />
-                        <span>Active</span>
-                      </>
-                    ) : (
-                      <>
-                        <Archive size={13} />
-                        <span>{archivedGroups.length || 'Archive'}</span>
-                      </>
-                    )}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSpaceFilter((curr) => (curr === 'archived' ? 'active' : 'archived'))
+                  }
+                  title={spaceFilter === 'archived' ? 'View active spaces' : 'View archived spaces'}
+                  className={`liquid-glass-interactive col-span-1 flex h-9 items-center justify-center gap-1 rounded-2xl border px-1.5 text-[10px] font-semibold whitespace-nowrap ${
+                    spaceFilter === 'archived'
+                      ? 'border-blue-400 bg-blue-50 text-blue-600 shadow-sm'
+                      : 'border-slate-200/80 text-slate-600'
+                  }`}
+                >
+                  {spaceFilter === 'archived' ? (
+                    <>
+                      <ArchiveRestore size={13} className="text-blue-600" />
+                      <span>Active</span>
+                    </>
+                  ) : (
+                    <>
+                      <Archive size={13} />
+                      <span>Archive{archivedGroups.length > 0 ? ` ${archivedGroups.length}` : ''}</span>
+                    </>
+                  )}
+                </button>
               </div>
 
               {/* 3A. Mobile Section: Spaces */}
@@ -849,7 +835,7 @@ export default function Dashboard({
                             className="liquid-glass-interactive flex items-center justify-between gap-2.5 rounded-2xl px-3.5 py-2.5 cursor-pointer shadow-sm"
                           >
                             <div className="flex min-w-0 items-center gap-3">
-                              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-sm">
+                              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-sm">
                                 {group.imageDataUrl ? (
                                   <img
                                     src={group.imageDataUrl}
@@ -975,7 +961,7 @@ export default function Dashboard({
                         >
                           <div className="min-w-0">
                             <p className="truncate text-xs font-bold text-slate-900">
-                              {iOwe ? `You owe ${otherName}` : `${otherName} owes you`}
+                              {iOwe ? `To pay ${otherName}` : `To receive from ${otherName}`}
                             </p>
                             <p className="truncate text-[11px] text-slate-500">{item.groupName}</p>
                           </div>
@@ -1002,48 +988,6 @@ export default function Dashboard({
                 </div>
               )}
 
-              {/* 3C. Mobile Section: Recent Transactions */}
-              {mobileSection === 'recent' && (
-                <div className="space-y-2">
-                  {recentTransactions.length === 0 ? (
-                    <div className="liquid-glass rounded-2xl px-4 py-8 text-center">
-                      <Receipt size={22} className="mx-auto mb-1.5 text-slate-400" />
-                      <p className="text-xs font-bold text-slate-900">No recent bills</p>
-                      <p className="mt-0.5 text-[11px] text-slate-500">
-                        Tap + in the bottom bar to log your first bill.
-                      </p>
-                    </div>
-                  ) : (
-                    recentTransactions.slice(0, 4).map((exp) => {
-                      const grp = myGroups.find((g) => g.id === exp.groupId);
-                      const iPaid = exp.paidBy === user?.id;
-                      return (
-                        <div
-                          key={exp.id}
-                          onClick={() => handleOpenGroup(exp.groupId, 'expenses')}
-                          className="liquid-glass-interactive flex items-center justify-between gap-3 rounded-2xl p-3 cursor-pointer"
-                        >
-                          <div className="min-w-0">
-                            <p className="truncate text-xs font-bold text-slate-900">
-                              {exp.title}
-                            </p>
-                            <p className="truncate text-[11px] text-slate-500">
-                              {grp?.name || 'Space'} · {iPaid ? 'You' : getUserName(exp.paidBy)} paid
-                            </p>
-                          </div>
-                          <span className="font-mono text-xs font-extrabold text-slate-900">
-                            {formatCurrency(
-                              parseFloat(exp.totalAmount) || 0,
-                              grp?.currency,
-                              0
-                            )}
-                          </span>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Mobile View: Render Transactions Tab */}
@@ -1053,8 +997,11 @@ export default function Dashboard({
                   transactions={recentTransactions}
                   groups={myGroups}
                   user={user}
+                  users={users}
                   getUserName={getUserName}
                   onOpenGroup={handleOpenGroup}
+                  ledgerFilter={ledgerFilter}
+                  onLedgerFilterChange={setLedgerFilter}
                 />
               </div>
             )}
@@ -1239,11 +1186,11 @@ export default function Dashboard({
                   </p>
                   <div className="mt-2 flex items-center gap-2 text-[11px] font-semibold text-slate-500">
                     <span className="text-emerald-600">
-                      +₹{groupMetrics.totalOwedToYou.toFixed(0)} owed
+                      +₹{groupMetrics.totalOwedToYou.toFixed(0)} to receive
                     </span>
                     <span>·</span>
                     <span className="text-rose-600">
-                      -₹{groupMetrics.totalYouOwe.toFixed(0)} due
+                      -₹{groupMetrics.totalYouOwe.toFixed(0)} to pay
                     </span>
                   </div>
                 </div>
@@ -1304,7 +1251,14 @@ export default function Dashboard({
                   )}
                 </div>
 
-                <div className="liquid-glass rounded-3xl p-5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLedgerFilter('mine');
+                    handleTabSwitch('transactions');
+                  }}
+                  className="liquid-glass-interactive w-full cursor-pointer rounded-3xl p-5 text-left"
+                >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-500">You Paid Out</span>
                     <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
@@ -1317,9 +1271,16 @@ export default function Dashboard({
                   <p className="mt-2 text-[11px] font-semibold text-slate-500">
                     {activeGroups.length} active space{activeGroups.length === 1 ? '' : 's'}
                   </p>
-                </div>
+                </button>
 
-                <div className="liquid-glass rounded-3xl p-5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLedgerFilter('settlements');
+                    handleTabSwitch('transactions');
+                  }}
+                  className="liquid-glass-interactive w-full cursor-pointer rounded-3xl p-5 text-left"
+                >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-500">Pending Settlements</span>
                     <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
@@ -1334,7 +1295,7 @@ export default function Dashboard({
                       ? 'Every room is settled'
                       : 'Active dues ready to settle'}
                   </p>
-                </div>
+                </button>
               </div>
 
               {/* 3. Main 12-Column Desktop Bento Grid */}
@@ -1380,50 +1341,103 @@ export default function Dashboard({
                       activeTab === 'groups' || activeTab === 'transactions' ? '' : 'hidden'
                     }`}
                   >
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/60 pb-3.5">
-                      <div>
-                        <h2 className="text-base font-extrabold tracking-tight text-slate-900">
-                          {activeTab === 'transactions' ? 'Transactions' : 'Recent Ledger Activity'}
-                        </h2>
-                        <p className="text-xs text-slate-500">
-                          {activeTab === 'transactions'
-                            ? 'Bills and settlements across all your spaces'
-                            : 'Latest bills and settlements across all your rooms'}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        {activeTab === 'groups' && (
-                          <button
-                            type="button"
-                            onClick={() => handleTabSwitch('transactions')}
-                            className="rounded-xl px-3 py-1.5 text-xs font-semibold text-blue-600 transition-colors hover:bg-blue-50"
-                          >
-                            See all
-                            <span aria-hidden="true"> →</span>
-                          </button>
-                        )}
-                        <div className="flex items-center gap-1 rounded-2xl bg-slate-200/60 p-1">
-                          {[
-                            { id: 'all', label: 'All' },
-                            { id: 'mine', label: 'Paid by Me' },
-                            { id: 'settlements', label: 'Settlements' },
-                          ].map((tab) => (
-                            <button
-                              key={tab.id}
-                              type="button"
-                              onClick={() => setLedgerFilter(tab.id)}
-                              className={`rounded-xl px-3 py-1 text-xs font-semibold transition-all ${
-                                ledgerFilter === tab.id
-                                  ? 'bg-white text-blue-600 shadow-sm'
-                                  : 'text-slate-600 hover:text-slate-900'
-                              }`}
+                    <div className={`mb-4 flex flex-wrap items-center justify-between gap-2.5 ${
+                      activeTab === 'transactions' ? '' : 'border-b border-slate-200/60 pb-3.5'
+                    }`}>
+                      {activeTab === 'transactions' ? (
+                        <>
+                          <div className="flex min-w-0 items-center gap-2.5 rounded-full border border-white/90 bg-white/75 p-2 pr-4 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
+                            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-sm">
+                              {user?.photoDataUrl ? (
+                                <img src={user.photoDataUrl} alt="" className="h-full w-full object-cover" />
+                              ) : (
+                                (user?.username || 'U').charAt(0).toUpperCase()
+                              )}
+                            </span>
+                            <h2 className="truncate text-sm font-extrabold tracking-tight text-slate-900">
+                              Transactions
+                            </h2>
+                          </div>
+                          <div className="hidden items-center gap-1 rounded-full border border-white/90 bg-white/75 p-1.5 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-2xl md:flex">
+                            {[
+                              { id: 'all', label: 'All' },
+                              { id: 'mine', label: 'Paid by Me' },
+                              { id: 'settlements', label: 'Settlements' },
+                            ].map((filter) => (
+                              <button
+                                key={filter.id}
+                                type="button"
+                                onClick={() => setLedgerFilter(filter.id)}
+                                aria-pressed={ledgerFilter === filter.id}
+                                className={`rounded-full px-3 py-2 text-xs font-semibold transition-colors ${
+                                  ledgerFilter === filter.id
+                                    ? 'bg-gradient-to-b from-blue-600 to-indigo-600 text-white shadow-sm'
+                                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                                }`}
+                              >
+                                {filter.label}
+                              </button>
+                            ))}
+                          </div>
+                          <label className="relative flex h-10 flex-shrink-0 items-center gap-2 rounded-full border border-white/90 bg-white/75 pl-3 pr-2.5 text-xs font-semibold text-slate-700 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-2xl md:hidden">
+                            <span className="pointer-events-none">{ledgerFilter === 'mine' ? 'Paid by Me' : ledgerFilter === 'settlements' ? 'Settlements' : 'All'}</span>
+                            <ChevronDown size={14} className="pointer-events-none text-slate-400" />
+                            <select
+                              aria-label="Filter transactions"
+                              value={ledgerFilter}
+                              onChange={(event) => setLedgerFilter(event.target.value)}
+                              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                             >
-                              {tab.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+                              <option value="all">All</option>
+                              <option value="mine">Paid by Me</option>
+                              <option value="settlements">Settlements</option>
+                            </select>
+                          </label>
+                        </>
+                      ) : (
+                        <>
+                          <div>
+                            <h2 className="text-base font-extrabold tracking-tight text-slate-900">
+                              Recent Ledger Activity
+                            </h2>
+                            <p className="text-xs text-slate-500">
+                              Latest bills and settlements across all your rooms
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {activeTab === 'groups' && (
+                              <button
+                                type="button"
+                                onClick={() => handleTabSwitch('transactions')}
+                                className="rounded-xl px-3 py-1.5 text-xs font-semibold text-blue-600 transition-colors hover:bg-blue-50"
+                              >
+                                See all
+                                <span aria-hidden="true"> →</span>
+                              </button>
+                            )}
+                            <div className="flex items-center gap-1 rounded-2xl bg-slate-200/60 p-1">
+                              {[
+                                { id: 'all', label: 'All' },
+                                { id: 'mine', label: 'Paid by Me' },
+                                { id: 'settlements', label: 'Settlements' },
+                              ].map((tab) => (
+                                <button
+                                  key={tab.id}
+                                  type="button"
+                                  onClick={() => setLedgerFilter(tab.id)}
+                                  className={`rounded-xl px-3 py-1 text-xs font-semibold transition-all ${
+                                    ledgerFilter === tab.id
+                                      ? 'bg-white text-blue-600 shadow-sm'
+                                      : 'text-slate-600 hover:text-slate-900'
+                                  }`}
+                                >
+                                  {tab.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     {recentTransactions.length === 0 ? (
@@ -1442,6 +1456,13 @@ export default function Dashboard({
                           const myShare = parseFloat(exp.splits?.[user?.id]) || 0;
                           const total = parseFloat(exp.totalAmount) || 0;
                           const myImpact = iPaid ? total - myShare : -myShare;
+                          const splitNames = Object.entries(exp.splits || {})
+                            .filter(([, amount]) => parseFloat(amount) > 0)
+                            .map(([memberId]) => (
+                              users.find((member) => member.id === memberId)?.username ||
+                              (memberId === user?.id ? user?.username : getUserName(memberId)) ||
+                              'Roommate'
+                            ));
 
                           return (
                             <div
@@ -1468,6 +1489,10 @@ export default function Dashboard({
                                     </span>{' '}
                                     paid {formatCurrency(total, grp?.currency)} via {exp.paymentMethod || 'UPI'} ·{' '}
                                     {exp.date}
+                                  </p>
+                                  <p className="mt-0.5 max-w-[min(65vw,28rem)] truncate text-[11px] text-slate-500">
+                                    <span className="font-semibold text-slate-600">Split: </span>
+                                    {splitNames.join(', ')}
                                   </p>
                                 </div>
                               </div>
@@ -1559,7 +1584,7 @@ export default function Dashboard({
                               className="liquid-glass-interactive group flex items-center justify-between gap-3 rounded-2xl cursor-pointer px-3.5 py-3 shadow-sm"
                             >
                               <div className="flex min-w-0 items-center gap-3">
-                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-sm font-extrabold text-white shadow-sm">
+                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-sm font-extrabold text-white shadow-sm">
                                   {group.imageDataUrl ? (
                                     <img
                                       src={group.imageDataUrl}
@@ -1641,7 +1666,7 @@ export default function Dashboard({
                             >
                               <div className="min-w-0">
                                 <p className="truncate text-xs font-bold text-slate-900">
-                                  {iOwe ? `Pay ${counterparty}` : `Collect from ${counterparty}`}
+                                  {iOwe ? `To pay ${counterparty}` : `To receive from ${counterparty}`}
                                 </p>
                                 <p className="truncate text-[11px] text-slate-500">
                                   in {s.groupName}

@@ -121,7 +121,7 @@ export default function GroupView({
               className="flex items-center gap-2.5 min-w-0 cursor-pointer select-none"
               title="View Expenses"
             >
-              <span className="flex h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-sm font-extrabold text-white shadow-sm">
+              <span className="flex h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-sm font-extrabold text-white shadow-sm">
                 {group.imageDataUrl ? (
                   <img src={group.imageDataUrl} alt="" className="h-full w-full object-cover" />
                 ) : (

@@ -1,5 +1,6 @@
 import { getApp, getApps, initializeApp } from 'firebase/app';
 import {
+  browserPopupRedirectResolver,
   browserLocalPersistence,
   getAuth,
   initializeAuth,
@@ -35,7 +36,10 @@ if (hasFirebase) {
     app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
     db = getFirestore(app);
     try {
-      auth = initializeAuth(app, { persistence: browserLocalPersistence });
+      auth = initializeAuth(app, {
+        persistence: browserLocalPersistence,
+        popupRedirectResolver: browserPopupRedirectResolver,
+      });
     } catch (error) {
       if (error.code !== 'auth/already-initialized') throw error;
       auth = getAuth(app);

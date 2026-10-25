@@ -94,6 +94,10 @@ const getNotificationTimestamp = (value) => {
   return Number.isFinite(timestamp) ? timestamp : null;
 };
 
+const removeDemoExpenses = (items) => (
+  items.filter((expense) => !(expense.id === 'exp_1' && expense.title === 'Pizza Dinner'))
+);
+
 function LaunchScreen() {
   return (
     <main className="launch-screen" role="status" aria-label="Loading RoomSplit">
@@ -177,7 +181,9 @@ export default function App() {
     () => hasInitialLocalSession ? readStoredData('rs_groups', INITIAL_GROUPS) : []
   );
   const [expenses, setExpenses] = useState(
-    () => hasInitialLocalSession ? readStoredData('rs_expenses', INITIAL_EXPENSES) : []
+    () => hasInitialLocalSession
+      ? removeDemoExpenses(readStoredData('rs_expenses', INITIAL_EXPENSES))
+      : []
   );
   const [notifications, setNotifications] = useState(
     () => hasInitialLocalSession ? readStoredData('rs_notifications', []) : []
@@ -411,15 +417,16 @@ export default function App() {
         }, (error) => console.error('Groups listener error:', error)));
 
         unsubscribers.push(onSnapshot(collection(db, 'expenses'), (snapshot) => {
-          if (!snapshot.empty) {
-            setExpenses(snapshot.docs.map((item) => ({ id: item.id, ...item.data() })));
-          } else if (!localStorage.getItem('rs_seeded_expenses')) {
-            INITIAL_EXPENSES.forEach((expense) => setDoc(doc(db, 'expenses', expense.id), expense).catch(() => {}));
-            localStorage.setItem('rs_seeded_expenses', 'true');
-            setExpenses(INITIAL_EXPENSES);
-          } else {
-            setExpenses([]);
-          }
+          const loadedExpenses = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+          const demoExpenses = loadedExpenses.filter(
+            (expense) => expense.id === 'exp_1' && expense.title === 'Pizza Dinner'
+          );
+          setExpenses(removeDemoExpenses(loadedExpenses));
+          demoExpenses.forEach((expense) => {
+            deleteDoc(doc(db, 'expenses', expense.id)).catch((error) => {
+              console.error('Could not remove the seeded demo expense:', error);
+            });
+          });
           setLoading(false);
         }, (error) => {
           console.error('Expenses listener error:', error);
@@ -549,7 +556,7 @@ export default function App() {
       const savedExpenses = localStorage.getItem('rs_expenses');
       const savedNotifications = localStorage.getItem('rs_notifications');
       setGroups(savedGroups ? JSON.parse(savedGroups) : INITIAL_GROUPS);
-      setExpenses(savedExpenses ? JSON.parse(savedExpenses) : INITIAL_EXPENSES);
+      setExpenses(removeDemoExpenses(savedExpenses ? JSON.parse(savedExpenses) : INITIAL_EXPENSES));
       setNotifications(savedNotifications ? JSON.parse(savedNotifications) : []);
       setLoading(false);
     }

@@ -1,8 +1,6 @@
 import { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  ChevronLeft,
-  ChevronRight,
   ArrowUpRight,
   ArrowDownLeft,
   PieChart,
@@ -15,6 +13,7 @@ import {
   HelpCircle,
   X,
   CalendarDays,
+  ChevronDown,
 } from 'lucide-react';
 
 const CATEGORY_META = {
@@ -65,8 +64,11 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [] }
     year: 'numeric',
   });
 
-  const handlePrevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
-  const handleNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+  const handleMonthChange = (event) => {
+    if (!event.target.value) return;
+    const [selectedYear, selectedMonth] = event.target.value.split('-').map(Number);
+    setCurrentDate(new Date(selectedYear, selectedMonth - 1, 1));
+  };
 
   const monthlyExpenses = useMemo(() => {
     const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
@@ -147,35 +149,32 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [] }
   return (
     <div className="mx-auto max-w-5xl space-y-5 p-4 sm:p-6 lg:p-8 pb-20">
       {/* Header & Month Switcher */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/90 pb-4">
-        <div>
-          <p className="text-xs font-medium text-slate-500">Monthly Spending Report</p>
-          <h1 className="mt-0.5 text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-            {formattedMonthLabel}
+      <div className="flex items-center justify-between gap-2.5">
+        <div className="flex min-w-0 items-center gap-2.5 rounded-full border border-white/90 bg-white/75 p-2 pr-4 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
+          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-sm">
+            {user?.photoDataUrl ? (
+              <img src={user.photoDataUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              (user?.username || 'U').charAt(0).toUpperCase()
+            )}
+          </span>
+          <h1 className="truncate text-sm font-extrabold tracking-tight text-slate-900">
+            Monthly
           </h1>
         </div>
 
-        <div className="flex items-center rounded-xl border border-slate-200 bg-white p-1 shadow-2xs">
-          <button
-            type="button"
-            onClick={handlePrevMonth}
-            className="rounded-lg p-1.5 text-slate-600 hover:bg-slate-100"
-            title="Previous Month"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <span className="min-w-[96px] px-2.5 text-center text-xs font-semibold text-slate-800">
-            {currentDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-          </span>
-          <button
-            type="button"
-            onClick={handleNextMonth}
-            className="rounded-lg p-1.5 text-slate-600 hover:bg-slate-100"
-            title="Next Month"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
+        <label className="relative flex h-10 min-w-0 max-w-[58%] flex-shrink items-center gap-2 rounded-full border border-white/90 bg-white/75 px-3 text-xs font-semibold text-slate-700 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
+          <CalendarDays size={14} className="flex-shrink-0 text-blue-600" />
+          <span className="truncate">{formattedMonthLabel}</span>
+          <ChevronDown size={14} className="flex-shrink-0 text-slate-400" />
+          <input
+            type="month"
+            aria-label="Choose report month"
+            value={`${year}-${String(month + 1).padStart(2, '0')}`}
+            onChange={handleMonthChange}
+            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+          />
+        </label>
       </div>
 
       {/* 3-Card Summary Row */}

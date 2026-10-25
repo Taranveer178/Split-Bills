@@ -345,7 +345,7 @@ export default function AddExpenseTab({
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg bg-slate-900 text-[11px] font-bold text-white">
+                    <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-slate-900 text-[11px] font-bold text-white">
                       {member?.photoDataUrl ? (
                         <img src={member.photoDataUrl} alt="" className="h-full w-full object-cover" />
                       ) : (

@@ -79,8 +79,9 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
       case 'auth/too-many-requests':
         return 'Too many attempts. Wait a little and try again.';
       case 'auth/popup-blocked':
+        return 'Google sign-in popup was blocked. Allow popups for this site and try again.';
       case 'auth/unauthorized-domain':
-        return 'Google sign-in could not open. Check your browser settings or authorized Firebase domains.';
+        return `Google sign-in is not enabled for ${window.location.hostname}. Add this host under Firebase Authentication > Settings > Authorized domains.`;
       case 'auth/operation-not-allowed':
         return 'Google sign-in is not enabled for this Firebase project. Enable Google in Firebase Authentication settings.';
       case 'auth/popup-closed-by-user':
@@ -104,11 +105,13 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
         throw new Error('Google sign-in is unavailable without a Firebase connection.');
       }
 
-      const authUsers = await onLoadUsers();
-      const result = await signInWithPopup(auth, new GoogleAuthProvider());
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      const result = await signInWithPopup(auth, provider);
       const googleUser = result.user;
       const userEmail = googleUser.email?.trim().toLowerCase();
       if (!userEmail) throw new Error('Google did not provide an email address for this account.');
+      const authUsers = await onLoadUsers();
 
       const existingUser = authUsers.find(
         (item) => item.email?.trim().toLowerCase() === userEmail
@@ -136,12 +139,6 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
         createdAt: new Date().toISOString(),
       };
       await onSaveUser(newUser);
-
-      if (!googleUser.emailVerified) {
-        await sendEmailVerification(googleUser);
-        setNotice(`A verification link was sent to ${userEmail}. Verify your email before signing in.`);
-        return;
-      }
 
       onLogin(newUser.id);
     } catch (authError) {
@@ -457,7 +454,28 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
             disabled={isSubmitting}
             className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <span className="font-bold text-base text-[#4285F4]" aria-hidden="true">G</span>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 48 48"
+              className="h-[18px] w-[18px] flex-shrink-0"
+            >
+              <path
+                fill="#4285F4"
+                d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.7c3.9-3.6 6-8.8 6-15Z"
+              />
+              <path
+                fill="#34A853"
+                d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.7-5.1c-1.8 1.2-4.1 2-6.8 2-5.2 0-9.6-3.5-11.2-8.2H5.9v5.2A20 20 0 0 0 24 44Z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M12.8 27.8a12 12 0 0 1 0-7.6V15H5.9a20 20 0 0 0 0 18l6.9-5.2Z"
+              />
+              <path
+                fill="#EA4335"
+                d="M24 12c3 0 5.7 1 7.8 3.1l5.9-5.9C34.1 5.9 29.5 4 24 4A20 20 0 0 0 5.9 15l6.9 5.2C14.4 15.5 18.8 12 24 12Z"
+              />
+            </svg>
             Continue with Google
           </button>
         </>

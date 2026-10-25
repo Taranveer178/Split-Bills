@@ -217,7 +217,7 @@ export default function MembersTab({
       <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3.5 flex-1 min-w-0">
-            <div className="w-12 h-12 overflow-hidden rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-lg flex-shrink-0">
+            <div className="w-12 h-12 overflow-hidden rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-lg flex-shrink-0">
               {group.imageDataUrl ? (
                 <img src={group.imageDataUrl} alt="" className="h-full w-full object-cover" />
               ) : group.name ? (
@@ -389,10 +389,10 @@ export default function MembersTab({
                     <img
                       src={user.photoDataUrl}
                       alt={`${user.username} profile`}
-                      className="h-9 w-9 rounded-xl object-cover border border-slate-200"
+                      className="h-9 w-9 rounded-full object-cover border border-slate-200"
                     />
                   ) : (
-                    <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center text-white font-bold text-xs">
+                    <div className="w-9 h-9 rounded-full bg-slate-900 flex items-center justify-center text-white font-bold text-xs">
                       {user ? user.username.charAt(0).toUpperCase() : '?'}
                     </div>
                   )}

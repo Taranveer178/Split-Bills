@@ -103,7 +103,7 @@ export default function CreateGroupModal({ user, onSaveGroup, onBack, showToast 
               Space Icon (Optional)
             </span>
             <div className="flex items-center gap-3.5">
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white text-slate-500">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-white text-slate-500">
                 {imageDataUrl ? (
                   <img src={imageDataUrl} alt="Group preview" className="h-full w-full object-cover" />
                 ) : (
