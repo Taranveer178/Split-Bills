@@ -2,6 +2,7 @@ import {
   LayoutGrid,
   IndianRupee,
   LogOut,
+  Download,
   PieChart,
   Plus,
   User,
@@ -26,6 +27,8 @@ export default function PrimaryNav({
   onLogout,
   user,
   unreadSpacesCount = 0,
+  onInstallApp,
+  isAppInstalled = false,
   desktopOnly = false,
 }) {
   return (
@@ -190,6 +193,23 @@ export default function PrimaryNav({
 
         {/* Desktop User Footer Card */}
         <div className="space-y-2 border-t border-slate-200/60 pt-4">
+          {!isAppInstalled && onInstallApp && (
+            <button
+              type="button"
+              onClick={onInstallApp}
+              className="flex w-full items-center gap-3 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:from-blue-100 hover:to-indigo-100 hover:shadow-md active:translate-y-0"
+            >
+              <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm">
+                <Download size={17} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-xs font-bold text-slate-900">Install RoomSplit</span>
+                <span className="mt-0.5 block text-[10px] text-slate-500">
+                  Add the app to your device
+                </span>
+              </span>
+            </button>
+          )}
           {user && (
             <div
               onClick={() => onNavigate('profile')}

@@ -13,6 +13,7 @@ import {
   Bell,
   LogOut,
   Edit2,
+  Download,
 } from 'lucide-react';
 import {
   EmailAuthProvider,
@@ -28,7 +29,14 @@ import { auth } from '../../firebase';
 import { Button, Input } from '../common/UI';
 import { requestNotificationPermission, triggerPushNotification } from '../../utils/notifications';
 
-export default function ProfileTab({ user, onUpdateUser, onLogout, showToast }) {
+export default function ProfileTab({
+  user,
+  onUpdateUser,
+  onLogout,
+  onInstallApp,
+  isAppInstalled = false,
+  showToast,
+}) {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(user?.username || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -301,6 +309,26 @@ export default function ProfileTab({ user, onUpdateUser, onLogout, showToast }) 
 
       {!isEditing ? (
         <div className="space-y-4">
+          {!isAppInstalled && onInstallApp && (
+            <button
+              type="button"
+              onClick={onInstallApp}
+              className="flex w-full items-center gap-4 rounded-3xl border border-white/90 bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 p-4 text-left text-white shadow-lg shadow-blue-900/10 transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 sm:p-5"
+            >
+              <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/15">
+                <Download size={20} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-extrabold">Install RoomSplit</span>
+                <span className="mt-0.5 block text-xs text-blue-100">
+                  Get quick access from your home screen
+                </span>
+              </span>
+              <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-blue-700">
+                Install
+              </span>
+            </button>
+          )}
           <div className="rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="relative inline-block">

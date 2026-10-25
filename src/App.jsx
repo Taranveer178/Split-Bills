@@ -160,6 +160,10 @@ export default function App() {
   const [activeUserId, setActiveUserId] = useState(
     () => localStorage.getItem('rs_active_user_id')
   );
+  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null);
+  const [isAppInstalled, setIsAppInstalled] = useState(
+    () => window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true
+  );
   const hasInitialLocalSession = Boolean(activeUserId && !(hasFirebase && db && auth));
   const readStoredData = (key, fallback) => {
     const value = localStorage.getItem(key);
@@ -214,6 +218,34 @@ export default function App() {
     .map((group) => group.id)
     .sort()
     .join(',');
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (event) => {
+      event.preventDefault();
+      setDeferredInstallPrompt(event);
+    };
+    const handleAppInstalled = () => {
+      setIsAppInstalled(true);
+      setDeferredInstallPrompt(null);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredInstallPrompt) return false;
+
+    deferredInstallPrompt.prompt();
+    const { outcome } = await deferredInstallPrompt.userChoice;
+    setDeferredInstallPrompt(null);
+    if (outcome === 'accepted') setIsAppInstalled(true);
+    return outcome === 'accepted';
+  };
 
   useEffect(() => {
     const viewport = window.visualViewport;
@@ -823,6 +855,9 @@ export default function App() {
       ) : currentView === 'dashboard' ? (
         <Dashboard
           key={dashboardTab}
+          deferredPromptAvailable={Boolean(deferredInstallPrompt)}
+          onInstallApp={handleInstallApp}
+          isAppInstalled={isAppInstalled}
           user={activeUser}
           users={users}
           initialTab={dashboardTab}

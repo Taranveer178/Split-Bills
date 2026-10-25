@@ -14,6 +14,31 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+const NAVIGATION_CACHE = 'roomsplit-navigation-v1';
+
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  if (request.method !== 'GET' || request.mode !== 'navigate') return;
+
+  const requestUrl = new URL(request.url);
+  if (requestUrl.origin !== self.location.origin) return;
+
+  event.respondWith((async () => {
+    const cache = await caches.open(NAVIGATION_CACHE);
+    try {
+      const response = await fetch(request);
+      if (response.ok && response.type === 'basic') {
+        await cache.put('/', response.clone());
+      }
+      return response;
+    } catch (error) {
+      const cachedAppShell = await cache.match('/');
+      if (cachedAppShell) return cachedAppShell;
+      throw error;
+    }
+  })());
+});
+
 // Handle notification display when the browser is backgrounded or tab closed
 messaging.onBackgroundMessage((payload) => {
   if (payload.notification) return;

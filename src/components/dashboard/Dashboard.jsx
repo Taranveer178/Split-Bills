@@ -20,6 +20,7 @@ import {
   MessageSquare,
   Trash2,
   LogOut,
+  Smartphone,
 } from 'lucide-react';
 import roomsplitIcon from '../../assets/roomsplit-icon.webp';
 import PrimaryNav from '../common/PrimaryNav';
@@ -48,11 +49,13 @@ export default function Dashboard({
   onClearNotifications,
   onTabChange,
   initialTab = 'groups',
+  deferredPromptAvailable = false,
+  onInstallApp,
+  isAppInstalled = false,
   showToast,
 }) {
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const [installDialogOpen, setInstallDialogOpen] = useState(false);
   const [spaceFilter, setSpaceFilter] = useState('active'); // 'active' | 'pinned' | 'archived'
   const [searchQuery, setSearchQuery] = useState('');
   const [ledgerFilter, setLedgerFilter] = useState('all'); // 'all' | 'mine' | 'settlements'
@@ -85,6 +88,15 @@ export default function Dashboard({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showLogoutConfirmation, isSigningOut]);
+
+  useEffect(() => {
+    if (!installDialogOpen) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setInstallDialogOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [installDialogOpen]);
 
   const confirmLogout = async () => {
     if (!onLogout || isSigningOut) return;
@@ -442,24 +454,23 @@ export default function Dashboard({
   }, [activeTab, unreadNotifications, onMarkNotificationsRead]);
 
   useEffect(() => {
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setShowInstallBanner(true);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-  }, []);
+    if (isAppInstalled || sessionStorage.getItem('roomsplit-install-prompt-shown')) return undefined;
+    const timer = window.setTimeout(() => {
+      setInstallDialogOpen(true);
+      sessionStorage.setItem('roomsplit-install-prompt-shown', 'true');
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [isAppInstalled]);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setShowInstallBanner(false);
+    if (!deferredPromptAvailable) {
+      setInstallDialogOpen(true);
+      return;
     }
-    setDeferredPrompt(null);
+    const wasInstalled = await onInstallApp?.();
+    if (wasInstalled) {
+      setInstallDialogOpen(false);
+    }
   };
 
   const handleTabSwitch = (tab) => {
@@ -661,30 +672,6 @@ export default function Dashboard({
                 : 'md:pt-6 lg:pt-8'
             }`}
           >
-            {/* PWA Install Banner */}
-            {activeTab === 'groups' && showInstallBanner && (
-              <div className="liquid-glass mb-4 flex items-center justify-between rounded-2xl px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
-                    <Download size={17} />
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-bold text-slate-900">Install RoomSplit App</h3>
-                    <p className="text-[11px] text-slate-500">
-                      Add to home screen for native full-screen experience.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleInstallClick}
-                  className="rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700"
-                >
-                  Install
-                </button>
-              </div>
-            )}
-
             {/* ===================================================================== */}
             {/* NATIVE MOBILE APP DASHBOARD (< md)                                    */}
             {/* ===================================================================== */}
@@ -1703,6 +1690,8 @@ export default function Dashboard({
                   user={user}
                   onUpdateUser={onUpdateUser}
                   onLogout={() => setShowLogoutConfirmation(true)}
+                  onInstallApp={handleInstallClick}
+                  isAppInstalled={isAppInstalled}
                   showToast={showToast}
                 />
               )}
@@ -1976,8 +1965,68 @@ export default function Dashboard({
         onQuickAction={() => openQuickExpenseModal()}
         unreadSpacesCount={totalUnreadSpacesCount}
         onLogout={() => setShowLogoutConfirmation(true)}
+        onInstallApp={handleInstallClick}
+        isAppInstalled={isAppInstalled}
         user={user}
       />
+
+      {installDialogOpen && !isAppInstalled && (
+        <div
+          className="fixed inset-0 z-[140] flex items-end justify-center bg-slate-950/40 p-0 backdrop-blur-md sm:items-center sm:p-4"
+          onClick={() => setInstallDialogOpen(false)}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="install-app-title"
+            className="w-full max-w-sm rounded-t-[32px] border border-white/80 bg-white/95 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.24)] backdrop-blur-2xl sm:rounded-[32px]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mx-auto mb-5 h-1.5 w-10 rounded-full bg-slate-300 sm:hidden" />
+            <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-[20px] border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-100 text-blue-600 shadow-sm">
+              <img src={roomsplitIcon} alt="" className="h-full w-full scale-110 object-cover" />
+            </div>
+            <h2
+              id="install-app-title"
+              className="mt-4 text-center text-lg font-extrabold tracking-tight text-slate-900"
+            >
+              Take RoomSplit with you
+            </h2>
+            <p className="mt-1.5 text-center text-sm leading-relaxed text-slate-500">
+              Install the app for quick access and a full-screen experience.
+            </p>
+            {!deferredPromptAvailable && (
+              <div className="mt-4 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-3.5">
+                <div className="flex items-start gap-2.5">
+                  <Smartphone size={17} className="mt-0.5 flex-shrink-0 text-blue-600" />
+                  <p className="text-xs leading-relaxed text-slate-600">
+                    {/iphone|ipad|ipod/i.test(navigator.userAgent)
+                      ? 'To install, tap Share in your browser, then choose “Add to Home Screen”.'
+                      : 'If your browser does not show an install prompt, open its menu and choose “Install app” or “Add to Home screen”.'}
+                  </p>
+                </div>
+              </div>
+            )}
+            <div className="mt-5 grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={() => setInstallDialogOpen(false)}
+                className="h-11 rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50"
+              >
+                Not now
+              </button>
+              <button
+                type="button"
+                onClick={deferredPromptAvailable ? handleInstallClick : () => setInstallDialogOpen(false)}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-b from-blue-600 to-indigo-600 text-sm font-bold text-white shadow-md shadow-blue-600/20 transition-transform hover:brightness-105 active:scale-[0.98]"
+              >
+                <Download size={16} />
+                {deferredPromptAvailable ? 'Install app' : 'Got it'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
 
       {showLogoutConfirmation && (
         <div
