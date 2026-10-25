@@ -11,6 +11,7 @@ import {
   Plus,
   Users,
 } from 'lucide-react';
+import { formatCurrency } from '../../utils/currency';
 
 export default function DesktopSpacesTab({
   groups,
@@ -20,6 +21,9 @@ export default function DesktopSpacesTab({
   spaceFilter,
   onSpaceFilterChange,
   groupMetrics,
+  unreadMessagesByGroup = {},
+  unreadChatByGroup = {},
+  showUnreadIndicators = false,
   users,
   user,
   pinnedGroupIds,
@@ -92,6 +96,8 @@ export default function DesktopSpacesTab({
             const isPinned = pinnedGroupIds.includes(group.id);
             const isMuted = mutedGroupIds.includes(group.id);
             const isArchived = archivedGroupIds.includes(group.id);
+            const unreadCount = unreadMessagesByGroup[group.id] || 0;
+            const unreadChatCount = unreadChatByGroup[group.id] || 0;
 
             return (
               <article
@@ -123,6 +129,14 @@ export default function DesktopSpacesTab({
                           <h2 className="truncate text-sm font-extrabold text-slate-900 transition-colors group-hover:text-blue-600">
                             {group.name}
                           </h2>
+                          {showUnreadIndicators && unreadCount > 0 && !isArchived && (
+                            <span
+                              title={`${unreadCount} unread item${unreadCount === 1 ? '' : 's'}`}
+                              className="flex h-4 min-w-4 flex-shrink-0 items-center justify-center rounded-full bg-rose-600 px-1 text-[9px] font-extrabold leading-none text-white"
+                            >
+                              {unreadCount > 99 ? '99+' : unreadCount}
+                            </span>
+                          )}
                           {isPinned && <Pin size={12} className="flex-shrink-0 text-blue-600" />}
                           {isMuted && <BellOff size={12} className="flex-shrink-0 text-amber-500" />}
                         </div>
@@ -141,9 +155,9 @@ export default function DesktopSpacesTab({
                       }`}
                     >
                       {metrics.myNet > 0.01
-                        ? `+₹${metrics.myNet.toFixed(2)}`
+                        ? `+${formatCurrency(metrics.myNet, group.currency)}`
                         : metrics.myNet < -0.01
-                          ? `-₹${Math.abs(metrics.myNet).toFixed(2)}`
+                          ? `-${formatCurrency(Math.abs(metrics.myNet), group.currency)}`
                           : 'Settled'}
                     </span>
                   </div>
@@ -154,7 +168,7 @@ export default function DesktopSpacesTab({
                         Room Spend
                       </span>
                       <span className="font-mono font-extrabold text-slate-800">
-                        ₹{metrics.roomSpend.toFixed(2)}
+                        {formatCurrency(metrics.roomSpend, group.currency)}
                       </span>
                     </div>
                     <div className="min-w-0">
@@ -223,11 +237,23 @@ export default function DesktopSpacesTab({
                         event.stopPropagation();
                         onOpenGroup(group.id, 'chat');
                       }}
-                      title="Open group chat"
-                      aria-label={`Open ${group.name} chat`}
-                      className="flex h-7 w-7 items-center justify-center rounded-xl text-slate-400 hover:bg-white hover:text-blue-600"
+                      title={showUnreadIndicators && unreadChatCount > 0
+                        ? `Open group chat (${unreadChatCount} unread)`
+                        : 'Open group chat'}
+                      aria-label={`Open ${group.name} chat${showUnreadIndicators && unreadChatCount > 0 ? `, ${unreadChatCount} unread messages` : ''}`}
+                      className={`relative flex h-7 w-7 items-center justify-center rounded-xl ${
+                        showUnreadIndicators && unreadChatCount > 0
+                          ? 'bg-rose-50 text-rose-600'
+                          : 'text-slate-400 hover:bg-white hover:text-blue-600'
+                      }`}
                     >
                       <MessageSquare size={14} />
+                      {showUnreadIndicators && unreadChatCount > 0 && (
+                        <span
+                          aria-hidden="true"
+                          className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border border-white bg-rose-600"
+                        />
+                      )}
                     </button>
                     <button
                       type="button"

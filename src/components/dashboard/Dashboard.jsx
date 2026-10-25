@@ -17,9 +17,9 @@ import {
   PieChart,
   CheckCircle2,
   X,
-  IndianRupee,
   MessageSquare,
   Trash2,
+  LogOut,
 } from 'lucide-react';
 import roomsplitIcon from '../../assets/roomsplit-icon.webp';
 import PrimaryNav from '../common/PrimaryNav';
@@ -29,6 +29,7 @@ import DesktopSpacesTab from './DesktopSpacesTab';
 import TransactionsTab from './TransactionsTab';
 import { calculateSettlements } from '../../utils/settlement';
 import { CATEGORIES, PAYMENT_METHODS } from '../../utils/constants';
+import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
 
 export default function Dashboard({
   user,
@@ -57,6 +58,8 @@ export default function Dashboard({
   const [ledgerFilter, setLedgerFilter] = useState('all'); // 'all' | 'mine' | 'settlements'
   const [mobileSection, setMobileSection] = useState('spaces'); // 'spaces' | 'dues' | 'recent'
   const [copiedCodeId, setCopiedCodeId] = useState(null);
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   // Activity Drawer / Notification Center Popup State
   const [isActivityOpen, setIsActivityOpen] = useState(false);
@@ -69,6 +72,30 @@ export default function Dashboard({
   const [quickCategory, setQuickCategory] = useState('Food');
   const [quickMethod, setQuickMethod] = useState('UPI');
   const [savingQuick, setSavingQuick] = useState(false);
+
+  useEffect(() => {
+    if (!showLogoutConfirmation) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && !isSigningOut) {
+        setShowLogoutConfirmation(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showLogoutConfirmation, isSigningOut]);
+
+  const confirmLogout = async () => {
+    if (!onLogout || isSigningOut) return;
+    setIsSigningOut(true);
+    try {
+      await onLogout();
+      setShowLogoutConfirmation(false);
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
 
   const pinnedGroupIds = user?.pinnedGroupIds || [];
   const archivedGroupIds = user?.archivedGroupIds || [];
@@ -99,7 +126,7 @@ export default function Dashboard({
   );
 
   // Unread message & transaction count per space
-  const unreadMessagesByGroup = useMemo(() => {
+  const unreadCountsByGroup = useMemo(() => {
     const map = {};
     myGroups.forEach((group) => {
       let chatCount = 0;
@@ -159,10 +186,26 @@ export default function Dashboard({
       ).length;
 
       const effectiveChatCount = Math.max(chatCount, chatNotifs);
-      map[group.id] = effectiveChatCount + transactionNotifs;
+      map[group.id] = {
+        chat: effectiveChatCount,
+        total: effectiveChatCount + transactionNotifs,
+      };
     });
     return map;
   }, [myGroups, notifications, user?.id, user?.lastReadGroupChat]);
+
+  const unreadMessagesByGroup = useMemo(
+    () => Object.fromEntries(
+      Object.entries(unreadCountsByGroup).map(([groupId, counts]) => [groupId, counts.total])
+    ),
+    [unreadCountsByGroup]
+  );
+  const unreadChatByGroup = useMemo(
+    () => Object.fromEntries(
+      Object.entries(unreadCountsByGroup).map(([groupId, counts]) => [groupId, counts.chat])
+    ),
+    [unreadCountsByGroup]
+  );
 
   const totalUnreadSpacesCount = useMemo(
     () => Object.values(unreadMessagesByGroup).reduce((sum, c) => sum + (c || 0), 0),
@@ -175,13 +218,30 @@ export default function Dashboard({
         (n) =>
           !n.read &&
           n.groupId === groupId &&
-          (!n.recipientId || n.recipientId === user?.id)
+          (!n.recipientId || n.recipientId === user?.id) &&
+          (
+            subTab === 'chat'
+              ? (
+                  n.type === 'CHAT_MESSAGE' ||
+                  n.type === 'NEW_MESSAGE' ||
+                  n.type === 'MESSAGE' ||
+                  n.category === 'chat' ||
+                  /message|chat/i.test(n.type || '')
+                )
+              : !(
+                  n.type === 'CHAT_MESSAGE' ||
+                  n.type === 'NEW_MESSAGE' ||
+                  n.type === 'MESSAGE' ||
+                  n.category === 'chat' ||
+                  /message|chat/i.test(n.type || '')
+                )
+          )
       );
       if (groupUnread.length > 0) {
         onMarkNotificationsRead(groupUnread.map((n) => n.id));
       }
     }
-    onOpenGroup?.(groupId, subTab);
+    onOpenGroup?.(groupId, subTab, unreadChatByGroup[groupId] || 0);
   };
 
   const handleClearAllActivity = () => {
@@ -488,7 +548,7 @@ export default function Dashboard({
           createdByName: user?.username || 'Roommate',
           groupId: targetGroup.id,
           type: 'EXPENSE_ADDED',
-          message: `${user?.username} added "${newExpense.title}" for ₹${newExpense.totalAmount} (Your share: ₹${share}).`,
+          message: `${user?.username} added "${newExpense.title}" for ${formatCurrency(newExpense.totalAmount, targetGroup.currency)} (Your share: ${formatCurrency(share, targetGroup.currency)}).`,
           expenseId: newExpense.id,
           createdAt: new Date().toISOString(),
           read: false,
@@ -526,8 +586,8 @@ export default function Dashboard({
           aria-label="Go to RoomSplit home"
           className="liquid-glass-interactive flex min-w-0 items-center gap-2 rounded-full border border-white/90 bg-white/80 py-1 pl-1 pr-3 text-left shadow-sm focus-visible:outline-none"
         >
-          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/90 bg-white p-1 shadow-sm">
-            <img src={roomsplitIcon} alt="" className="h-full w-full object-contain" />
+          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/90 bg-white shadow-sm">
+            <img src={roomsplitIcon} alt="" className="h-full w-full scale-110 rounded-full object-cover" />
           </span>
           <div className="min-w-0">
             <span className="block truncate text-xs font-extrabold tracking-tight text-slate-900 leading-none">
@@ -594,7 +654,13 @@ export default function Dashboard({
       {/* --- MAIN CONTENT AREA --- */}
       <main className="relative z-10 min-w-0 flex-1 overscroll-y-contain overflow-y-auto pb-24 scrollbar-hide md:order-2 md:pb-8">
         {(activeTab === 'groups' || activeTab === 'spaces' || activeTab === 'transactions') && (
-          <div className="mx-auto max-w-[1360px] p-3.5 sm:p-5 md:p-6 lg:p-8">
+          <div
+            className={`mx-auto max-w-[1360px] p-3.5 sm:p-5 md:px-6 md:pb-6 lg:px-8 lg:pb-8 ${
+              activeTab === 'spaces' || activeTab === 'transactions'
+                ? 'md:pt-0 lg:pt-0'
+                : 'md:pt-6 lg:pt-8'
+            }`}
+          >
             {/* PWA Install Banner */}
             {activeTab === 'groups' && showInstallBanner && (
               <div className="liquid-glass mb-4 flex items-center justify-between rounded-2xl px-4 py-3">
@@ -709,11 +775,6 @@ export default function Dashboard({
                         ? `Archived (${archivedGroups.length})`
                         : `Spaces (${activeGroups.length})`}
                     </span>
-                    {totalUnreadSpacesCount > 0 && spaceFilter !== 'archived' && (
-                      <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[9px] font-extrabold text-white leading-none">
-                        {totalUnreadSpacesCount > 99 ? '99+' : totalUnreadSpacesCount}
-                      </span>
-                    )}
                   </button>
                   <button
                     type="button"
@@ -832,7 +893,7 @@ export default function Dashboard({
                                 <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
                                   <span>{group.members.length} members</span>
                                   <span>·</span>
-                                  <span>₹{metrics.roomSpend.toFixed(0)}</span>
+                                  <span>{formatCurrency(metrics.roomSpend, group.currency, 0)}</span>
                                 </div>
                               </div>
                             </div>
@@ -854,9 +915,9 @@ export default function Dashboard({
                                 }`}
                               >
                                 {metrics.myNet > 0.01
-                                  ? `+₹${metrics.myNet.toFixed(0)}`
+                                  ? `+${formatCurrency(metrics.myNet, group.currency, 0)}`
                                   : metrics.myNet < -0.01
-                                    ? `-₹${Math.abs(metrics.myNet).toFixed(0)}`
+                                    ? `-${formatCurrency(Math.abs(metrics.myNet), group.currency, 0)}`
                                     : 'Settled'}
                               </span>
 
@@ -937,7 +998,11 @@ export default function Dashboard({
                                 iOwe ? 'text-rose-600' : 'text-emerald-600'
                               }`}
                             >
-                              {iOwe ? '-' : '+'}₹{item.amount.toFixed(0)}
+                              {iOwe ? '-' : '+'}{formatCurrency(
+                                item.amount,
+                                myGroups.find((group) => group.id === item.groupId)?.currency,
+                                0
+                              )}
                             </span>
                             <span className="rounded-xl bg-gradient-to-b from-blue-600 to-indigo-600 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
                               Settle
@@ -980,7 +1045,11 @@ export default function Dashboard({
                             </p>
                           </div>
                           <span className="font-mono text-xs font-extrabold text-slate-900">
-                            ₹{(parseFloat(exp.totalAmount) || 0).toFixed(0)}
+                            {formatCurrency(
+                              parseFloat(exp.totalAmount) || 0,
+                              grp?.currency,
+                              0
+                            )}
                           </span>
                         </div>
                       );
@@ -1015,6 +1084,7 @@ export default function Dashboard({
                   onSpaceFilterChange={setSpaceFilter}
                   groupMetrics={groupMetrics}
                   unreadMessagesByGroup={unreadMessagesByGroup}
+                  unreadChatByGroup={unreadChatByGroup}
                   users={users}
                   user={user}
                   pinnedGroupIds={pinnedGroupIds}
@@ -1057,26 +1127,26 @@ export default function Dashboard({
                 </div>
 
                 <div className="flex flex-shrink-0 flex-nowrap items-center gap-2">
-                  <div className="relative w-36 lg:w-40 xl:w-48">
-                    <Search
-                      size={14}
-                      strokeWidth={2.5}
-                      className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-slate-500"
-                    />
+                  <div className="group relative w-36 lg:w-48 xl:w-56">
+                    <span className="pointer-events-none absolute left-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100/80 text-slate-500 transition-colors group-focus-within:bg-blue-50 group-focus-within:text-blue-600">
+                      <Search size={14} strokeWidth={2.25} />
+                    </span>
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search spaces..."
-                      className="relative z-0 h-9 w-full rounded-xl border border-slate-200/90 bg-white/90 pl-8 pr-6 text-xs font-semibold text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-blue-500 focus:bg-white focus:outline-none"
+                      aria-label="Search spaces"
+                      className="relative z-0 h-10 w-full rounded-full border border-white/90 bg-white/70 pl-11 pr-9 text-xs font-semibold text-slate-800 shadow-[0_4px_16px_rgba(15,23,42,0.06)] backdrop-blur-xl transition-all placeholder:text-slate-400 hover:bg-white/90 focus:border-blue-200 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10"
                     />
                     {searchQuery && (
                       <button
                         type="button"
                         onClick={() => setSearchQuery('')}
-                        className="absolute right-2 top-1/2 z-10 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                        aria-label="Clear search"
+                        className="absolute right-2 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-800"
                       >
-                        <X size={13} />
+                        <X size={12} strokeWidth={2.5} />
                       </button>
                     )}
                   </div>
@@ -1300,6 +1370,8 @@ export default function Dashboard({
                       onSpaceFilterChange={setSpaceFilter}
                       groupMetrics={groupMetrics}
                       unreadMessagesByGroup={unreadMessagesByGroup}
+                      unreadChatByGroup={unreadChatByGroup}
+                      showUnreadIndicators
                       users={users}
                       user={user}
                       pinnedGroupIds={pinnedGroupIds}
@@ -1315,7 +1387,9 @@ export default function Dashboard({
 
                   {/* RECENT TRANSACTIONS LEDGER PANEL */}
                   <section
-                    className={`rounded-3xl  backdrop-blur-md ${
+                    className={`rounded-3xl backdrop-blur-md ${
+                      activeTab === 'groups' ? 'liquid-glass p-5' : ''
+                    } ${
                       activeTab === 'groups' || activeTab === 'transactions' ? '' : 'hidden'
                     }`}
                   >
@@ -1405,7 +1479,7 @@ export default function Dashboard({
                                     <span className="font-semibold text-slate-700">
                                       {iPaid ? 'You' : getUserName(exp.paidBy)}
                                     </span>{' '}
-                                    paid ₹{total.toFixed(2)} via {exp.paymentMethod || 'UPI'} ·{' '}
+                                    paid {formatCurrency(total, grp?.currency)} via {exp.paymentMethod || 'UPI'} ·{' '}
                                     {exp.date}
                                   </p>
                                 </div>
@@ -1423,10 +1497,10 @@ export default function Dashboard({
                                     }`}
                                   >
                                     {myImpact > 0.01
-                                      ? `+₹${myImpact.toFixed(2)}`
+                                      ? `+${formatCurrency(myImpact, grp?.currency)}`
                                       : myImpact < -0.01
-                                        ? `-₹${Math.abs(myImpact).toFixed(2)}`
-                                        : `₹${total.toFixed(2)}`}
+                                        ? `-${formatCurrency(Math.abs(myImpact), grp?.currency)}`
+                                        : formatCurrency(total, grp?.currency)}
                                   </span>
                                   <span className="text-[10px] text-slate-400">
                                     {myImpact > 0.01
@@ -1592,7 +1666,10 @@ export default function Dashboard({
                                     iOwe ? 'text-rose-600' : 'text-emerald-600'
                                   }`}
                                 >
-                                  {iOwe ? '-' : '+'}₹{s.amount.toFixed(2)}
+                                  {iOwe ? '-' : '+'}{formatCurrency(
+                                    s.amount,
+                                    myGroups.find((group) => group.id === s.groupId)?.currency
+                                  )}
                                 </span>
                                 <span className="rounded-xl bg-gradient-to-b from-blue-600 to-indigo-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
                                   Settle
@@ -1625,7 +1702,7 @@ export default function Dashboard({
                   key={[user?.id, user?.username, user?.email, user?.upiId, user?.photoDataUrl].join(':')}
                   user={user}
                   onUpdateUser={onUpdateUser}
-                  onLogout={onLogout}
+                  onLogout={() => setShowLogoutConfirmation(true)}
                   showToast={showToast}
                 />
               )}
@@ -1793,13 +1870,12 @@ export default function Dashboard({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1 block text-xs font-bold text-slate-700">
-                    Total Amount (₹)
+                    Total Amount ({getCurrencySymbol(myGroups.find((group) => group.id === quickGroupId)?.currency)})
                   </label>
                   <div className="relative">
-                    <IndianRupee
-                      size={14}
-                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-blue-600"
-                    />
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-blue-600">
+                      {getCurrencySymbol(myGroups.find((group) => group.id === quickGroupId)?.currency)}
+                    </span>
                     <input
                       type="number"
                       step="0.01"
@@ -1899,9 +1975,59 @@ export default function Dashboard({
         onNavigate={handleTabSwitch}
         onQuickAction={() => openQuickExpenseModal()}
         unreadSpacesCount={totalUnreadSpacesCount}
-        onLogout={onLogout}
+        onLogout={() => setShowLogoutConfirmation(true)}
         user={user}
       />
+
+      {showLogoutConfirmation && (
+        <div
+          className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/40 p-5 backdrop-blur-sm"
+          onClick={() => !isSigningOut && setShowLogoutConfirmation(false)}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="logout-confirmation-title"
+            aria-describedby="logout-confirmation-description"
+            className="w-full max-w-[340px] rounded-[28px] border border-white/70 bg-white/95 p-6 text-center shadow-[0_24px_80px_rgba(15,23,42,0.24)] backdrop-blur-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-rose-100 bg-rose-50 text-rose-600">
+              <LogOut size={21} />
+            </div>
+            <h2
+              id="logout-confirmation-title"
+              className="mt-4 text-base font-bold tracking-tight text-slate-900"
+            >
+              Sign out of RoomSplit?
+            </h2>
+            <p
+              id="logout-confirmation-description"
+              className="mt-1.5 text-sm leading-relaxed text-slate-500"
+            >
+              You can sign back in anytime to manage your shared spaces.
+            </p>
+            <div className="mt-6 grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                disabled={isSigningOut}
+                onClick={() => setShowLogoutConfirmation(false)}
+                className="h-11 rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isSigningOut}
+                onClick={confirmLogout}
+                className="h-11 rounded-2xl bg-rose-600 text-sm font-semibold text-white shadow-md shadow-rose-600/20 transition-colors hover:bg-rose-700 disabled:opacity-60"
+              >
+                {isSigningOut ? 'Signing out…' : 'Sign out'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

@@ -12,7 +12,6 @@ import {
   ChevronUp,
   Receipt,
   User,
-  IndianRupee,
   ArrowUpRight,
   ArrowDownLeft,
   X,
@@ -20,6 +19,7 @@ import {
 import { calculateSettlements } from '../../utils/settlement';
 import { Button } from '../common/UI';
 import { triggerPushNotification } from '../../utils/notifications';
+import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
 
 export default function BalancesTab({
   expenses,
@@ -31,6 +31,7 @@ export default function BalancesTab({
   onSendNotification,
   showToast,
 }) {
+  const currency = group.currency || 'INR';
   const { balances, settlements: optimizedSettlements } = useMemo(
     () => calculateSettlements(expenses, group.members),
     [expenses, group.members]
@@ -183,9 +184,7 @@ export default function BalancesTab({
       setConfirmSettlement(null);
       setExpandedId(null);
       const receiverName = currentUser.username || getUserName(currentUser.id);
-      const message = `${receiverName} confirmed receiving ₹${confirmSettlement.amount.toFixed(
-        2
-      )} from you.`;
+      const message = `${receiverName} confirmed receiving ${formatCurrency(confirmSettlement.amount, currency)} from you.`;
 
       try {
         await sendPaymentNotification(confirmSettlement.from, 'SETTLEMENT_CONFIRMED', message);
@@ -219,6 +218,12 @@ export default function BalancesTab({
     }
 
     if (!isRecordingOnly) {
+      if (currency !== 'INR') {
+        if (typeof showToast === 'function') {
+          showToast('UPI payments are only supported for INR spaces. You can record the payment instead.', 'error');
+        }
+        return;
+      }
       const payeeName = getUserName(customPayee);
       const payeeUpi = getMemberUpi(customPayee) || FALLBACK_DEFAULT_UPI;
       const amountStr = amt.toFixed(2);
@@ -242,7 +247,7 @@ export default function BalancesTab({
       try {
         await recordSettlement(currentUser.id, customPayee, amt.toFixed(2), 'Quick Pay');
         const payerName = currentUser.username || getUserName(currentUser.id);
-        const message = `${payerName} recorded a payment of ₹${amt.toFixed(2)} to you.`;
+        const message = `${payerName} recorded a payment of ${formatCurrency(amt, currency)} to you.`;
 
         await sendPaymentNotification(customPayee, 'PAYMENT_RECORDED', message);
 
@@ -294,7 +299,7 @@ export default function BalancesTab({
                   : 'text-slate-900'
             }`}
           >
-            {myBalance < 0 ? '-' : myBalance > 0 ? '+' : ''}₹{Math.abs(myBalance).toFixed(2)}
+            {myBalance < 0 ? '-' : myBalance > 0 ? '+' : ''}{formatCurrency(Math.abs(myBalance), currency)}
           </div>
         </div>
 
@@ -422,7 +427,7 @@ export default function BalancesTab({
                         <span
                           className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-mono font-bold mt-1 ${amountBadge}`}
                         >
-                          ₹{settlement.amount.toFixed(2)}
+                          {formatCurrency(settlement.amount, currency)}
                         </span>
                       </div>
                     </div>
@@ -463,6 +468,7 @@ export default function BalancesTab({
                               </span>
                             </div>
                           )}
+                          {currency === 'INR' ? (
                           <div className="grid grid-cols-2 gap-2">
                             <button
                               type="button"
@@ -485,6 +491,11 @@ export default function BalancesTab({
                               {copiedIndex === index ? 'Copied!' : 'Copy UPI ID'}
                             </button>
                           </div>
+                          ) : (
+                            <p className="rounded-xl border border-amber-200 bg-amber-50 p-2.5 text-[11px] text-amber-800">
+                              UPI payments are only supported for INR spaces. Record the payment after paying another way.
+                            </p>
+                          )}
                         </div>
                       )}
 
@@ -541,10 +552,9 @@ export default function BalancesTab({
           </div>
 
           <div className="relative w-full sm:w-36 flex-shrink-0">
-            <IndianRupee
-              size={13}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            />
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+              {getCurrencySymbol(currency)}
+            </span>
             <input
               type="number"
               placeholder="0.00"
@@ -580,25 +590,45 @@ export default function BalancesTab({
 
       {breakdownData &&
         createPortal(
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-sm rounded-2xl p-5 bg-white border border-slate-200 shadow-xl">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">Expense Breakdown</h3>
-                  <p className="text-xs text-slate-500">
-                    {breakdownData.fromName} owes {breakdownData.toName}
-                  </p>
+          <div
+            className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 backdrop-blur-md sm:items-center sm:p-4"
+            onClick={() => setBreakdownData(null)}
+          >
+            <div
+              className="w-full max-w-md rounded-t-[32px] border border-white/80 bg-white/95 p-5 shadow-2xl backdrop-blur-2xl sm:rounded-[32px] sm:p-6"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-slate-300 sm:hidden" />
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-blue-600">
+                    <Receipt size={18} />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-base font-extrabold text-slate-900">Expense Breakdown</h3>
+                    <p className="truncate text-xs text-slate-500">
+                      {breakdownData.fromName} owes {breakdownData.toName}
+                    </p>
+                  </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setBreakdownData(null)}
-                  className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-700 rounded-lg"
+                  aria-label="Close expense breakdown"
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-800"
                 >
-                  <X size={15} />
+                  <X size={16} />
                 </button>
               </div>
 
-              <div className="space-y-2 mb-4 max-h-60 overflow-y-auto scrollbar-hide">
+              <div className="mb-4 flex items-center justify-between rounded-2xl border border-blue-100 bg-blue-50/70 px-4 py-3">
+                <span className="text-xs font-semibold text-slate-600">Total owed</span>
+                <span className="font-mono text-base font-extrabold text-blue-700">
+                  {formatCurrency(breakdownData.amount, currency)}
+                </span>
+              </div>
+
+              <div className="mb-4 max-h-[50vh] space-y-2 overflow-y-auto scrollbar-hide">
                 {getBreakdownForPair(breakdownData.from, breakdownData.to).map((exp) => {
                   const isFromPaid = exp.paidBy === breakdownData.from;
                   const payerName = isFromPaid ? breakdownData.fromName : breakdownData.toName;
@@ -610,17 +640,17 @@ export default function BalancesTab({
                   return (
                     <div
                       key={exp.id}
-                      className="p-2.5 bg-slate-50 border border-slate-200/70 rounded-xl"
+                      className="rounded-2xl border border-slate-200/70 bg-white/80 p-3 shadow-sm"
                     >
-                      <div className="flex justify-between items-start mb-0.5">
-                        <span className="text-xs font-bold text-slate-900">{exp.title}</span>
-                        <span className="text-xs font-mono font-bold text-slate-900">
-                          ₹{parseFloat(shareAmt).toFixed(2)}
+                      <div className="mb-1 flex items-start justify-between gap-3">
+                        <span className="min-w-0 text-sm font-bold text-slate-900">{exp.title}</span>
+                        <span className="flex-shrink-0 font-mono text-sm font-extrabold text-slate-900">
+                          {formatCurrency(shareAmt, currency)}
                         </span>
                       </div>
-                      <div className="text-[11px] text-slate-500 flex justify-between items-center">
+                      <div className="flex items-center justify-between gap-2 text-[11px] text-slate-500">
                         <span>
-                          {payerName} paid ₹{parseFloat(exp.totalAmount).toFixed(2)}
+                          {payerName} paid {formatCurrency(exp.totalAmount, currency)}
                         </span>
                         <span>({borrowerName}’s share)</span>
                       </div>
@@ -629,13 +659,13 @@ export default function BalancesTab({
                 })}
               </div>
 
-              <Button
+              <button
+                type="button"
                 onClick={() => setBreakdownData(null)}
-                variant="secondary"
-                className="w-full py-2 text-xs"
+                className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-slate-900/15 transition-transform active:scale-[0.98]"
               >
                 Done
-              </Button>
+              </button>
             </div>
           </div>,
           document.body
@@ -652,7 +682,7 @@ export default function BalancesTab({
               <p className="text-slate-500 text-xs mb-4">
                 Confirm you received{' '}
                 <strong className="text-slate-900 font-mono">
-                  ₹{confirmSettlement.amount.toFixed(2)}
+                  {formatCurrency(confirmSettlement.amount, currency)}
                 </strong>{' '}
                 from <strong className="text-slate-800">{getUserName(confirmSettlement.from)}</strong>.
               </p>

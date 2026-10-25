@@ -3,10 +3,12 @@ import { AlertCircle, Eye, EyeOff, ArrowLeft, CheckCircle2 } from 'lucide-react'
 import {
   createUserWithEmailAndPassword,
   deleteUser,
+  GoogleAuthProvider,
   sendEmailVerification,
   sendPasswordResetEmail,
   signInAnonymously,
   signInWithEmailAndPassword,
+  signInWithPopup,
 } from 'firebase/auth';
 import roomsplitIcon from '../../assets/roomsplit-icon.webp';
 import { Button } from '../common/UI';
@@ -76,8 +78,78 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
         return 'Network error. Check your connection and try again.';
       case 'auth/too-many-requests':
         return 'Too many attempts. Wait a little and try again.';
+      case 'auth/popup-blocked':
+      case 'auth/unauthorized-domain':
+        return 'Google sign-in could not open. Check your browser settings or authorized Firebase domains.';
+      case 'auth/operation-not-allowed':
+        return 'Google sign-in is not enabled for this Firebase project. Enable Google in Firebase Authentication settings.';
+      case 'auth/popup-closed-by-user':
+        return 'Google sign-in was cancelled.';
+      case 'auth/account-exists-with-different-credential':
+        return 'An account already uses this email with another sign-in method. Sign in with that method first.';
+      case 'auth/credential-already-in-use':
+        return 'This Google account is already linked to another RoomSplit profile.';
       default:
         return 'Could not complete the request. Please try again.';
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setNotice('');
+    setIsSubmitting(true);
+
+    try {
+      if (!auth) {
+        throw new Error('Google sign-in is unavailable without a Firebase connection.');
+      }
+
+      const authUsers = await onLoadUsers();
+      const result = await signInWithPopup(auth, new GoogleAuthProvider());
+      const googleUser = result.user;
+      const userEmail = googleUser.email?.trim().toLowerCase();
+      if (!userEmail) throw new Error('Google did not provide an email address for this account.');
+
+      const existingUser = authUsers.find(
+        (item) => item.email?.trim().toLowerCase() === userEmail
+      );
+      if (existingUser) {
+        onLogin(existingUser.id);
+        return;
+      }
+
+      const baseUsername =
+        googleUser.displayName?.trim() || userEmail.split('@')[0] || 'Roommate';
+      const usedUsernames = new Set(authUsers.map((item) => item.username?.toLowerCase()));
+      let username = baseUsername;
+      let suffix = 2;
+      while (usedUsernames.has(username.toLowerCase())) {
+        username = `${baseUsername} ${suffix}`;
+        suffix += 1;
+      }
+
+      const newUser = {
+        id: googleUser.uid,
+        username,
+        email: userEmail,
+        photoDataUrl: googleUser.photoURL || '',
+        createdAt: new Date().toISOString(),
+      };
+      await onSaveUser(newUser);
+
+      if (!googleUser.emailVerified) {
+        await sendEmailVerification(googleUser);
+        setNotice(`A verification link was sent to ${userEmail}. Verify your email before signing in.`);
+        return;
+      }
+
+      onLogin(newUser.id);
+    } catch (authError) {
+      console.error('Google sign-in failed:', authError);
+      if (authError.code === 'auth/popup-closed-by-user') return;
+      setError(authError.code ? getAuthErrorMessage(authError) : authError.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -110,37 +182,7 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
           onLogin(localUser.id);
           return;
         }
-        if (cleanUsername.length < 3) {
-          setError('Username must be at least 3 characters.');
-          return;
-        }
-        if (!cleanEmail) {
-          setError('Email is required to create an account.');
-          return;
-        }
-        if (password.length < 6) {
-          setError('Password must be at least 6 characters.');
-          return;
-        }
-        if (
-          authUsers.some(
-            (item) =>
-              item.username?.toLowerCase() === cleanUsername.toLowerCase() ||
-              item.email?.toLowerCase() === cleanEmail
-          )
-        ) {
-          setError('An account already uses this username or email. Please sign in.');
-          return;
-        }
-        const localUser = {
-          id: `usr_${Date.now()}`,
-          username: cleanUsername,
-          email: cleanEmail,
-          password,
-          createdAt: new Date().toISOString(),
-        };
-        await onSaveUser(localUser);
-        onLogin(localUser.id);
+        setError('Account creation requires Firebase email verification. Please try again when connected.');
         return;
       }
 
@@ -193,23 +235,25 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
         if (matchedUser.password === password) {
           try {
             const credential = await createUserWithEmailAndPassword(auth, userEmail, password);
-            if (credential.user.uid !== matchedUser.id) {
+            if (!credential.user.emailVerified) {
               await sendEmailVerification(credential.user);
             }
             await onSaveUser({ ...matchedUser, password: '' });
+            if (!credential.user.emailVerified) {
+              setNotice(`A verification link was sent to ${userEmail}. Verify your email before signing in.`);
+              return;
+            }
             onLogin(matchedUser.id);
             return;
           } catch (migrationError) {
             if (migrationError.code !== 'auth/email-already-in-use') throw migrationError;
           }
         }
-
         const credential = await signInWithEmailAndPassword(auth, userEmail, password);
-        if (
-          matchedUser.id !== credential.user.uid
-          && !credential.user.emailVerified
-        ) {
+        if (!credential.user.emailVerified) {
           await sendEmailVerification(credential.user);
+          setNotice(`A verification link was sent to ${userEmail}. Verify your email before signing in.`);
+          return;
         }
         if (matchedUser.password) await onSaveUser({ ...matchedUser, password: '' });
         onLogin(matchedUser.id);
@@ -236,7 +280,6 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
         setError('An account already uses this email. Please sign in.');
         return;
       }
-
       const credential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
       const newUser = {
         id: credential.user.uid,
@@ -251,7 +294,11 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
         await signInAnonymously(auth);
         throw saveError;
       }
-      onLogin(newUser.id);
+      await sendEmailVerification(credential.user);
+      setNotice(`Account created. Check ${cleanEmail} for a verification link, then sign in.`);
+      setIsLogin(true);
+      setIdentifier(cleanEmail);
+      setPassword('');
     } catch (authError) {
       console.error('Authentication request failed:', authError);
       setError(authError.code ? getAuthErrorMessage(authError) : authError.message);
@@ -397,6 +444,25 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
               : 'Create account'}
       </Button>
 
+      {!isForgotPassword && (
+        <>
+          <div className="flex items-center gap-3 text-[11px] font-medium text-slate-400">
+            <span className="h-px flex-1 bg-slate-200" />
+            <span>or continue with</span>
+            <span className="h-px flex-1 bg-slate-200" />
+          </div>
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={isSubmitting}
+            className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <span className="font-bold text-base text-[#4285F4]" aria-hidden="true">G</span>
+            Continue with Google
+          </button>
+        </>
+      )}
+
       <div className="mt-2 text-center">
         <button
           type="button"
@@ -427,19 +493,21 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
   return (
     <main className="min-h-[100dvh] w-full bg-[#F8FAFC] font-sans flex items-center justify-center md:p-6 relative overflow-hidden">
       {/* MOBILE LAYOUT */}
-      <div className="md:hidden fixed inset-0 flex flex-col w-full h-full overflow-hidden bg-slate-900">
+      <div className="md:hidden fixed inset-0 flex flex-col w-full h-full overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-slate-900">
         <div className="flex-1 flex flex-col justify-between">
-          <div className="flex-1 flex flex-col items-start justify-center px-6 text-left">
-            <div className="w-14 h-14 bg-white rounded-2xl p-2 shadow-sm mb-5 flex items-center justify-center">
-              <img src={roomsplitIcon} alt="RoomSplit Logo" className="w-full h-full object-contain" />
+          <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-7 pb-8 text-center">
+            <div className="pointer-events-none absolute -top-20 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-sky-300/20 blur-3xl" />
+            <div className="pointer-events-none absolute bottom-8 -left-20 h-48 w-48 rounded-full bg-blue-400/20 blur-3xl" />
+            <div className="relative mb-6 flex h-[76px] w-[76px] items-center justify-center overflow-hidden rounded-[26px] border border-white/80 bg-white p-2.5 shadow-[0_16px_40px_rgba(15,23,42,0.25)]">
+              <img src={roomsplitIcon} alt="RoomSplit Logo" className="h-full w-full rounded-[18px] object-cover" />
             </div>
-            <span className="text-xs font-semibold uppercase tracking-widest text-emerald-400">
-              Shared Expense Ledger
+            <span className="relative rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-blue-100 shadow-sm backdrop-blur-sm">
+              Room Split
             </span>
-            <h1 className="mt-2 text-3xl font-bold text-white tracking-tight leading-tight">
+            <h1 className="relative mt-4 max-w-sm text-[32px] font-bold leading-[1.08] tracking-[-0.045em] text-white">
               Split bills. Stay balanced.
             </h1>
-            <p className="text-slate-400 mt-2.5 text-sm leading-relaxed max-w-xs">
+            <p className="relative mt-3 max-w-xs text-sm leading-relaxed text-blue-100/85">
               Track shared apartment expenses, UPI reimbursements, and roommate balances without clutter.
             </p>
           </div>
@@ -493,19 +561,19 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
       </div>
 
       {/* DESKTOP LAYOUT */}
-      <div className="hidden md:flex w-full max-w-[920px] min-h-[540px] bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
-        <div className="w-[45%] bg-slate-900 p-10 flex flex-col justify-between text-white">
+      <div className="hidden md:flex w-full max-w-[920px] min-h-[540px] bg-white rounded-2xl border border-blue-100 shadow-[0_24px_70px_rgba(30,64,175,0.14)] overflow-hidden">
+        <div className="w-[45%] bg-gradient-to-br from-blue-600 via-indigo-700 to-slate-900 p-10 flex flex-col justify-between text-white">
           <div>
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-10 h-10 bg-white rounded-xl p-1.5 flex items-center justify-center">
-                <img src={roomsplitIcon} alt="RoomSplit Logo" className="w-full h-full object-contain" />
+              <div className="w-10 h-10 overflow-hidden bg-white rounded-xl p-1.5 flex items-center justify-center">
+                <img src={roomsplitIcon} alt="RoomSplit Logo" className="h-full w-full rounded-lg object-cover" />
               </div>
               <span className="text-lg font-bold tracking-tight">RoomSplit</span>
             </div>
             <h2 className="text-3xl font-bold leading-tight tracking-tight mb-3">
               Clear shared accounting for modern households.
             </h2>
-            <p className="text-slate-400 text-sm leading-relaxed">
+            <p className="text-white text-sm leading-relaxed">
               Log bills in seconds, split equally or custom, and settle dues directly via UPI.
             </p>
 
@@ -525,10 +593,10 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
             </ul>
           </div>
 
-          <p className="text-slate-500 text-xs">© {new Date().getFullYear()} RoomSplit</p>
+          <p className="text-white text-xs">© {new Date().getFullYear()} RoomSplit</p>
         </div>
 
-        <div className="w-[55%] bg-white p-10 flex flex-col justify-center items-center">
+        <div className="w-[55%] bg-gradient-to-br from-blue-50/80 via-white to-indigo-50/70 p-10 flex flex-col justify-center items-center">
           <div className="w-full max-w-sm">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-slate-900 tracking-tight">

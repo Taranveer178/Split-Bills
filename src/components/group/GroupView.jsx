@@ -17,12 +17,15 @@ import ExpensesTab from './ExpensesTab';
 import MembersTab from './MembersTab';
 import ChatTab from './ChatTab';
 import { calculateSettlements } from '../../utils/settlement';
+import { formatCurrency } from '../../utils/currency';
 
 export default function GroupView({
   group,
   initialTab = 'expenses',
   onGroupTabChange,
   onActiveChatChange,
+  unreadChatCount = 0,
+  onMarkChatNotificationsRead,
   groups = [],
   expenses,
   onSaveExpense,
@@ -82,6 +85,10 @@ export default function GroupView({
     return () => onActiveChatChange?.(null);
   }, [activeTab, group.id, onActiveChatChange]);
 
+  useEffect(() => {
+    if (activeTab === 'chat') onMarkChatNotificationsRead?.(group.id);
+  }, [activeTab, group.id, onMarkChatNotificationsRead]);
+
   const handleTabSelect = (tab) => {
     onGroupTabChange?.(tab);
   };
@@ -127,7 +134,7 @@ export default function GroupView({
                   {group.name}
                 </h1>
                 <p className="text-[11px] leading-tight font-semibold text-slate-500 mt-0.5 truncate">
-                  {group.members.length} members · ₹{totalRoomSpend.toFixed(0)} spent
+                  {group.members.length} members · {formatCurrency(totalRoomSpend, group.currency, 0)} spent
                 </p>
               </div>
             </div>
@@ -158,9 +165,22 @@ export default function GroupView({
                     ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
-                title="Chat"
+                title={unreadChatCount > 0 && activeTab !== 'chat'
+                  ? `Chat (${unreadChatCount} unread)`
+                  : 'Chat'}
+                aria-label={unreadChatCount > 0 && activeTab !== 'chat'
+                  ? `Chat, ${unreadChatCount} unread messages`
+                  : 'Chat'}
               >
-                <MessageSquare size={19} />
+                <span className="relative inline-flex">
+                  <MessageSquare size={19} />
+                  {unreadChatCount > 0 && activeTab !== 'chat' && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-rose-600"
+                    />
+                  )}
+                </span>
                 <span className="hidden sm:inline">Chat</span>
               </button>
 
@@ -205,6 +225,7 @@ export default function GroupView({
                 <div className="col-span-12 xl:col-span-8">
                   <ExpensesTab
                     expenses={sortedExpenses}
+                    currency={group.currency}
                     currentUser={currentUser}
                     users={users}
                     getUserName={getUserName}
@@ -230,10 +251,10 @@ export default function GroupView({
                         }`}
                       >
                         {myBalance > 0.01
-                          ? `+₹${myBalance.toFixed(2)}`
+                          ? `+${formatCurrency(myBalance, group.currency)}`
                           : myBalance < -0.01
-                            ? `-₹${Math.abs(myBalance).toFixed(2)}`
-                            : '₹0.00'}
+                            ? `-${formatCurrency(Math.abs(myBalance), group.currency)}`
+                            : formatCurrency(0, group.currency)}
                       </span>
                       <button
                         type="button"
@@ -264,7 +285,7 @@ export default function GroupView({
                                 {s.to === currentUser.id ? 'You' : getUserName(s.to)}
                               </span>
                               <span className="font-mono font-extrabold text-slate-900">
-                                ₹{s.amount.toFixed(2)}
+                                {formatCurrency(s.amount, group.currency)}
                               </span>
                             </div>
                           ))}
@@ -314,10 +335,10 @@ export default function GroupView({
                               }`}
                             >
                               {mNet > 0.01
-                                ? `+₹${mNet.toFixed(0)}`
+                                ? `+${formatCurrency(mNet, group.currency, 0)}`
                                 : mNet < -0.01
-                                  ? `-₹${Math.abs(mNet).toFixed(0)}`
-                                  : '₹0'}
+                                  ? `-${formatCurrency(Math.abs(mNet), group.currency, 0)}`
+                                  : formatCurrency(0, group.currency, 0)}
                             </span>
                           </div>
                         );

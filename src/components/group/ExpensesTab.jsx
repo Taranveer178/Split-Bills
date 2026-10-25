@@ -19,9 +19,9 @@ import {
   Home,
   ShoppingBag,
   Zap,
-  IndianRupee,
 } from 'lucide-react';
 import { Button } from '../common/UI';
+import { formatCurrency } from '../../utils/currency';
 
 const getCategoryMeta = (category = '') => {
   const cat = category.toLowerCase();
@@ -57,6 +57,7 @@ const getCategoryMeta = (category = '') => {
 
 export default function ExpensesTab({
   expenses,
+  currency = 'INR',
   currentUser,
   users = [],
   getUserName,
@@ -246,14 +247,14 @@ export default function ExpensesTab({
               const totalOthersOwe =
                 parseFloat(exp.totalAmount) - (myShare ? parseFloat(myShare) : 0);
               if (totalOthersOwe > 0) {
-                statusAmount = `+₹${totalOthersOwe.toFixed(2)}`;
+                statusAmount = `+${formatCurrency(totalOthersOwe, currency)}`;
                 isPositive = true;
                 isInvolved = true;
               } else {
-                statusAmount = `₹${parseFloat(exp.totalAmount).toFixed(2)}`;
+                statusAmount = formatCurrency(exp.totalAmount, currency);
               }
             } else if (myShare && parseFloat(myShare) > 0) {
-              statusAmount = `-₹${parseFloat(myShare).toFixed(2)}`;
+              statusAmount = `-${formatCurrency(myShare, currency)}`;
               isPositive = false;
               isInvolved = true;
             }
@@ -289,7 +290,7 @@ export default function ExpensesTab({
                       </span>{' '}
                       paid{' '}
                       <span className="font-bold text-slate-900 font-mono">
-                        ₹{parseFloat(exp.totalAmount).toFixed(2)}
+                        {formatCurrency(exp.totalAmount, currency)}
                       </span>{' '}
                       · {participants.length} split
                     </p>
@@ -352,27 +353,30 @@ export default function ExpensesTab({
       {detailExpense &&
         createPortal(
           <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm"
             onClick={() => setDetailExpense(null)}
           >
-            <div
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="expense-detail-title"
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm rounded-2xl p-5 bg-white border border-slate-200 shadow-xl"
+              className="max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-[28px] border border-white/70 bg-white/95 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.24)] backdrop-blur-2xl"
             >
-              <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-3.5">
+              <div className="mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
                 <div className="flex items-center gap-3">
                   <div
-                    className={`w-10 h-10 rounded-xl border flex items-center justify-center ${
+                    className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border ${
                       getCategoryMeta(detailExpense.category).bg
                     }`}
                   >
                     {getCategoryMeta(detailExpense.category).icon}
                   </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-sm leading-tight">
+                  <div className="min-w-0">
+                    <h3 id="expense-detail-title" className="truncate text-sm font-bold leading-tight text-slate-900">
                       {getExpenseTitle(detailExpense)}
                     </h3>
-                    <span className="text-xs text-slate-500">
+                    <span className="mt-0.5 block text-xs text-slate-500">
                       {detailExpense.category || 'General'}
                     </span>
                   </div>
@@ -380,25 +384,25 @@ export default function ExpensesTab({
                 <button
                   type="button"
                   onClick={() => setDetailExpense(null)}
-                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg"
+                  aria-label="Close expense details"
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-800"
                 >
                   <X size={16} />
                 </button>
               </div>
 
-              <div className="bg-slate-900 text-white rounded-xl p-3.5 text-center mb-3.5">
-                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
+              <div className="mb-4 rounded-2xl border border-white/20 bg-gradient-to-br from-blue-600 via-indigo-600 to-slate-900 p-4 text-center text-white shadow-lg shadow-blue-600/15">
+                <span className="block text-[10px] font-semibold uppercase tracking-wider text-blue-100/80">
                   Total Bill
                 </span>
-                <div className="text-2xl font-bold font-mono flex items-center justify-center gap-0.5 mt-0.5">
-                  <IndianRupee size={18} />
-                  <span>{parseFloat(detailExpense.totalAmount).toFixed(2)}</span>
+                <div className="mt-1 font-mono text-2xl font-bold">
+                  {formatCurrency(detailExpense.totalAmount, currency)}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 mb-3.5 text-xs">
-                <div className="p-2.5 bg-slate-50 border border-slate-200/70 rounded-xl">
-                  <div className="text-slate-400 font-medium flex items-center gap-1 mb-0.5 text-[11px]">
+              <div className="mb-4 grid grid-cols-2 gap-2 text-xs">
+                <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-3">
+                  <div className="mb-1 flex items-center gap-1 text-[11px] font-medium text-slate-400">
                     <User size={12} />
                     <span>Paid By</span>
                   </div>
@@ -409,8 +413,8 @@ export default function ExpensesTab({
                   </div>
                 </div>
 
-                <div className="p-2.5 bg-slate-50 border border-slate-200/70 rounded-xl">
-                  <div className="text-slate-400 font-medium flex items-center gap-1 mb-0.5 text-[11px]">
+                <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-3">
+                  <div className="mb-1 flex items-center gap-1 text-[11px] font-medium text-slate-400">
                     <CreditCard size={12} />
                     <span>Method</span>
                   </div>
@@ -419,16 +423,16 @@ export default function ExpensesTab({
                   </div>
                 </div>
 
-                <div className="p-2.5 bg-slate-50 border border-slate-200/70 rounded-xl">
-                  <div className="text-slate-400 font-medium flex items-center gap-1 mb-0.5 text-[11px]">
+                <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-3">
+                  <div className="mb-1 flex items-center gap-1 text-[11px] font-medium text-slate-400">
                     <Calendar size={12} />
                     <span>Date</span>
                   </div>
                   <div className="font-bold text-slate-900">{detailExpense.date}</div>
                 </div>
 
-                <div className="p-2.5 bg-slate-50 border border-slate-200/70 rounded-xl">
-                  <div className="text-slate-400 font-medium flex items-center gap-1 mb-0.5 text-[11px]">
+                <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-3">
+                  <div className="mb-1 flex items-center gap-1 text-[11px] font-medium text-slate-400">
                     <Users size={12} />
                     <span>Split</span>
                   </div>
@@ -438,11 +442,11 @@ export default function ExpensesTab({
                 </div>
               </div>
 
-              <div className="mb-4">
-                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-2">
+              <div className="mb-5">
+                <span className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   Member Shares
                 </span>
-                <div className="space-y-1.5 max-h-36 overflow-y-auto scrollbar-hide">
+                <div className="max-h-36 space-y-1.5 overflow-y-auto scrollbar-hide">
                   {Object.entries(detailExpense.splits || {}).map(([memberId, shareAmount]) => {
                     const numShare = parseFloat(shareAmount);
                     if (numShare <= 0) return null;
@@ -450,13 +454,13 @@ export default function ExpensesTab({
                     return (
                       <div
                         key={memberId}
-                        className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-50 text-xs"
+                        className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-xs"
                       >
                         <span className="font-semibold text-slate-800">
                           {isUser ? 'You' : getUserName(memberId)}
                         </span>
                         <span className="font-bold font-mono text-slate-900">
-                          ₹{numShare.toFixed(2)}
+                          {formatCurrency(numShare, currency)}
                         </span>
                       </div>
                     );
@@ -467,11 +471,11 @@ export default function ExpensesTab({
               <Button
                 variant="secondary"
                 onClick={() => setDetailExpense(null)}
-                className="w-full py-2 text-xs"
+                className="w-full rounded-2xl border-slate-200 bg-slate-100/80 py-2.5 text-xs hover:bg-slate-100"
               >
                 Close
               </Button>
-            </div>
+            </section>
           </div>,
           document.body
         )}

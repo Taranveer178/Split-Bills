@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import {
   collection,
@@ -98,7 +98,7 @@ function LaunchScreen() {
   return (
     <main className="launch-screen" role="status" aria-label="Loading RoomSplit">
       <div className="launch-screen__logo-frame">
-        <img className="launch-screen__logo" src="/roomsplit-icon.webp" alt="" />
+        <img className="launch-screen__logo" src="/roomsplit-icon-192.png" alt="" />
       </div>
       <h1 className="launch-screen__title">RoomSplit</h1>
       <p className="launch-screen__subtitle">Shared expenses, simplified.</p>
@@ -193,6 +193,7 @@ export default function App() {
     initialRoute.groupId || initialRoute.groupSlug || null
   );
   const [currentGroupInitialTab, setCurrentGroupInitialTab] = useState('expenses');
+  const [currentGroupUnreadChatCount, setCurrentGroupUnreadChatCount] = useState(0);
   const [currentGroupDrawerOpen, setCurrentGroupDrawerOpen] = useState(false);
   const [toast, setToast] = useState(null);
   const [incomingChat, setIncomingChat] = useState(null);
@@ -597,7 +598,7 @@ export default function App() {
     });
   };
 
-  const markNotificationsRead = async (notificationIds) => {
+  const markNotificationsRead = useCallback(async (notificationIds) => {
     if (!notificationIds.length) return;
     if (db) {
       await Promise.all(notificationIds.map((notificationId) => (
@@ -612,7 +613,32 @@ export default function App() {
       localStorage.setItem('rs_notifications', JSON.stringify(next));
       return next;
     });
-  };
+  }, []);
+
+  const markGroupChatNotificationsRead = useCallback(async (groupId) => {
+    const chatNotificationIds = notifications
+      .filter((notification) => (
+        !notification.read &&
+        notification.groupId === groupId &&
+        (!notification.recipientId || notification.recipientId === activeUserId) &&
+        (
+          notification.type === 'CHAT_MESSAGE' ||
+          notification.type === 'NEW_MESSAGE' ||
+          notification.type === 'MESSAGE' ||
+          notification.category === 'chat' ||
+          /message|chat/i.test(notification.type || '')
+        )
+      ))
+      .map((notification) => notification.id);
+
+    try {
+      if (chatNotificationIds.length) await markNotificationsRead(chatNotificationIds);
+      setCurrentGroupUnreadChatCount(0);
+    } catch (error) {
+      console.error('Could not mark chat notifications as read:', error);
+      setToast({ message: 'Could not update chat notifications. Please try again.', type: 'error' });
+    }
+  }, [activeUserId, markNotificationsRead, notifications]);
 
   const clearNotifications = async (notificationIds) => {
     const requestedIds = new Set(notificationIds);
@@ -803,9 +829,10 @@ export default function App() {
           groups={groups}
           expenses={expenses}
           onLogout={handleLogout}
-          onOpenGroup={(id, initialTab = 'expenses') => {
+          onOpenGroup={(id, initialTab = 'expenses', unreadChatCount = 0) => {
             const group = groups.find((item) => item.id === id);
             if (group) {
+              setCurrentGroupUnreadChatCount(initialTab === 'chat' ? 0 : unreadChatCount);
               const tabToReturnTo = currentRouteRef.current.dashboardTab || dashboardTab;
               setReturnDashboardTab(tabToReturnTo);
               navigateTo({
@@ -877,6 +904,8 @@ export default function App() {
               }, { replace: true });
             }}
             onActiveChatChange={setActiveChatGroupId}
+            unreadChatCount={currentGroupUnreadChatCount}
+            onMarkChatNotificationsRead={markGroupChatNotificationsRead}
             groups={groups}
             expenses={expenses.filter((expense) => expense.groupId === activeGroup.id)}
             onSaveExpense={saveExpense}

@@ -16,10 +16,12 @@ import {
   QrCode,
   UserPlus,
   ImagePlus,
+  Coins,
 } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { calculateSettlements, GROUP_DELETE_BALANCE_TOLERANCE } from '../../utils/settlement';
 import { compressImageFile } from '../../utils/compressImage';
+import { GROUP_CURRENCIES, formatCurrency } from '../../utils/currency';
 
 export default function MembersTab({
   group,
@@ -37,6 +39,7 @@ export default function MembersTab({
   const [newGroupName, setNewGroupName] = useState(group.name || '');
   const [savingName, setSavingName] = useState(false);
   const [savingImage, setSavingImage] = useState(false);
+  const [savingCurrency, setSavingCurrency] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
   const [isInviteOpen, setIsInviteOpen] = useState(false);
@@ -163,6 +166,20 @@ export default function MembersTab({
       showToast(error.message || 'Could not update group image.', 'error');
     } finally {
       setSavingImage(false);
+    }
+  };
+
+  const handleCurrencyChange = async (event) => {
+    const currency = event.target.value;
+    if (currency === (group.currency || 'INR')) return;
+    setSavingCurrency(true);
+    try {
+      await onUpdateGroup({ ...group, currency });
+      showToast(`Space currency changed to ${currency}.`);
+    } catch (error) {
+      showToast(error.message || 'Could not change the space currency.', 'error');
+    } finally {
+      setSavingCurrency(false);
     }
   };
 
@@ -296,6 +313,33 @@ export default function MembersTab({
             </button>
           )}
         </div>
+
+        {isAdmin && (
+          <div className="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600">
+                <Coins size={15} />
+              </span>
+              <div>
+                <p className="text-xs font-bold text-slate-800">Space currency</p>
+                <p className="text-[11px] text-slate-500">
+                  Changes the displayed currency; existing amounts are not converted.
+                </p>
+              </div>
+            </div>
+            <select
+              value={group.currency || 'INR'}
+              onChange={handleCurrencyChange}
+              disabled={savingCurrency}
+              aria-label="Space currency"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 outline-none transition-colors focus:border-blue-400 disabled:opacity-60 sm:w-56"
+            >
+              {GROUP_CURRENCIES.map(({ code, label }) => (
+                <option key={code} value={code}>{label}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Invite Bar */}
@@ -442,7 +486,7 @@ export default function MembersTab({
               <h3 className="text-xs sm:text-sm font-bold text-slate-900">Delete Space</h3>
               <p className="mt-0.5 text-xs text-slate-500">
                 {hasOutstandingBalances
-                  ? 'Settle all balances of ₹1 or more before deleting this group.'
+                  ? `Settle all balances of ${formatCurrency(1, group.currency)} or more before deleting this group.`
                   : 'All member balances are settled. Deleting permanently removes this space.'}
               </p>
               {confirmingDelete ? (
@@ -468,7 +512,7 @@ export default function MembersTab({
                   onClick={() => {
                     if (hasOutstandingBalances) {
                       showToast(
-                        'Please settle all group balances of ₹1 or more before deleting this group.',
+                        `Please settle all group balances of ${formatCurrency(1, group.currency)} or more before deleting this group.`,
                         'error'
                       );
                       return;

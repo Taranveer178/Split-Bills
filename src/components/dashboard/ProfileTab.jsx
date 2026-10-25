@@ -12,6 +12,7 @@ import {
   Camera,
   Bell,
   LogOut,
+  Edit2,
 } from 'lucide-react';
 import {
   EmailAuthProvider,
@@ -126,6 +127,15 @@ export default function ProfileTab({ user, onUpdateUser, onLogout, showToast }) 
       let linkedLegacyAccount = false;
       const nextEmail = email.trim().toLowerCase();
       const emailChanged = nextEmail !== (user.email || '').toLowerCase();
+      let emailVerificationSent = false;
+      if (emailChanged && (!firebaseUser || firebaseUser.isAnonymous)) {
+        if (!firebaseUser) {
+          throw new Error('Email changes require a Firebase connection so the new address can be verified.');
+        }
+        if (!currentPassword.trim() && !password.trim()) {
+          throw new Error('Add a password to this profile before changing its email so the new address can be verified.');
+        }
+      }
       if (firebaseUser?.isAnonymous && nextEmail && (currentPassword.trim() || password.trim())) {
         let linkedUser;
         if (currentPassword.trim()) {
@@ -151,7 +161,10 @@ export default function ProfileTab({ user, onUpdateUser, onLogout, showToast }) 
             throw error;
           }
         }
-        if (!linkedUser.emailVerified) await sendEmailVerification(linkedUser);
+        if (!linkedUser.emailVerified) {
+          await sendEmailVerification(linkedUser);
+          emailVerificationSent = true;
+        }
         firestoreUpdates.email = nextEmail;
         firestoreUpdates.password = '';
         linkedLegacyAccount = true;
@@ -180,6 +193,7 @@ export default function ProfileTab({ user, onUpdateUser, onLogout, showToast }) 
         if (firebaseUser && !firebaseUser.isAnonymous) {
           await updateEmail(firebaseUser, nextEmail);
           await sendEmailVerification(firebaseUser);
+          emailVerificationSent = true;
         }
         firestoreUpdates.email = nextEmail;
       }
@@ -209,6 +223,8 @@ export default function ProfileTab({ user, onUpdateUser, onLogout, showToast }) 
           ? (auth.currentUser?.emailVerified
             ? 'Profile linked to Firebase. Push notifications are ready.'
             : 'Profile linked. Verify your email to enable push notifications.')
+          : emailVerificationSent
+            ? `Verification email sent to ${nextEmail}. Confirm it to complete the email change.`
           : 'Profile updated successfully!');
       } else {
         setFallbackToast(true);
@@ -252,17 +268,33 @@ export default function ProfileTab({ user, onUpdateUser, onLogout, showToast }) 
             Profile Settings
           </h1>
         </div>
-        <div>
+        <div className="flex items-center gap-2">
           {!isEditing && (
-            <Button
-              onClick={() => {
-                setIsEditing(true);
-                setLocalError('');
-              }}
-              className="h-9 px-4 text-xs"
-            >
-              Edit Profile
-            </Button>
+            <>
+              {onLogout && (
+                <button
+                  type="button"
+                  onClick={onLogout}
+                  aria-label="Sign out"
+                  title="Sign out"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-100 hover:text-rose-700 hover:shadow-md active:translate-y-0"
+                >
+                  <LogOut size={16} />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditing(true);
+                  setLocalError('');
+                }}
+                aria-label="Edit profile"
+                title="Edit profile"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 hover:shadow-md active:translate-y-0"
+              >
+                <Edit2 size={16} />
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -371,21 +403,6 @@ export default function ProfileTab({ user, onUpdateUser, onLogout, showToast }) 
                 </p>
               )}
             </div>
-
-            {/* Sign Out Button placed right below push notification box inside the card */}
-            {onLogout && (
-              <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
-                <span className="text-xs text-slate-500">Finished managing your account?</span>
-                <button
-                  type="button"
-                  onClick={onLogout}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-4 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-100 shadow-xs"
-                >
-                  <LogOut size={14} />
-                  <span>Sign out</span>
-                </button>
-              </div>
-            )}
 
             <div className="mt-4 flex items-center gap-2 rounded-xl bg-slate-50 px-3.5 py-2.5 text-xs text-slate-500">
               <ShieldCheck size={15} className="text-emerald-600 flex-shrink-0" />

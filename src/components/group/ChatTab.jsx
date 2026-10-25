@@ -1796,6 +1796,16 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
             <textarea
               ref={messageInputRef}
               value={input}
+              onKeyDown={(event) => {
+                if (
+                  event.key === 'Enter' &&
+                  !event.shiftKey &&
+                  !event.nativeEvent.isComposing
+                ) {
+                  event.preventDefault();
+                  handleSend();
+                }
+              }}
               onChange={(e) => {
                 setInput(e.target.value);
                 updateTypingStatus(e.target.value);
@@ -1804,7 +1814,7 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
                 e.target.style.overflowY = e.target.scrollHeight > 128 ? 'auto' : 'hidden';
               }}
               onPaste={handleInputPaste}
-              placeholder="Type a message or note..."
+              placeholder="Type a message..."
               rows={1}
               className="min-h-10 max-h-32 min-w-0 flex-1 resize-none self-center overflow-y-hidden bg-transparent px-2.5 py-2 text-base leading-5 text-slate-800 outline-none placeholder:text-slate-400 font-medium"
             />

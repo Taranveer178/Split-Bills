@@ -1,4 +1,5 @@
 import { ChevronRight, Receipt } from 'lucide-react';
+import { formatCurrency } from '../../utils/currency';
 
 export default function TransactionsTab({
   transactions,
@@ -49,6 +50,7 @@ export default function TransactionsTab({
             const myShare = parseFloat(expense.splits?.[user.id]) || 0;
             const total = parseFloat(expense.totalAmount) || 0;
             const myImpact = iPaid ? total - myShare : -myShare;
+            const currency = group?.currency;
 
             return (
               <div
@@ -73,7 +75,7 @@ export default function TransactionsTab({
                       <span className="font-semibold text-slate-700">
                         {iPaid ? 'You' : getUserName(expense.paidBy)}
                       </span>{' '}
-                      paid ₹{total.toFixed(2)} via {expense.paymentMethod || 'UPI'} ·{' '}
+                      paid {formatCurrency(total, currency)} via {expense.paymentMethod || 'UPI'} ·{' '}
                       {expense.date}
                     </p>
                   </div>
@@ -91,10 +93,10 @@ export default function TransactionsTab({
                       }`}
                     >
                       {myImpact > 0.01
-                        ? `+₹${myImpact.toFixed(2)}`
+                        ? `+${formatCurrency(myImpact, currency)}`
                         : myImpact < -0.01
-                          ? `-₹${Math.abs(myImpact).toFixed(2)}`
-                          : `₹${total.toFixed(2)}`}
+                          ? `-${formatCurrency(Math.abs(myImpact), currency)}`
+                          : formatCurrency(total, currency)}
                     </span>
                     <span className="text-[10px] text-slate-400">
                       {myImpact > 0.01

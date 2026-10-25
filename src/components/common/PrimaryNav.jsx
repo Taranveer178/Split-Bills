@@ -1,9 +1,9 @@
 import {
   LayoutGrid,
+  IndianRupee,
   LogOut,
   PieChart,
   Plus,
-  Receipt,
   User,
   Users,
 } from 'lucide-react';
@@ -12,9 +12,9 @@ import roomsplitIcon from '../../assets/roomsplit-icon.webp';
 const ITEMS = [
   { id: 'groups', label: 'Overview', mobileLabel: 'Overview', icon: LayoutGrid },
   { id: 'spaces', label: 'Spaces', mobileLabel: 'Spaces', icon: Users },
-  { id: 'transactions', label: 'Transactions', mobileLabel: 'Transactions', icon: Receipt },
+  { id: 'transactions', label: 'Transactions', mobileLabel: 'Transactions', icon: IndianRupee },
   { id: 'monthly', label: 'Analytics', mobileLabel: 'Monthly', icon: PieChart },
-  { id: 'profile', label: 'Account', mobileLabel: 'Profile', icon: User },
+  { id: 'profile', label: 'Profile', mobileLabel: 'Profile', icon: User },
 ];
 
 const MOBILE_ITEMS = ITEMS.filter(({ id }) => id !== 'spaces');
@@ -25,6 +25,7 @@ export default function PrimaryNav({
   onQuickAction,
   onLogout,
   user,
+  unreadSpacesCount = 0,
   desktopOnly = false,
 }) {
   return (
@@ -57,7 +58,7 @@ export default function PrimaryNav({
                   <span className="relative inline-flex items-center justify-center">
                     <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
                   </span>
-                  <span className="text-[10px] leading-tight tracking-tight">{mobileLabel}</span>
+                  <span className="sr-only">{mobileLabel}</span>
                 </button>
               );
             })}
@@ -105,7 +106,7 @@ export default function PrimaryNav({
                   ) : (
                     <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
                   )}
-                  <span className="text-[10px] leading-tight tracking-tight">{mobileLabel}</span>
+                  <span className="sr-only">{mobileLabel}</span>
                 </button>
               );
             })}
@@ -128,11 +129,11 @@ export default function PrimaryNav({
             aria-label="Go to RoomSplit home"
             className="flex w-full items-center gap-3 rounded-2xl px-2 py-1.5 text-left transition-opacity hover:opacity-90"
           >
-            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-white p-1.5 shadow-sm border border-slate-200/70">
+            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-200/70">
               <img
                 src={roomsplitIcon}
                 alt="RoomSplit"
-                className="h-full w-full object-contain"
+                className="h-full w-full scale-110 rounded-[14px] object-cover"
               />
             </span>
             <div>
@@ -173,6 +174,14 @@ export default function PrimaryNav({
                     className={isActive ? 'text-white' : 'text-slate-500 group-hover:text-blue-600'}
                   />
                   <span>{label}</span>
+                  {id === 'spaces' && unreadSpacesCount > 0 && (
+                    <span
+                      aria-label={`${unreadSpacesCount} unread items`}
+                      className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1.5 text-[10px] font-extrabold leading-none text-white shadow-sm"
+                    >
+                      {unreadSpacesCount > 99 ? '99+' : unreadSpacesCount}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -207,7 +216,7 @@ export default function PrimaryNav({
               type="button"
               onClick={onLogout}
               aria-label="Log out"
-              className="flex h-10 w-full items-center gap-2.5 rounded-2xl px-3.5 text-xs font-bold text-slate-500 transition-colors hover:bg-rose-50/80 hover:text-rose-600"
+              className="flex h-10 w-full items-center gap-2.5 rounded-2xl border border-rose-200/80 bg-rose-50 px-3.5 text-xs font-bold text-rose-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-100 hover:text-rose-700 hover:shadow-md active:translate-y-0"
             >
               <LogOut size={16} />
               <span>Sign out</span>

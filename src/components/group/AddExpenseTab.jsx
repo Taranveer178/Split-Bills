@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   AlertCircle,
-  IndianRupee,
   Calendar,
   CreditCard,
   Tag,
@@ -13,6 +12,7 @@ import {
 import { CATEGORIES, PAYMENT_METHODS } from '../../utils/constants';
 import { triggerPushNotification } from '../../utils/notifications';
 import { Button, Input } from '../common/UI';
+import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
 
 export default function AddExpenseTab({
   group,
@@ -90,9 +90,7 @@ export default function AddExpenseTab({
       }
       if (Math.abs(totalCustom - numericAmount) > 0.05) {
         setError(
-          `Participant amounts sum to ₹${totalCustom.toFixed(
-            2
-          )}, but total expense is ₹${numericAmount.toFixed(2)}.`
+          `Participant amounts sum to ${formatCurrency(totalCustom, group.currency)}, but total expense is ${formatCurrency(numericAmount, group.currency)}.`
         );
         return;
       }
@@ -121,7 +119,9 @@ export default function AddExpenseTab({
         const recipientNotifications = otherMemberIds.map((memberId) => {
           const owesAmount = finalSplits[memberId];
           const splitText =
-            owesAmount && parseFloat(owesAmount) > 0 ? ` (Your share: ₹${owesAmount})` : '';
+            owesAmount && parseFloat(owesAmount) > 0
+              ? ` (Your share: ${formatCurrency(owesAmount, group.currency)})`
+              : '';
 
           return {
             id: `notif_${Date.now()}_${memberId}`,
@@ -131,7 +131,7 @@ export default function AddExpenseTab({
             createdByName: actualPayerName,
             groupId: group.id,
             type: 'EXPENSE_ADDED',
-            message: `${actualPayerName} added "${newExpense.title}" for ₹${newExpense.totalAmount}${splitText}.`,
+            message: `${actualPayerName} added "${newExpense.title}" for ${formatCurrency(newExpense.totalAmount, group.currency)}${splitText}.`,
             expenseId: newExpense.id,
             createdAt: new Date().toISOString(),
             read: false,
@@ -200,7 +200,7 @@ export default function AddExpenseTab({
               Total Amount
             </span>
             <div className="flex items-center justify-center gap-1">
-              <IndianRupee size={22} className="text-slate-900" />
+              <span className="text-xl font-bold text-slate-900">{getCurrencySymbol(group.currency)}</span>
               <input
                 type="number"
                 step="0.01"
@@ -359,7 +359,7 @@ export default function AddExpenseTab({
                     <div className="flex items-center gap-3">
                       {isChecked && parseFloat(amount) > 0 && (
                         <span className="rounded bg-slate-200/70 px-2 py-0.5 font-mono text-xs font-bold text-slate-900">
-                          ₹{equalAmount}
+                          {formatCurrency(equalAmount, group.currency)}
                         </span>
                       )}
                       <label className="relative flex cursor-pointer items-center justify-center">
@@ -387,7 +387,7 @@ export default function AddExpenseTab({
                     </div>
                   ) : (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-slate-400">₹</span>
+                      <span className="text-xs font-bold text-slate-400">{getCurrencySymbol(group.currency)}</span>
                       <input
                         type="number"
                         min="0"
