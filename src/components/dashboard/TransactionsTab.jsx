@@ -12,7 +12,7 @@ export default function TransactionsTab({
   const visibleTransactions = preview ? transactions.slice(0, 4) : transactions;
 
   return (
-    <section className="liquid-glass rounded-3xl p-6">
+    <section>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/60 pb-3.5">
         <div>
           <h2 className="text-base font-extrabold tracking-tight text-slate-900">

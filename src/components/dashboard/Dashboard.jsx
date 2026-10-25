@@ -1315,7 +1315,7 @@ export default function Dashboard({
 
                   {/* RECENT TRANSACTIONS LEDGER PANEL */}
                   <section
-                    className={`liquid-glass rounded-3xl p-6 ${
+                    className={`rounded-3xl  backdrop-blur-md ${
                       activeTab === 'groups' || activeTab === 'transactions' ? '' : 'hidden'
                     }`}
                   >
