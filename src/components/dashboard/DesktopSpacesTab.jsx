@@ -32,7 +32,7 @@ export default function DesktopSpacesTab({
   copiedCodeId,
 }) {
   return (
-    <section className="liquid-glass w-full rounded-3xl p-6">
+    <section className="w-full rounded-3xl ">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/60 pb-3.5">
         <div className="flex items-center gap-2">
           <h1 className="text-base font-extrabold tracking-tight text-slate-900">

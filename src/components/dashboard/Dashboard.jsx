@@ -30,6 +30,7 @@ import PrimaryNav from '../common/PrimaryNav';
 import MonthlyAnalyticsTab from './MonthlyAnalyticsTab';
 import ProfileTabView from './ProfileTab';
 import DesktopSpacesTab from './DesktopSpacesTab';
+import TransactionsTab from './TransactionsTab';
 import { calculateSettlements } from '../../utils/settlement';
 import { CATEGORIES, PAYMENT_METHODS } from '../../utils/constants';
 
@@ -379,6 +380,12 @@ export default function Dashboard({
   };
 
   useEffect(() => {
+    if (activeTab === 'notifications' && unreadNotifications.length) {
+      onMarkNotificationsRead(unreadNotifications.map((notification) => notification.id));
+    }
+  }, [activeTab, unreadNotifications, onMarkNotificationsRead]);
+
+  useEffect(() => {
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -400,9 +407,21 @@ export default function Dashboard({
   };
 
   const handleTabSwitch = (tab) => {
-    if (window.innerWidth < 768 && tab === 'transactions') return;
     setActiveTab(tab);
     onTabChange(tab);
+  };
+
+  const handleCopyInvite = (event, group) => {
+    event.stopPropagation();
+    if (!group.inviteCode) return;
+    try {
+      navigator.clipboard?.writeText(group.inviteCode);
+      setCopiedCodeId(group.id);
+      showToast?.(`Invite code ${group.inviteCode} copied`);
+      setTimeout(() => setCopiedCodeId(null), 1800);
+    } catch {
+      showToast?.('Could not copy code', 'error');
+    }
   };
 
   const openQuickExpenseModal = (defaultGroupId = '') => {
@@ -742,7 +761,7 @@ export default function Dashboard({
                 )}
               </div>
 
-              {/* 3A. Mobile Section: Spaces (With Pin, Mute, & Archive/Unarchive Controls) */}
+              {/* 3A. Mobile Section: Spaces */}
               {mobileSection === 'spaces' && (
                 <div className="space-y-2">
                   {visibleGroups.length === 0 ? (
@@ -965,7 +984,20 @@ export default function Dashboard({
               )}
             </div>
 
-            {/* Desktop Spaces View */}
+            {/* Mobile View: Render Transactions Tab */}
+            {activeTab === 'transactions' && (
+              <div className="md:hidden">
+                <TransactionsTab
+                  transactions={recentTransactions}
+                  groups={myGroups}
+                  user={user}
+                  getUserName={getUserName}
+                  onOpenGroup={handleOpenGroup}
+                />
+              </div>
+            )}
+
+            {/* Mobile View: Render Spaces Tab */}
             {activeTab === 'spaces' && (
               <div className="md:hidden">
                 <DesktopSpacesTab
@@ -1104,7 +1136,7 @@ export default function Dashboard({
                 </div>
               </div>
 
-              {/* 2. Desktop 4-Card Liquid Glass KPI Strip */}
+              {/* 2. Desktop 4-Card Liquid Glass KPI Strip with Compressed Category Breakdown in Card 2 */}
               <div
                 className={`grid grid-cols-2 gap-4 lg:grid-cols-4 ${
                   activeTab === 'groups' ? '' : 'hidden'
@@ -1153,6 +1185,7 @@ export default function Dashboard({
                   </div>
                 </div>
 
+                {/* Top Compressed Monthly Share Card with Segmented Category Bar */}
                 <div
                   onClick={() => handleTabSwitch('monthly')}
                   className="liquid-glass-interactive cursor-pointer rounded-3xl p-5"
@@ -1168,9 +1201,44 @@ export default function Dashboard({
                   <p className="mt-2 font-mono text-2xl font-extrabold tracking-tight text-slate-900">
                     ₹{monthlySummary.myShare.toFixed(2)}
                   </p>
-                  <p className="mt-2 text-[11px] font-semibold text-blue-600">
-                    Across {monthlySummary.billCount} bill{monthlySummary.billCount === 1 ? '' : 's'} · Analytics →
-                  </p>
+
+                  {monthlySummary.categories.length > 0 ? (
+                    <div className="mt-2.5 space-y-1.5">
+                      {/* Compressed Segmented Distribution Bar */}
+                      <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-slate-200/80">
+                        {monthlySummary.categories.slice(0, 4).map((cat, i) => {
+                          const barColors = [
+                            'bg-blue-600',
+                            'bg-indigo-500',
+                            'bg-cyan-400',
+                            'bg-amber-400',
+                          ];
+                          return (
+                            <div
+                              key={cat.name}
+                              style={{ width: `${cat.pct}%` }}
+                              title={`${cat.name}: ₹${cat.amount.toFixed(0)} (${cat.pct}%)`}
+                              className={`h-full ${barColors[i % barColors.length]}`}
+                            />
+                          );
+                        })}
+                      </div>
+
+                      {/* Clean Non-Crowded Category Preview & Analytics Link */}
+                      <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500">
+                        <span className="truncate pr-1">
+                          {monthlySummary.categories.slice(0, 2).map((c) => `${c.name} ${c.pct}%`).join(' · ')}
+                        </span>
+                        <span className="flex-shrink-0 text-blue-600 font-bold hover:underline">
+                          Analytics →
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-[11px] font-semibold text-slate-400">
+                      Across {monthlySummary.billCount} bills · Analytics →
+                    </p>
+                  )}
                 </div>
 
                 <div className="liquid-glass rounded-3xl p-5">
@@ -1212,7 +1280,7 @@ export default function Dashboard({
                 <div
                   className={
                     activeTab === 'spaces' || activeTab === 'transactions'
-                      ? 'col-span-12 space-y-6'
+                      ? 'col-span-12'
                       : 'col-span-12 xl:col-span-8 space-y-6'
                   }
                 >
@@ -1372,7 +1440,7 @@ export default function Dashboard({
                   </section>
                 </div>
 
-                {/* RIGHT 4 COLUMNS: Pinned Spaces + Live Settlements + Monthly Breakdown */}
+                {/* RIGHT 4 COLUMNS: Pinned Spaces + Live Settlements (OCT BREAKDOWN REMOVED) */}
                 <div
                   className={`col-span-12 xl:col-span-4 space-y-6 ${
                     activeTab === 'groups' ? '' : 'hidden'
@@ -1530,53 +1598,6 @@ export default function Dashboard({
                       </div>
                     )}
                   </section>
-
-                  {/* MONTHLY BREAKDOWN */}
-                  <section className="liquid-glass rounded-3xl p-5">
-                    <div className="mb-3.5 flex items-center justify-between border-b border-slate-200/60 pb-3">
-                      <div>
-                        <h3 className="text-sm font-extrabold text-slate-900">
-                          {monthlySummary.monthLabel} Breakdown
-                        </h3>
-                        <p className="text-[11px] text-slate-500">Your share by category</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleTabSwitch('monthly')}
-                        className="text-xs font-bold text-blue-600 hover:underline"
-                      >
-                        Full Report →
-                      </button>
-                    </div>
-
-                    {monthlySummary.categories.length === 0 ? (
-                      <p className="py-4 text-center text-xs text-slate-400">
-                        No category spend recorded this month.
-                      </p>
-                    ) : (
-                      <div className="space-y-3">
-                        {monthlySummary.categories.slice(0, 4).map((cat) => (
-                          <div key={cat.name} className="space-y-1">
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="font-bold text-slate-700">{cat.name}</span>
-                              <span className="font-mono font-extrabold text-slate-900">
-                                ₹{cat.amount.toFixed(0)}{' '}
-                                <span className="text-[11px] font-normal text-slate-400">
-                                  ({cat.pct}%)
-                                </span>
-                              </span>
-                            </div>
-                            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200/70">
-                              <div
-                                className="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
-                                style={{ width: `${Math.max(4, cat.pct)}%` }}
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </section>
                 </div>
               </div>
             </div>
@@ -1674,7 +1695,6 @@ export default function Dashboard({
                     <div
                       key={n.id}
                       onClick={() => {
-                        // Mark this individual notification as read when clicked
                         if (!n.read && onMarkNotificationsRead) {
                           onMarkNotificationsRead([n.id]);
                         }
@@ -1792,7 +1812,7 @@ export default function Dashboard({
                   <select
                     value={quickCategory}
                     onChange={(e) => setQuickCategory(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200/90 bg-white/80 px-3 py-2.5 text-sm font-semibold text-slate-900 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-2xl border border-slate-200/90 bg-white/80 px-3.5 py-2.5 text-sm font-semibold text-slate-900 focus:border-blue-500 focus:outline-none"
                   >
                     {CATEGORIES.map((c) => (
                       <option key={c} value={c}>
