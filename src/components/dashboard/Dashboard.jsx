@@ -187,13 +187,6 @@ export default function Dashboard({
     onOpenGroup?.(groupId, subTab);
   };
 
-  // Mark all notifications as read when the activity popup drawer opens
-  useEffect(() => {
-    if (isActivityOpen && unreadNotifications.length && onMarkNotificationsRead) {
-      onMarkNotificationsRead(unreadNotifications.map((n) => n.id));
-    }
-  }, [isActivityOpen, unreadNotifications, onMarkNotificationsRead]);
-
   const handleClearAllActivity = () => {
     if (onClearNotifications) {
       onClearNotifications();
@@ -410,19 +403,6 @@ export default function Dashboard({
     if (window.innerWidth < 768 && tab === 'transactions') return;
     setActiveTab(tab);
     onTabChange(tab);
-  };
-
-  const handleCopyInvite = (event, group) => {
-    event.stopPropagation();
-    if (!group.inviteCode) return;
-    try {
-      navigator.clipboard?.writeText(group.inviteCode);
-      setCopiedCodeId(group.id);
-      showToast?.(`Invite code ${group.inviteCode} copied`);
-      setTimeout(() => setCopiedCodeId(null), 1800);
-    } catch {
-      showToast?.('Could not copy code', 'error');
-    }
   };
 
   const openQuickExpenseModal = (defaultGroupId = '') => {
@@ -687,7 +667,7 @@ export default function Dashboard({
                 </div>
               </div>
 
-              {/* 2. Native iOS Segmented Glass Control */}
+              {/* 2. Native iOS Segmented Glass Control with Active / Archived Toggle */}
               <div className="flex items-center gap-2">
                 <div className="liquid-glass grid flex-1 grid-cols-3 rounded-2xl p-1">
                   <button
@@ -699,8 +679,12 @@ export default function Dashboard({
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    <span>Spaces ({activeGroups.length})</span>
-                    {totalUnreadSpacesCount > 0 && (
+                    <span>
+                      {spaceFilter === 'archived'
+                        ? `Archived (${archivedGroups.length})`
+                        : `Spaces (${activeGroups.length})`}
+                    </span>
+                    {totalUnreadSpacesCount > 0 && spaceFilter !== 'archived' && (
                       <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[9px] font-extrabold text-white leading-none">
                         {totalUnreadSpacesCount > 99 ? '99+' : totalUnreadSpacesCount}
                       </span>
@@ -730,23 +714,35 @@ export default function Dashboard({
                   </button>
                 </div>
 
-                {mobileSection === 'spaces' && archivedGroups.length > 0 && (
+                {mobileSection === 'spaces' && (
                   <button
                     type="button"
                     onClick={() =>
                       setSpaceFilter((curr) => (curr === 'archived' ? 'active' : 'archived'))
                     }
-                    className={`liquid-glass-interactive flex h-9 items-center gap-1 rounded-2xl px-2.5 text-[11px] font-semibold ${
-                      spaceFilter === 'archived' ? 'text-blue-600' : 'text-slate-600'
+                    title={spaceFilter === 'archived' ? 'View active spaces' : 'View archived spaces'}
+                    className={`liquid-glass-interactive flex h-9 items-center gap-1 rounded-2xl px-2.5 text-[11px] font-semibold border ${
+                      spaceFilter === 'archived'
+                        ? 'border-blue-400 bg-blue-50 text-blue-600 shadow-sm'
+                        : 'border-slate-200/80 text-slate-600'
                     }`}
                   >
-                    <Archive size={13} />
-                    <span>{spaceFilter === 'archived' ? 'Active' : archivedGroups.length}</span>
+                    {spaceFilter === 'archived' ? (
+                      <>
+                        <ArchiveRestore size={13} className="text-blue-600" />
+                        <span>Active</span>
+                      </>
+                    ) : (
+                      <>
+                        <Archive size={13} />
+                        <span>{archivedGroups.length || 'Archive'}</span>
+                      </>
+                    )}
                   </button>
                 )}
               </div>
 
-              {/* 3A. Mobile Section: Spaces */}
+              {/* 3A. Mobile Section: Spaces (With Pin, Mute, & Archive/Unarchive Controls) */}
               {mobileSection === 'spaces' && (
                 <div className="space-y-2">
                   {visibleGroups.length === 0 ? (
@@ -755,7 +751,9 @@ export default function Dashboard({
                         {spaceFilter === 'archived' ? 'No archived spaces' : 'No spaces yet'}
                       </p>
                       <p className="mt-1 text-xs text-slate-500">
-                        Create a new shared room or join an existing flat with a code.
+                        {spaceFilter === 'archived'
+                          ? 'Archive spaces anytime to organize your dashboard.'
+                          : 'Create a new shared room or join an existing flat with a code.'}
                       </p>
                     </div>
                   ) : (
@@ -769,6 +767,7 @@ export default function Dashboard({
                         const unreadCount = unreadMessagesByGroup[group.id] || 0;
                         const isPinned = pinnedGroupIds.includes(group.id);
                         const isMuted = mutedGroupIds.includes(group.id);
+                        const isArchived = archivedGroupIds.includes(group.id);
 
                         return (
                           <div
@@ -793,11 +792,16 @@ export default function Dashboard({
                                   <h3 className="truncate text-xs font-semibold text-slate-900">
                                     {group.name}
                                   </h3>
-                                  {isPinned && (
+                                  {isPinned && !isArchived && (
                                     <Pin size={10} className="flex-shrink-0 text-blue-600" />
                                   )}
                                   {isMuted && (
                                     <BellOff size={10} className="flex-shrink-0 text-amber-500" />
+                                  )}
+                                  {isArchived && (
+                                    <span className="rounded bg-slate-200 px-1 py-0.2 text-[9px] font-bold text-slate-600">
+                                      Archived
+                                    </span>
                                   )}
                                 </div>
                                 <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
@@ -808,8 +812,8 @@ export default function Dashboard({
                               </div>
                             </div>
 
-                            <div className="flex flex-shrink-0 items-center gap-2">
-                              {unreadCount > 0 && (
+                            <div className="flex flex-shrink-0 items-center gap-1.5">
+                              {unreadCount > 0 && !isArchived && (
                                 <span className="flex h-5 min-w-[18px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-extrabold text-white leading-none">
                                   {unreadCount > 99 ? '99+' : unreadCount}
                                 </span>
@@ -831,18 +835,40 @@ export default function Dashboard({
                                     : 'Settled'}
                               </span>
 
+                              {/* Mobile Pin/Unpin */}
+                              {!isArchived && (
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    updateGroupPreference(group.id, 'pinnedGroupIds', !isPinned);
+                                  }}
+                                  className={`flex h-7 w-7 items-center justify-center rounded-lg ${
+                                    isPinned ? 'bg-blue-50 text-blue-600' : 'text-slate-400 hover:text-slate-600'
+                                  }`}
+                                  aria-label={isPinned ? `Unpin ${group.name}` : `Pin ${group.name}`}
+                                >
+                                  <Pin size={12} />
+                                </button>
+                              )}
+
+                              {/* Mobile Archive / Unarchive Button */}
                               <button
                                 type="button"
                                 onClick={(event) => {
                                   event.stopPropagation();
-                                  updateGroupPreference(group.id, 'pinnedGroupIds', !isPinned);
+                                  updateGroupPreference(group.id, 'archivedGroupIds', !isArchived);
+                                  showToast?.(
+                                    isArchived
+                                      ? `Restored "${group.name}"`
+                                      : `Archived "${group.name}"`
+                                  );
                                 }}
-                                className={`flex h-6 w-6 items-center justify-center rounded-lg ${
-                                  isPinned ? 'bg-blue-50 text-blue-600' : 'text-slate-400'
-                                }`}
-                                aria-label={isPinned ? `Unpin ${group.name}` : `Pin ${group.name}`}
+                                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 active:scale-90 transition-transform"
+                                aria-label={isArchived ? `Restore ${group.name}` : `Archive ${group.name}`}
+                                title={isArchived ? `Restore ${group.name}` : `Archive ${group.name}`}
                               >
-                                <Pin size={11} />
+                                {isArchived ? <ArchiveRestore size={13} className="text-blue-600" /> : <Archive size={13} />}
                               </button>
                             </div>
                           </div>
@@ -1580,7 +1606,7 @@ export default function Dashboard({
           )}
       </main>
 
-      {/* --- NOTIFICATION CENTER / ACTIVITY RIGHT POPUP FLYOUT DRAWER --- */}
+      {/* --- NOTIFICATION CENTER / ACTIVITY RIGHT POPUP FLYOUT DRAWER (Full Width on Mobile) --- */}
       {isActivityOpen && (
         <div
           className="fixed inset-0 z-[80] flex justify-end bg-slate-900/30 backdrop-blur-sm transition-opacity"
@@ -1588,7 +1614,7 @@ export default function Dashboard({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="flex h-full w-full max-w-sm sm:max-w-md flex-col border-l border-white/80 bg-white/95 p-5 shadow-2xl backdrop-blur-2xl transition-transform animate-in slide-in-from-right"
+            className="flex h-full w-full sm:max-w-md flex-col border-l border-white/80 bg-white/95 p-5 shadow-2xl backdrop-blur-2xl transition-transform animate-in slide-in-from-right"
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-200/70 pb-4">
@@ -1602,6 +1628,7 @@ export default function Dashboard({
                   </h2>
                   <p className="text-[11px] text-slate-500">
                     {userNotifications.length} notification{userNotifications.length === 1 ? '' : 's'}
+                    {unreadNotifications.length > 0 && ` · ${unreadNotifications.length} unread`}
                   </p>
                 </div>
               </div>
@@ -1647,6 +1674,10 @@ export default function Dashboard({
                     <div
                       key={n.id}
                       onClick={() => {
+                        // Mark this individual notification as read when clicked
+                        if (!n.read && onMarkNotificationsRead) {
+                          onMarkNotificationsRead([n.id]);
+                        }
                         if (n.groupId) {
                           handleOpenGroup(n.groupId, isChat ? 'chat' : 'expenses');
                           setIsActivityOpen(false);
