@@ -52,13 +52,15 @@ export default function PrimaryNav({
                   onClick={() => onNavigate(id)}
                   aria-label={mobileLabel}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`relative flex h-full flex-1 flex-col items-center justify-center gap-0.5 rounded-[22px] transition-all duration-200 active:scale-95 ${
-                    isActive
-                      ? 'bg-gradient-to-b from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25 font-bold'
-                      : 'text-slate-600 hover:bg-white/60 hover:text-slate-900 font-semibold'
-                  }`}
+                  className="relative flex h-full flex-1 items-center justify-center rounded-[22px] text-slate-600 transition-all duration-200 active:scale-95"
                 >
-                  <span className="relative inline-flex items-center justify-center">
+                  <span
+                    className={`relative inline-flex h-10 w-10 items-center justify-center rounded-2xl transition-all ${
+                      isActive
+                        ? 'bg-gradient-to-b from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
+                        : 'hover:bg-white/60 hover:text-slate-900'
+                    }`}
+                  >
                     <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
                   </span>
                   <span className="sr-only">{mobileLabel}</span>
@@ -88,28 +90,32 @@ export default function PrimaryNav({
                   onClick={() => onNavigate(id)}
                   aria-label={mobileLabel}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`relative flex h-full flex-1 flex-col items-center justify-center gap-0.5 rounded-[22px] transition-all duration-200 active:scale-95 ${
-                    isActive
-                      ? 'bg-gradient-to-b from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25 font-bold'
-                      : 'text-slate-600 hover:bg-white/60 hover:text-slate-900 font-semibold'
-                  }`}
+                    className="relative flex h-full flex-1 items-center justify-center rounded-[22px] text-slate-600 transition-all duration-200 active:scale-95"
                 >
-                  {id === 'profile' ? (
-                    <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-[10px] font-extrabold text-white ring-2 ring-white/80">
-                      {user?.photoDataUrl ? (
-                        <img
-                          src={user.photoDataUrl}
-                          alt=""
-                          className="h-full w-full object-cover"
-                        />
+                    <span
+                      className={`relative inline-flex h-10 w-10 items-center justify-center rounded-2xl transition-all ${
+                        isActive
+                          ? 'bg-gradient-to-b from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
+                          : 'hover:bg-white/60 hover:text-slate-900'
+                      }`}
+                    >
+                      {id === 'profile' ? (
+                        <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-[10px] font-extrabold text-white ring-2 ring-white/80">
+                          {user?.photoDataUrl ? (
+                            <img
+                              src={user.photoDataUrl}
+                              alt=""
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            (user?.username || 'U').charAt(0).toUpperCase()
+                          )}
+                        </span>
                       ) : (
-                        (user?.username || 'U').charAt(0).toUpperCase()
+                        <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
                       )}
                     </span>
-                  ) : (
-                    <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
-                  )}
-                  <span className="sr-only">{mobileLabel}</span>
+                    <span className="sr-only">{mobileLabel}</span>
                 </button>
               );
             })}
