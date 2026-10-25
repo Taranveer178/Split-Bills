@@ -168,6 +168,9 @@ export default function App() {
   const [isAppInstalled, setIsAppInstalled] = useState(
     () => window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true
   );
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem('rs_theme') === 'dark' ? 'dark' : 'light'
+  );
   const hasInitialLocalSession = Boolean(activeUserId && !(hasFirebase && db && auth));
   const readStoredData = (key, fallback) => {
     const value = localStorage.getItem(key);
@@ -215,6 +218,14 @@ export default function App() {
   const currentRouteRef = useRef(initialRoute);
   const navigateToRef = useRef(null);
   const activeUser = users.find((user) => user.id === activeUserId);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    localStorage.setItem('rs_theme', theme);
+    document.querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', theme === 'dark' ? '#000000' : '#f8fafc');
+  }, [theme]);
+
   const mutedGroupIds = useMemo(
     () => (Array.isArray(activeUser?.mutedGroupIds) ? activeUser.mutedGroupIds : []),
     [activeUser]
@@ -865,6 +876,8 @@ export default function App() {
           deferredPromptAvailable={Boolean(deferredInstallPrompt)}
           onInstallApp={handleInstallApp}
           isAppInstalled={isAppInstalled}
+          theme={theme}
+          onThemeChange={setTheme}
           user={activeUser}
           users={users}
           initialTab={dashboardTab}

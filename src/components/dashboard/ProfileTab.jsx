@@ -14,6 +14,8 @@ import {
   LogOut,
   Edit2,
   Download,
+  Moon,
+  Sun,
 } from 'lucide-react';
 import {
   EmailAuthProvider,
@@ -35,6 +37,8 @@ export default function ProfileTab({
   onLogout,
   onInstallApp,
   isAppInstalled = false,
+  theme = 'light',
+  onThemeChange,
   showToast,
 }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -398,6 +402,36 @@ export default function ProfileTab({
                   </p>
                 </div>
               </div>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-slate-200/80 bg-slate-50/70 p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700">
+                  {theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-900">Dark mode</p>
+                  <p className="text-[11px] text-slate-500">
+                    {theme === 'dark' ? 'On' : 'Off'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={theme === 'dark'}
+                aria-label="Dark mode"
+                onClick={() => onThemeChange?.(theme === 'dark' ? 'light' : 'dark')}
+                className={`relative h-7 w-12 flex-shrink-0 rounded-full transition-colors ${
+                  theme === 'dark' ? 'bg-blue-600' : 'bg-slate-300'
+                }`}
+              >
+                <span
+                  className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                    theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
             </div>
 
             {canViewPushDiagnostics && (

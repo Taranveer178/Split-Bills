@@ -53,6 +53,8 @@ export default function Dashboard({
   deferredPromptAvailable = false,
   onInstallApp,
   isAppInstalled = false,
+  theme = 'light',
+  onThemeChange,
   showToast,
 }) {
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -1717,6 +1719,8 @@ export default function Dashboard({
                   onLogout={() => setShowLogoutConfirmation(true)}
                   onInstallApp={handleInstallClick}
                   isAppInstalled={isAppInstalled}
+                  theme={theme}
+                  onThemeChange={onThemeChange}
                   showToast={showToast}
                 />
               )}

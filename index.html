@@ -37,6 +37,16 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="RoomSplit" />
 
+    <script>
+      try {
+        if (localStorage.getItem('rs_theme') === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch {
+        // Keep the default light appearance when storage is unavailable.
+      }
+    </script>
+
     <style>
       html, body, #root {
         height: 100%;
