@@ -252,17 +252,7 @@ export default function ProfileTab({ user, onUpdateUser, onLogout, showToast }) 
             Profile Settings
           </h1>
         </div>
-        <div className="flex items-center gap-2">
-          {onLogout && (
-            <button
-              type="button"
-              onClick={onLogout}
-              className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-100"
-            >
-              <LogOut size={14} />
-              <span>Sign out</span>
-            </button>
-          )}
+        <div>
           {!isEditing && (
             <Button
               onClick={() => {
@@ -381,6 +371,21 @@ export default function ProfileTab({ user, onUpdateUser, onLogout, showToast }) 
                 </p>
               )}
             </div>
+
+            {/* Sign Out Button placed right below push notification box inside the card */}
+            {onLogout && (
+              <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-xs text-slate-500">Finished managing your account?</span>
+                <button
+                  type="button"
+                  onClick={onLogout}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-4 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-100 shadow-xs"
+                >
+                  <LogOut size={14} />
+                  <span>Sign out</span>
+                </button>
+              </div>
+            )}
 
             <div className="mt-4 flex items-center gap-2 rounded-xl bg-slate-50 px-3.5 py-2.5 text-xs text-slate-500">
               <ShieldCheck size={15} className="text-emerald-600 flex-shrink-0" />
