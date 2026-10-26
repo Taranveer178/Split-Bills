@@ -20,18 +20,18 @@ export default function TransactionsTab({
       {!preview && (
         <div className="mb-4 flex items-center justify-between gap-2.5">
           <div className="page-heading flex min-w-0 items-center gap-2.5 rounded-full p-0 pr-4">
-            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-blue-600 to-blue-600 text-xs font-bold text-white shadow-sm">
+            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-blue-600 to-blue-600 text-xs font-bold text-white shadow-sm">
               {user?.photoDataUrl ? (
                 <img src={user.photoDataUrl} alt="" className="h-full w-full object-cover" />
               ) : (
                 (user?.username || 'U').charAt(0).toUpperCase()
               )}
             </span>
-            <h2 className="truncate text-sm font-extrabold tracking-tight text-slate-900">
+            <h1 className="truncate text-sm font-extrabold tracking-tight text-slate-900">
               Transactions
-            </h2>
+            </h1>
           </div>
-          <div className="filter-segmented hidden items-center gap-0.5 rounded-full p-1 md:flex">
+          <div className="page-heading-controls hidden items-center gap-0.5 rounded-full p-1 md:flex">
             {[
               { id: 'all', label: 'All' },
               { id: 'mine', label: 'Paid by Me' },
@@ -44,7 +44,7 @@ export default function TransactionsTab({
                 aria-pressed={ledgerFilter === filter.id}
                 className={`rounded-full px-3 py-2 text-xs font-semibold transition-colors ${
                   ledgerFilter === filter.id
-                    ? 'filter-segmented__active text-slate-900 shadow-sm'
+                    ? 'bg-white text-slate-900 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -52,7 +52,7 @@ export default function TransactionsTab({
               </button>
             ))}
           </div>
-          <label className="page-heading-controls relative flex h-10 flex-shrink-0 items-center gap-2 rounded-full pl-3 pr-2.5 text-xs font-semibold text-slate-700 md:hidden">
+          <label className="page-heading-controls relative flex h-10 flex-shrink-0 items-center gap-2 rounded-full px-3 text-xs font-semibold text-slate-700 md:hidden">
             <span className="pointer-events-none">{ledgerFilter === 'mine' ? 'Paid by Me' : ledgerFilter === 'settlements' ? 'Settlements' : 'All'}</span>
             <ChevronDown size={14} className="pointer-events-none text-slate-400" />
             <select

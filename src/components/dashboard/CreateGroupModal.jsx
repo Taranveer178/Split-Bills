@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, ImagePlus, X, Loader2 } from 'lucide-react';
+import { ImagePlus, X, Loader2, UsersRound } from 'lucide-react';
 import { generateInviteCode } from '../../utils/constants';
 import { compressImageFile } from '../../utils/compressImage';
 import { Button, Input } from '../common/UI';
@@ -48,26 +48,23 @@ export default function CreateGroupModal({ user, onSaveGroup, onBack, showToast 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs"
+      className="app-modal-overlay fixed inset-0 z-[160] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs"
       onClick={() => !saving && onBack()}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-space-title"
+        className="app-modal-surface relative z-[161] w-full max-w-md rounded-[28px] border border-slate-200 bg-white p-5 shadow-xl sm:p-6"
       >
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-          <div className="flex items-center gap-2.5">
-            <button
-              type="button"
-              onClick={onBack}
-              disabled={saving}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
-              aria-label="Go back"
-            >
-              <ArrowLeft size={16} />
-            </button>
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600">
+              <UsersRound size={18} />
+            </span>
             <div>
-              <h1 className="text-base font-bold text-slate-900">Create New Space</h1>
+              <h1 id="create-space-title" className="text-base font-bold text-slate-900">Create a space</h1>
               <p className="text-xs text-slate-500">Set up a shared ledger for your flat or trip</p>
             </div>
           </div>
@@ -76,13 +73,14 @@ export default function CreateGroupModal({ user, onSaveGroup, onBack, showToast 
             type="button"
             onClick={onBack}
             disabled={saving}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            className="popup-close-button flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 transition-colors hover:bg-rose-100 hover:text-rose-700"
+            aria-label="Close create space"
           >
             <X size={16} />
           </button>
         </div>
 
-        <form onSubmit={handleCreate} className="mt-5 space-y-4">
+        <form onSubmit={handleCreate} className="mt-4 space-y-4">
           <Input
             label="Space Name"
             placeholder="e.g. Flat 302, Goa Trip"

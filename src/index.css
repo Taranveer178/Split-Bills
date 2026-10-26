@@ -117,11 +117,6 @@ html.dark [class*="bg-[#F8FAFC]"] {
   background-image: none !important;
 }
 
-html.dark [class*="blur-2xl"],
-html.dark [class*="blur-3xl"] {
-  display: none !important;
-}
-
 html.dark [class*="bg-white"],
 html.dark [class*="bg-slate-50"],
 html.dark [class*="bg-slate-100"],
@@ -197,15 +192,11 @@ html.dark .page-heading-controls {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.65) !important;
 }
 
-html.dark .filter-segmented {
-  background: #25272d;
-}
-
-html.dark .filter-segmented button {
+html.dark .page-heading-controls button {
   color: #d1d5db !important;
 }
 
-html.dark .filter-segmented .filter-segmented__active {
+html.dark .page-heading-controls button[aria-pressed="true"] {
   background: #fff !important;
   color: #111827 !important;
 }
@@ -242,6 +233,116 @@ html.dark .logout-confirmation-dialog button:not(.bg-rose-600) {
   color: #fff !important;
 }
 
+.app-modal-overlay {
+  isolation: isolate;
+}
+
+.app-modal-surface {
+  flex-shrink: 0;
+  background: #fff;
+  border-color: #e2e8f0;
+  color: #0f172a;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.24);
+}
+
+.popup-close-button {
+  flex-shrink: 0;
+}
+
+html.dark .app-modal-overlay {
+  background-color: rgba(0, 0, 0, 0.72) !important;
+}
+
+html.dark .app-modal-surface {
+  background: #181a20 !important;
+  background-image: none !important;
+  border-color: #3b404b !important;
+  color: #f8fafc !important;
+  box-shadow: 0 24px 72px rgba(0, 0, 0, 0.8) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+html.dark [role="dialog"] {
+  position: relative;
+  z-index: 1;
+  background-color: #181a20 !important;
+  background-image: none !important;
+  border-color: #3b404b !important;
+  color: #f8fafc !important;
+  box-shadow: 0 24px 72px rgba(0, 0, 0, 0.8) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+html.dark .app-modal-surface [class*="text-slate-"],
+html.dark .app-modal-surface [class*="text-gray-"] {
+  color: #f1f5f9 !important;
+}
+
+html.dark .app-modal-surface input,
+html.dark .app-modal-surface textarea,
+html.dark .app-modal-surface select {
+  background: #242832 !important;
+  border-color: #454b57 !important;
+  color: #f8fafc !important;
+}
+
+html.dark .popup-close-button {
+  background: #4c151b !important;
+  border-color: #7f1d1d !important;
+  color: #fecaca !important;
+}
+
+html.dark .popup-close-button:hover {
+  background: #651b23 !important;
+  border-color: #b91c1c !important;
+  color: #fff !important;
+}
+
+html.dark .desktop-install-card {
+  background: linear-gradient(110deg, #17243a, #1c2d49) !important;
+  border-color: #35527d !important;
+}
+
+html.dark .desktop-install-card:hover {
+  background: linear-gradient(110deg, #1d2e4a, #24395c) !important;
+  border-color: #4a6b9e !important;
+}
+
+html.dark .desktop-install-card__icon {
+  background: #eaf2ff !important;
+  color: #1d4ed8 !important;
+}
+
+html.dark .desktop-install-card__title {
+  color: #f8fafc !important;
+}
+
+html.dark .desktop-install-card__description {
+  color: #cbd5e1 !important;
+}
+
+html.dark .group-view-header {
+  background: #101010 !important;
+  border-color: #303030 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55) !important;
+}
+
+html.dark .group-view-tabbar {
+  background: #242424 !important;
+  border: 1px solid #3a3a3a;
+}
+
+html.dark .group-view-tabbar button {
+  color: #d1d5db !important;
+}
+
+html.dark .group-view-tabbar button[class*="bg-white"] {
+  background: #3a3a3a !important;
+  color: #93c5fd !important;
+}
+
 .ios-theme-switch {
   position: relative;
   height: 28px;
@@ -274,6 +375,26 @@ html.dark .logout-confirmation-dialog button:not(.bg-rose-600) {
   transform: translateX(20px);
 }
 
+.mobile-auth-panel {
+  position: relative;
+  z-index: 1;
+  background: #fff;
+}
+
+.auth-page-shell {
+  background:
+    radial-gradient(ellipse at 12% 8%, rgba(96, 165, 250, 0.18), transparent 38%),
+    radial-gradient(ellipse at 90% 92%, rgba(59, 130, 246, 0.12), transparent 36%),
+    #f3f7ff;
+}
+
+html.dark .auth-page-shell {
+  background:
+    radial-gradient(ellipse at 12% 8%, rgba(37, 99, 235, 0.2), transparent 38%),
+    radial-gradient(ellipse at 90% 92%, rgba(29, 78, 216, 0.14), transparent 36%),
+    #05080f;
+}
+
 html.dark .ios-theme-switch {
   border-color: #3a3a3a;
   background: #3a3a3a;
@@ -282,6 +403,16 @@ html.dark .ios-theme-switch {
 html.dark .ios-theme-switch[aria-checked="true"] {
   border-color: #007aff;
   background: #007aff;
+}
+
+html.dark .mobile-auth-panel {
+  background: #fff !important;
+  border-color: #d1d5db !important;
+  color: #111827 !important;
+}
+
+html.dark .mobile-auth-panel [class*="text-slate-"] {
+  color: #111827 !important;
 }
 
 html.dark input,

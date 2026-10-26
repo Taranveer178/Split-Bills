@@ -362,7 +362,7 @@ export default function ExpensesTab({
       {detailExpense &&
         createPortal(
           <div
-            className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm"
+            className="app-modal-overlay fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm"
             onClick={() => setDetailExpense(null)}
           >
             <section
@@ -370,7 +370,7 @@ export default function ExpensesTab({
               aria-modal="true"
               aria-labelledby="expense-detail-title"
               onClick={(e) => e.stopPropagation()}
-              className="max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-[28px] border border-white/70 bg-white/95 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.24)] backdrop-blur-2xl"
+              className="app-modal-surface relative z-[151] max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-[28px] border border-white/70 bg-white/95 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.24)] backdrop-blur-2xl"
             >
               <div className="mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
                 <div className="flex items-center gap-3">
@@ -394,7 +394,7 @@ export default function ExpensesTab({
                   type="button"
                   onClick={() => setDetailExpense(null)}
                   aria-label="Close expense details"
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-800"
+                  className="popup-close-button flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 transition-colors hover:border-rose-300 hover:bg-rose-100 hover:text-rose-700"
                 >
                   <X size={16} />
                 </button>

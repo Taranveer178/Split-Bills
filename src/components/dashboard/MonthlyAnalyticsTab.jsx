@@ -306,14 +306,14 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [] }
       {selectedBreakdown &&
         createPortal(
           <div
-            className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs"
+            className="app-modal-overlay fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs"
             onClick={() => setSelectedBreakdown(null)}
           >
             <section
               role="dialog"
               aria-modal="true"
               aria-labelledby="spending-breakdown-title"
-              className="relative flex max-h-[85dvh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-xl"
+              className="app-modal-surface relative z-[121] flex max-h-[85dvh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-xl"
               onClick={(event) => event.stopPropagation()}
             >
               <header className="flex items-start justify-between gap-4 border-b border-slate-100 pb-3.5">

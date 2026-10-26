@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, Camera, KeyRound, ScanLine, X, Loader2 } from 'lucide-react';
+import { Camera, KeyRound, ScanLine, X, Loader2 } from 'lucide-react';
 import QrScanner from 'qr-scanner';
 import { Button } from '../common/UI';
 
@@ -94,26 +94,23 @@ export default function JoinGroupModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs"
+      className="app-modal-overlay fixed inset-0 z-[160] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs"
       onClick={() => !isJoining && onBack()}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="join-space-title"
+        className="app-modal-surface relative z-[161] w-full max-w-md rounded-[28px] border border-slate-200 bg-white p-5 shadow-xl sm:p-6"
       >
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-          <div className="flex items-center gap-2.5">
-            <button
-              type="button"
-              onClick={onBack}
-              disabled={isJoining}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
-              aria-label="Go back"
-            >
-              <ArrowLeft size={16} />
-            </button>
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600">
+              <KeyRound size={18} />
+            </span>
             <div>
-              <h1 className="text-base font-bold text-slate-900">Join a Space</h1>
+              <h1 id="join-space-title" className="text-base font-bold text-slate-900">Join a space</h1>
               <p className="text-xs text-slate-500">Enter a 6-character invite code or scan QR</p>
             </div>
           </div>
@@ -122,17 +119,15 @@ export default function JoinGroupModal({
             type="button"
             onClick={onBack}
             disabled={isJoining}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            className="popup-close-button flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 transition-colors hover:bg-rose-100 hover:text-rose-700"
+            aria-label="Close join space"
           >
             <X size={16} />
           </button>
         </div>
 
-        <form onSubmit={handleJoin} className="mt-5 space-y-4">
+        <form onSubmit={handleJoin} className="mt-4 space-y-4">
           <div className="text-center">
-            <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
-              <KeyRound size={20} />
-            </div>
             <label className="block text-xs font-semibold text-slate-600 mb-2">
               Space Invite Code
             </label>
