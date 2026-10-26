@@ -751,57 +751,51 @@ export default function Dashboard({
               </div>
 
               {/* 2. Native iOS Segmented Glass Control with Active / Archived Toggle */}
-              <div className="grid grid-cols-3 gap-2">
-                <div className="liquid-glass col-span-2 grid grid-cols-2 rounded-2xl p-1">
-                  <button
-                    type="button"
-                    onClick={() => setMobileSection('spaces')}
-                    className={`relative flex items-center justify-center gap-1.5 rounded-xl py-1.5 text-xs font-semibold transition-all duration-200 ${
-                      mobileSection === 'spaces'
-                        ? 'bg-gradient-to-b from-blue-600 to-blue-600 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    <span>
-                      {spaceFilter === 'archived' ? 'Archived' : 'Spaces'}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMobileSection('dues')}
-                    className={`rounded-xl py-1.5 text-xs font-semibold transition-all duration-200 ${
-                      mobileSection === 'dues'
-                        ? 'bg-gradient-to-b from-blue-600 to-blue-600 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    Dues ({groupMetrics.allMySettlements.length})
-                  </button>
-                </div>
-
+              <div className="liquid-glass grid grid-cols-3 gap-1 rounded-2xl p-1">
                 <button
                   type="button"
-                  onClick={() =>
-                    setSpaceFilter((curr) => (curr === 'archived' ? 'active' : 'archived'))
-                  }
-                  title={spaceFilter === 'archived' ? 'View active spaces' : 'View archived spaces'}
-                  className={`liquid-glass-interactive col-span-1 flex h-9 items-center justify-center gap-1 rounded-2xl border px-1.5 text-[10px] font-semibold whitespace-nowrap ${
-                    spaceFilter === 'archived'
-                      ? 'border-blue-400 bg-blue-50 text-blue-600 shadow-sm'
-                      : 'border-slate-200/80 text-slate-600'
+                  onClick={() => {
+                    setSpaceFilter('active');
+                    setMobileSection('spaces');
+                  }}
+                  aria-pressed={mobileSection === 'spaces' && spaceFilter === 'active'}
+                  className={`flex h-8 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-semibold transition-all duration-200 ${
+                    mobileSection === 'spaces' && spaceFilter === 'active'
+                      ? 'bg-gradient-to-b from-blue-600 to-blue-600 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  {spaceFilter === 'archived' ? (
-                    <>
-                      <ArchiveRestore size={13} className="text-blue-600" />
-                      <span>Active</span>
-                    </>
-                  ) : (
-                    <>
-                      <Archive size={13} />
-                      <span>Archive{archivedGroups.length > 0 ? ` ${archivedGroups.length}` : ''}</span>
-                    </>
-                  )}
+                  <span className="truncate">Active</span>
+                  <span>({activeGroups.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSpaceFilter('archived');
+                    setMobileSection('spaces');
+                  }}
+                  aria-pressed={mobileSection === 'spaces' && spaceFilter === 'archived'}
+                  className={`flex h-8 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-semibold transition-all duration-200 ${
+                    mobileSection === 'spaces' && spaceFilter === 'archived'
+                      ? 'bg-gradient-to-b from-blue-600 to-blue-600 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <span className="truncate">Archived</span>
+                  <span>({archivedGroups.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMobileSection('dues')}
+                  aria-pressed={mobileSection === 'dues'}
+                  className={`flex h-8 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-semibold transition-all duration-200 ${
+                    mobileSection === 'dues'
+                      ? 'bg-gradient-to-b from-blue-600 to-blue-600 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <span className="truncate">Dues</span>
+                  <span>({groupMetrics.allMySettlements.length})</span>
                 </button>
               </div>
 
@@ -855,9 +849,6 @@ export default function Dashboard({
                                   <h3 className="truncate text-sm font-semibold text-slate-900">
                                     {group.name}
                                   </h3>
-                                  {isPinned && !isArchived && (
-                                    <Pin size={10} className="flex-shrink-0 text-blue-600" />
-                                  )}
                                   {isMuted && (
                                     <BellOff size={10} className="flex-shrink-0 text-amber-500" />
                                   )}

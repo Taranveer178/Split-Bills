@@ -13,7 +13,8 @@ import {
   HelpCircle,
   X,
   CalendarDays,
-  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 const CATEGORY_META = {
@@ -175,21 +176,46 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [] }
           </h1>
         </div>
 
-        <div className="relative min-w-0 max-w-[58%] flex-shrink">
-          <button type="button" onClick={openMonthPicker} className="page-heading-controls flex h-10 w-full min-w-0 items-center gap-2 rounded-full px-3 text-left text-xs font-semibold text-slate-700">
-          <CalendarDays size={14} className="flex-shrink-0 text-blue-600" />
-          <span className="truncate">{formattedMonthLabel}</span>
-          <ChevronDown size={14} className="flex-shrink-0 text-slate-400" />
+        <div className="flex min-w-0 max-w-[62%] flex-shrink items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setCurrentDate(new Date(year, month - 1, 1))}
+            aria-label="Previous month"
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-slate-600 hover:bg-white/80"
+          >
+            <ChevronLeft size={16} />
           </button>
-          <input
-            ref={monthInputRef}
-            type="month"
-            aria-label="Choose report month"
-            value={`${year}-${String(month + 1).padStart(2, '0')}`}
-            onChange={handleMonthChange}
-            className="pointer-events-none absolute left-0 top-0 h-px w-px opacity-0"
-            tabIndex={-1}
-          />
+          <span className="min-w-0 flex-1 truncate text-center text-xs font-semibold text-slate-700">
+            {formattedMonthLabel}
+          </span>
+          <button
+            type="button"
+            onClick={() => setCurrentDate(new Date(year, month + 1, 1))}
+            aria-label="Next month"
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-slate-600 hover:bg-white/80"
+          >
+            <ChevronRight size={16} />
+          </button>
+          <div className="relative flex-shrink-0">
+            <button
+              type="button"
+              onClick={openMonthPicker}
+              aria-label="Choose month"
+              title="Choose month"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm hover:bg-blue-700"
+            >
+              <CalendarDays size={15} />
+            </button>
+            <input
+              ref={monthInputRef}
+              type="month"
+              aria-label="Choose report month"
+              value={`${year}-${String(month + 1).padStart(2, '0')}`}
+              onChange={handleMonthChange}
+              className="pointer-events-none absolute left-0 top-0 h-px w-px opacity-0"
+              tabIndex={-1}
+            />
+          </div>
         </div>
       </div>
 

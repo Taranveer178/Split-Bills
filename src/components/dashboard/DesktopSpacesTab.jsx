@@ -159,7 +159,6 @@ export default function DesktopSpacesTab({
                               {unreadCount > 99 ? '99+' : unreadCount}
                             </span>
                           )}
-                          {isPinned && <Pin size={12} className="flex-shrink-0 text-blue-600" />}
                           {isMuted && <BellOff size={12} className="flex-shrink-0 text-amber-500" />}
                         </div>
                         <p className="truncate text-sm text-slate-500 md:text-xs">
