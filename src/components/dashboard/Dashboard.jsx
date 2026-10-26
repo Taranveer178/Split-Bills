@@ -6,8 +6,6 @@ import {
   Download,
   ChevronRight,
   ChevronDown,
-  Archive,
-  ArchiveRestore,
   Pin,
   Bell,
   BellOff,
@@ -32,6 +30,7 @@ import PrimaryNav from '../common/PrimaryNav';
 import MonthlyAnalyticsTab from './MonthlyAnalyticsTab';
 import ProfileTabView from './ProfileTab';
 import DesktopSpacesTab from './DesktopSpacesTab';
+import SpaceLongPressActions from './SpaceLongPressActions';
 import TransactionsTab from './TransactionsTab';
 import TransactionExportModal from './TransactionExportModal';
 import { calculateSettlements } from '../../utils/settlement';
@@ -885,8 +884,18 @@ export default function Dashboard({
                         const isArchived = archivedGroupIds.includes(group.id);
 
                         return (
-                          <div
+                          <SpaceLongPressActions
                             key={group.id}
+                            groupName={group.name}
+                            isPinned={isPinned}
+                            isArchived={isArchived}
+                            onTogglePin={() => updateGroupPreference(group.id, 'pinnedGroupIds', !isPinned)}
+                            onToggleArchive={() => {
+                              updateGroupPreference(group.id, 'archivedGroupIds', !isArchived);
+                              showToast?.(isArchived ? `Restored "${group.name}"` : `Archived "${group.name}"`);
+                            }}
+                          >
+                          <div
                             onClick={() => handleOpenGroup(group.id)}
                             className="liquid-glass-interactive flex items-center justify-between gap-2.5 rounded-2xl px-3.5 py-2.5 cursor-pointer shadow-sm"
                           >
@@ -907,6 +916,9 @@ export default function Dashboard({
                                   <h3 className="truncate text-sm font-semibold text-slate-900">
                                     {group.name}
                                   </h3>
+                                  {isPinned && (
+                                    <Pin size={11} aria-label="Pinned" title="Pinned" className="flex-shrink-0 text-blue-600" />
+                                  )}
                                   {groupMetrics.myUnpaidRents.some((rent) => rent.groupId === group.id) && (
                                     <button
                                       type="button"
@@ -961,43 +973,9 @@ export default function Dashboard({
                                     : 'Settled'}
                               </span>
 
-                              {/* Mobile Pin/Unpin */}
-                              {!isArchived && (
-                                <button
-                                  type="button"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    updateGroupPreference(group.id, 'pinnedGroupIds', !isPinned);
-                                  }}
-                                  className={`flex h-7 w-7 items-center justify-center rounded-lg ${
-                                    isPinned ? 'bg-blue-50 text-blue-600' : 'text-slate-400 hover:text-slate-600'
-                                  }`}
-                                  aria-label={isPinned ? `Unpin ${group.name}` : `Pin ${group.name}`}
-                                >
-                                  <Pin size={12} />
-                                </button>
-                              )}
-
-                              {/* Mobile Archive / Unarchive Button */}
-                              <button
-                                type="button"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  updateGroupPreference(group.id, 'archivedGroupIds', !isArchived);
-                                  showToast?.(
-                                    isArchived
-                                      ? `Restored "${group.name}"`
-                                      : `Archived "${group.name}"`
-                                  );
-                                }}
-                                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 active:scale-90 transition-transform"
-                                aria-label={isArchived ? `Restore ${group.name}` : `Archive ${group.name}`}
-                                title={isArchived ? `Restore ${group.name}` : `Archive ${group.name}`}
-                              >
-                                {isArchived ? <ArchiveRestore size={13} className="text-blue-600" /> : <Archive size={13} />}
-                              </button>
                             </div>
                           </div>
+                          </SpaceLongPressActions>
                         );
                       })}
                     </div>

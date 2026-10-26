@@ -1,6 +1,4 @@
 import {
-  Archive,
-  ArchiveRestore,
   Bell,
   BellOff,
   CircleDollarSign,
@@ -9,11 +7,11 @@ import {
   Copy,
   MessageSquare,
   Pin,
-  PinOff,
   Plus,
   Users,
 } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
+import SpaceLongPressActions from './SpaceLongPressActions';
 
 export default function DesktopSpacesTab({
   groups,
@@ -30,8 +28,8 @@ export default function DesktopSpacesTab({
   users,
   user,
   pinnedGroupIds,
-  archivedGroupIds,
   mutedGroupIds,
+  archivedGroupIds,
   onOpenGroup,
   onUpdateGroupPreference,
   onQuickAdd,
@@ -129,8 +127,15 @@ export default function DesktopSpacesTab({
             ));
 
             return (
-              <article
+              <SpaceLongPressActions
                 key={group.id}
+                groupName={group.name}
+                isPinned={isPinned}
+                isArchived={isArchived}
+                onTogglePin={() => onUpdateGroupPreference(group.id, 'pinnedGroupIds', !isPinned)}
+                onToggleArchive={() => onUpdateGroupPreference(group.id, 'archivedGroupIds', !isArchived)}
+              >
+              <article
                 onClick={() => onOpenGroup(group.id)}
                 onKeyDown={(event) => {
                   if (event.target !== event.currentTarget) return;
@@ -158,6 +163,9 @@ export default function DesktopSpacesTab({
                           <h2 className="truncate text-base font-extrabold text-slate-900 transition-colors group-hover:text-blue-600 md:text-sm">
                             {group.name}
                           </h2>
+                          {isPinned && (
+                            <Pin size={12} aria-label="Pinned" title="Pinned" className="flex-shrink-0 text-blue-600" />
+                          )}
                           {hasRentDue && (
                             <button
                               type="button"
@@ -310,33 +318,10 @@ export default function DesktopSpacesTab({
                     >
                       {isMuted ? <BellOff size={14} /> : <Bell size={14} />}
                     </button>
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onUpdateGroupPreference(group.id, 'pinnedGroupIds', !isPinned);
-                      }}
-                      aria-label={isPinned ? `Unpin ${group.name}` : `Pin ${group.name}`}
-                      className={`flex h-7 w-7 items-center justify-center rounded-xl ${
-                        isPinned ? 'bg-blue-50 text-blue-600' : 'text-slate-400 hover:bg-white'
-                      }`}
-                    >
-                      {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onUpdateGroupPreference(group.id, 'archivedGroupIds', !isArchived);
-                      }}
-                      aria-label={isArchived ? `Restore ${group.name}` : `Archive ${group.name}`}
-                      className="flex h-7 w-7 items-center justify-center rounded-xl text-slate-400 hover:bg-white"
-                    >
-                      {isArchived ? <ArchiveRestore size={14} /> : <Archive size={14} />}
-                    </button>
                   </div>
                 </div>
-              </article>
+                </article>
+              </SpaceLongPressActions>
             );
           })}
         </div>
