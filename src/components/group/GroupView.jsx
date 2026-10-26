@@ -94,12 +94,7 @@ export default function GroupView({
   };
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-white font-sans md:flex-row md:bg-[#EEF2F9]">
-      {/* Soft Refractive Mesh Backdrop */}
-      <div className="pointer-events-none fixed inset-0 z-0 hidden overflow-hidden md:block">
-        <div className="absolute -top-20 right-10 h-72 w-72 rounded-full bg-green-300/20 blur-3xl" />
-        <div className="absolute bottom-10 left-10 h-72 w-72 rounded-full bg-green-300/20 blur-3xl" />
-      </div>
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-white font-sans md:flex-row">
 
       <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {/* LIQUID GLASS HEADER */}
@@ -121,7 +116,7 @@ export default function GroupView({
               className="flex items-center gap-2.5 min-w-0 cursor-pointer select-none"
               title="View Expenses"
             >
-              <span className="flex h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-green-600 to-green-600 text-sm font-extrabold text-white shadow-sm">
+              <span className="flex h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-blue-600 to-blue-600 text-sm font-extrabold text-white shadow-sm">
                 {group.imageDataUrl ? (
                   <img src={group.imageDataUrl} alt="" className="h-full w-full object-cover" />
                 ) : (
@@ -148,7 +143,7 @@ export default function GroupView({
                 onClick={() => handleTabSelect('balances')}
                 className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                   activeTab === 'balances'
-                    ? 'bg-white text-green-600 shadow-sm'
+                    ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
                 title="Balances"
@@ -162,7 +157,7 @@ export default function GroupView({
                 onClick={() => handleTabSelect('chat')}
                 className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                   activeTab === 'chat'
-                    ? 'bg-white text-green-600 shadow-sm'
+                    ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
                 title={unreadChatCount > 0 && activeTab !== 'chat'
@@ -189,7 +184,7 @@ export default function GroupView({
                 onClick={() => handleTabSelect('members')}
                 className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                   activeTab === 'members'
-                    ? 'bg-white text-green-600 shadow-sm'
+                    ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
                 title="Room Settings"
@@ -202,7 +197,7 @@ export default function GroupView({
             <button
               type="button"
               onClick={() => handleTabSelect('add')}
-              className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-2xl bg-gradient-to-b from-green-600 to-green-600 px-3.5 text-xs font-bold text-white shadow-md shadow-green-600/20 hover:opacity-95"
+              className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-2xl bg-gradient-to-b from-blue-600 to-blue-600 px-3.5 text-xs font-bold text-white shadow-md shadow-blue-600/20 hover:opacity-95"
             >
               <Plus size={14} />
               <span>Add Bill</span>
@@ -259,7 +254,7 @@ export default function GroupView({
                       <button
                         type="button"
                         onClick={() => handleTabSelect('balances')}
-                        className="text-xs font-bold text-green-600 hover:underline"
+                        className="text-xs font-bold text-blue-600 hover:underline"
                       >
                         Settle up →
                       </button>
@@ -297,7 +292,7 @@ export default function GroupView({
                   <div className="liquid-glass rounded-3xl p-5">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                        <Users size={14} className="text-green-600" />
+                        <Users size={14} className="text-blue-600" />
                         <span>Members ({group.members.length})</span>
                       </h3>
                       {group.inviteCode && (
@@ -407,7 +402,7 @@ export default function GroupView({
             type="button"
             onClick={() => handleTabSelect('add')}
             aria-label="Add expense"
-            className="fixed bottom-5 right-5 z-30 flex h-12 items-center gap-1.5 rounded-2xl bg-gradient-to-r from-green-600 to-green-600 px-4 text-xs font-bold text-white shadow-lg shadow-green-600/30 border border-white/25 transition-transform active:scale-95 sm:hidden"
+            className="fixed bottom-5 right-5 z-30 flex h-12 items-center gap-1.5 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-600 px-4 text-xs font-bold text-white shadow-lg shadow-blue-600/30 border border-white/25 transition-transform active:scale-95 sm:hidden"
             title="Add Expense"
           >
             <Plus size={17} strokeWidth={2.5} />

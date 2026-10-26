@@ -57,7 +57,7 @@ export default function PrimaryNav({
                   <span
                     className={`relative inline-flex h-10 w-10 items-center justify-center rounded-2xl transition-all ${
                       isActive
-                        ? 'bg-gradient-to-b from-green-600 to-green-600 text-white shadow-md shadow-green-600/25'
+                        ? 'bg-gradient-to-b from-blue-600 to-blue-600 text-white shadow-md shadow-blue-600/25'
                         : 'hover:bg-white/60 hover:text-slate-900'
                     }`}
                   >
@@ -74,7 +74,7 @@ export default function PrimaryNav({
                 type="button"
                 onClick={onQuickAction}
                 aria-label="Quick add bill"
-                className="mx-0.5 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[20px] bg-gradient-to-tr from-slate-900 via-slate-800 to-green-900 text-white shadow-lg shadow-slate-900/25 border border-white/30 transition-transform active:scale-90"
+                className="mx-0.5 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[20px] bg-gradient-to-tr from-slate-900 via-slate-800 to-blue-900 text-white shadow-lg shadow-slate-900/25 border border-white/30 transition-transform active:scale-90"
               >
                 <Plus size={22} strokeWidth={2.75} />
               </button>
@@ -95,12 +95,12 @@ export default function PrimaryNav({
                     <span
                       className={`relative inline-flex h-10 w-10 items-center justify-center rounded-2xl transition-all ${
                         isActive
-                          ? 'bg-gradient-to-b from-green-600 to-green-600 text-white shadow-md shadow-green-600/25'
+                          ? 'bg-gradient-to-b from-blue-600 to-blue-600 text-white shadow-md shadow-blue-600/25'
                           : 'hover:bg-white/60 hover:text-slate-900'
                       }`}
                     >
                       {id === 'profile' ? (
-                        <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-green-600 to-green-600 text-[10px] font-extrabold text-white ring-2 ring-white/80">
+                        <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-blue-600 to-blue-600 text-[10px] font-extrabold text-white ring-2 ring-white/80">
                           {user?.photoDataUrl ? (
                             <img
                               src={user.photoDataUrl}
@@ -128,7 +128,7 @@ export default function PrimaryNav({
       {/* ===================================================================== */}
       <aside
         aria-label="Desktop navigation"
-        className="hidden md:flex md:order-first md:h-full md:w-60 lg:w-64 md:flex-shrink-0 md:flex-col md:justify-between bg-white/75 backdrop-blur-2xl border-r border-white/80 shadow-[4px_0_24px_rgba(15,23,42,0.03)] px-4 py-6 z-30"
+        className="hidden md:flex md:order-first md:h-full md:w-60 lg:w-64 md:flex-shrink-0 md:flex-col md:justify-between bg-white/95 backdrop-blur-xl border-r border-slate-200/80 shadow-[4px_0_24px_rgba(15,23,42,0.03)] px-4 py-6 z-30"
       >
         <div>
           {/* Brand Header */}
@@ -149,7 +149,7 @@ export default function PrimaryNav({
               <span className="block text-base font-extrabold tracking-tight text-slate-900 leading-none">
                 RoomSplit
               </span>
-              <span className="mt-1 block text-[11px] font-semibold text-green-600 leading-none">
+              <span className="mt-1 block text-[11px] font-semibold text-blue-600 leading-none">
                 Shared Ledger
               </span>
             </div>
@@ -173,14 +173,14 @@ export default function PrimaryNav({
                   aria-current={isActive ? 'page' : undefined}
                   className={`group flex h-11 w-full items-center gap-3 rounded-2xl px-3.5 text-sm transition-all duration-200 ${
                     isActive
-                      ? 'bg-gradient-to-r from-green-600 to-green-600 text-white font-bold shadow-md shadow-green-600/20'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-600 text-white font-bold shadow-md shadow-blue-600/20'
                       : 'text-slate-600 font-semibold hover:bg-white/80 hover:text-slate-900'
                   }`}
                 >
                   <Icon
                     size={18}
                     strokeWidth={isActive ? 2.5 : 2}
-                    className={isActive ? 'text-white' : 'text-slate-500 group-hover:text-green-600'}
+                    className={isActive ? 'text-white' : 'text-slate-500 group-hover:text-blue-600'}
                   />
                   <span>{label}</span>
                   {id === 'spaces' && unreadSpacesCount > 0 && (
@@ -203,9 +203,9 @@ export default function PrimaryNav({
             <button
               type="button"
               onClick={onInstallApp}
-              className="flex w-full items-center gap-3 rounded-2xl border border-green-100 bg-gradient-to-r from-green-50 to-green-50 p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-green-200 hover:from-green-100 hover:to-green-100 hover:shadow-md active:translate-y-0"
+              className="flex w-full items-center gap-3 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-blue-50 p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:from-blue-100 hover:to-blue-100 hover:shadow-md active:translate-y-0"
             >
-              <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white text-green-600 shadow-sm">
+              <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm">
                 <Download size={17} />
               </span>
               <span className="min-w-0 flex-1">
@@ -221,7 +221,7 @@ export default function PrimaryNav({
               onClick={() => onNavigate('profile')}
               className="flex items-center gap-3 rounded-2xl bg-white/70 border border-white/90 p-2.5 shadow-sm hover:bg-white cursor-pointer transition-all"
             >
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-tr from-green-600 to-green-600 text-xs font-bold text-white shadow-sm">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-tr from-blue-600 to-blue-600 text-xs font-bold text-white shadow-sm">
                 {user.photoDataUrl ? (
                   <img src={user.photoDataUrl} alt="" className="h-full w-full object-cover" />
                 ) : (

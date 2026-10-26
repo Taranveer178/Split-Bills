@@ -33,8 +33,8 @@ const CATEGORY_META = {
     icon: <Home size={14} />,
   },
   Utilities: {
-    color: 'bg-green-500',
-    softBg: 'bg-green-50 border-green-200/80 text-green-700',
+    color: 'bg-blue-500',
+    softBg: 'bg-blue-50 border-blue-200/80 text-blue-700',
     icon: <Zap size={14} />,
   },
   Shopping: {
@@ -151,7 +151,7 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [] }
       {/* Header & Month Switcher */}
       <div className="flex items-center justify-between gap-2.5">
         <div className="flex min-w-0 items-center gap-2.5 rounded-full border border-white/90 bg-white/75 p-2 pr-4 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
-          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-green-600 to-green-600 text-xs font-bold text-white shadow-sm">
+          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-blue-600 to-blue-600 text-xs font-bold text-white shadow-sm">
             {user?.photoDataUrl ? (
               <img src={user.photoDataUrl} alt="" className="h-full w-full object-cover" />
             ) : (
@@ -164,7 +164,7 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [] }
         </div>
 
         <label className="relative flex h-10 min-w-0 max-w-[58%] flex-shrink items-center gap-2 rounded-full border border-white/90 bg-white/75 px-3 text-xs font-semibold text-slate-700 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
-          <CalendarDays size={14} className="flex-shrink-0 text-green-600" />
+          <CalendarDays size={14} className="flex-shrink-0 text-blue-600" />
           <span className="truncate">{formattedMonthLabel}</span>
           <ChevronDown size={14} className="flex-shrink-0 text-slate-400" />
           <input

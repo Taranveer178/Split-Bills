@@ -20,7 +20,7 @@ export default function TransactionsTab({
       {!preview && (
         <div className="mb-4 flex items-center justify-between gap-2.5">
           <div className="flex min-w-0 items-center gap-2.5 rounded-full border border-white/90 bg-white/75 p-2 pr-4 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
-            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-green-600 to-green-600 text-xs font-bold text-white shadow-sm">
+            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-blue-600 to-blue-600 text-xs font-bold text-white shadow-sm">
               {user?.photoDataUrl ? (
                 <img src={user.photoDataUrl} alt="" className="h-full w-full object-cover" />
               ) : (
@@ -44,7 +44,7 @@ export default function TransactionsTab({
                 aria-pressed={ledgerFilter === filter.id}
                 className={`rounded-full px-3 py-2 text-xs font-semibold transition-colors ${
                   ledgerFilter === filter.id
-                    ? 'bg-gradient-to-b from-green-600 to-green-600 text-white shadow-sm'
+                    ? 'bg-gradient-to-b from-blue-600 to-blue-600 text-white shadow-sm'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
@@ -77,7 +77,7 @@ export default function TransactionsTab({
           <button
             type="button"
             onClick={onSeeAll}
-            className="rounded-xl px-3 py-1.5 text-xs font-bold text-green-600 transition-colors hover:bg-green-50"
+            className="rounded-xl px-3 py-1.5 text-xs font-bold text-blue-600 transition-colors hover:bg-blue-50"
           >
             See all transactions
             <span aria-hidden="true"> →</span>
@@ -115,7 +115,7 @@ export default function TransactionsTab({
                 className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-white/80 bg-white/60 px-3.5 py-3 transition-all hover:bg-white/95"
               >
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-green-100 bg-green-50 text-green-600">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600">
                     <Receipt size={16} />
                   </div>
                   <div className="min-w-0">
@@ -123,7 +123,7 @@ export default function TransactionsTab({
                       <p className="truncate text-sm font-bold text-slate-900">
                         {expense.title}
                       </p>
-                      <span className="rounded-lg bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700">
+                      <span className="rounded-lg bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
                         {group?.name || 'Room'}
                       </span>
                     </div>

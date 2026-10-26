@@ -601,7 +601,7 @@ export default function BalancesTab({
               <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-slate-300 sm:hidden" />
               <div className="mb-4 flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
-                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-green-100 bg-green-50 text-green-600">
+                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-blue-600">
                     <Receipt size={18} />
                   </span>
                   <div className="min-w-0">
@@ -621,9 +621,9 @@ export default function BalancesTab({
                 </button>
               </div>
 
-              <div className="mb-4 flex items-center justify-between rounded-2xl border border-green-100 bg-green-50/70 px-4 py-3">
+              <div className="mb-4 flex items-center justify-between rounded-2xl border border-blue-100 bg-blue-50/70 px-4 py-3">
                 <span className="text-xs font-semibold text-slate-600">Total owed</span>
-                <span className="font-mono text-base font-extrabold text-green-700">
+                <span className="font-mono text-base font-extrabold text-blue-700">
                   {formatCurrency(breakdownData.amount, currency)}
                 </span>
               </div>

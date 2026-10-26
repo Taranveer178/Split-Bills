@@ -509,15 +509,15 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
   );
 
   return (
-    <main className="min-h-[100dvh] w-full bg-white font-sans flex items-center justify-center md:bg-[#F8FAFC] md:p-6 relative overflow-hidden">
+    <main className="min-h-[100dvh] w-full bg-white font-sans flex items-center justify-center md:p-6 relative overflow-hidden">
       {/* MOBILE LAYOUT */}
       <div className="md:hidden fixed inset-0 flex flex-col w-full h-full overflow-hidden bg-white">
         <div className="flex-1 flex flex-col justify-between">
           <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-7 pb-8 text-center">
-            <div className="relative mb-6 flex h-[76px] w-[76px] items-center justify-center overflow-hidden rounded-[26px] border border-slate-100 bg-white p-2.5 shadow-[0_12px_30px_rgba(15,23,42,0.1)]">
+            <div className="relative mb-6 flex h-[76px] w-[76px] items-center justify-center overflow-hidden rounded-[26px] border border-slate-200/80 bg-white p-2.5 shadow-[0_12px_30px_rgba(15,23,42,0.1)]">
               <img src={roomsplitIcon} alt="RoomSplit Logo" className="h-full w-full rounded-[18px] object-cover" />
             </div>
-            <span className="relative rounded-full border border-green-100 bg-green-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-green-700">
+            <span className="relative rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">
               Room Split
             </span>
             <h1 className="relative mt-4 max-w-sm text-[32px] font-bold leading-[1.08] tracking-[-0.045em] text-slate-900">
@@ -528,7 +528,7 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
             </p>
           </div>
 
-          <div className="bg-white w-full rounded-t-2xl pt-6 pb-8 px-6 flex flex-col gap-3">
+          <div className="w-full border-t border-slate-200/80 bg-white px-6 pt-6 pb-[max(2rem,env(safe-area-inset-bottom))] flex flex-col gap-3">
             <Button onClick={() => handleOpenSheet('login')} className="w-full h-11 text-sm">
               Sign in to RoomSplit
             </Button>
@@ -577,8 +577,8 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
       </div>
 
       {/* DESKTOP LAYOUT */}
-      <div className="hidden md:flex w-full max-w-[920px] min-h-[540px] bg-white rounded-2xl border border-green-100 shadow-[0_24px_70px_rgba(30,64,175,0.14)] overflow-hidden">
-        <div className="w-[45%] bg-gradient-to-br from-green-600 via-green-700 to-slate-900 p-10 flex flex-col justify-between text-white">
+      <div className="hidden md:flex w-full max-w-[920px] min-h-[540px] bg-white rounded-2xl border border-slate-200 shadow-[0_20px_60px_rgba(15,23,42,0.08)] overflow-hidden">
+        <div className="w-[45%] border-r border-slate-200/80 bg-white p-10 flex flex-col justify-between text-slate-900">
           <div>
             <div className="flex items-center gap-3 mb-8">
               <div className="w-10 h-10 overflow-hidden bg-white rounded-xl p-1.5 flex items-center justify-center">
@@ -589,11 +589,11 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
             <h2 className="text-3xl font-bold leading-tight tracking-tight mb-3">
               Clear shared accounting for modern households.
             </h2>
-            <p className="text-white text-sm leading-relaxed">
+            <p className="text-slate-600 text-sm leading-relaxed">
               Log bills in seconds, split equally or custom, and settle dues directly via UPI.
             </p>
 
-            <ul className="mt-8 space-y-2.5 text-xs text-slate-300">
+            <ul className="mt-8 space-y-2.5 text-xs text-slate-600">
               <li className="flex items-center gap-2">
                 <CheckCircle2 size={15} className="text-emerald-400 flex-shrink-0" />
                 <span>Smart debt simplification across roommates</span>
@@ -609,10 +609,10 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
             </ul>
           </div>
 
-          <p className="text-white text-xs">© {new Date().getFullYear()} RoomSplit</p>
+          <p className="text-slate-500 text-xs">© {new Date().getFullYear()} RoomSplit</p>
         </div>
 
-        <div className="w-[55%] bg-gradient-to-br from-green-50/80 via-white to-green-50/70 p-10 flex flex-col justify-center items-center">
+        <div className="w-[55%] bg-white p-10 flex flex-col justify-center items-center">
           <div className="w-full max-w-sm">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-slate-900 tracking-tight">

@@ -317,7 +317,7 @@ export default function MembersTab({
         {isAdmin && (
           <div className="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-green-100 bg-green-50 text-green-600">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600">
                 <Coins size={15} />
               </span>
               <div>
@@ -332,7 +332,7 @@ export default function MembersTab({
               onChange={handleCurrencyChange}
               disabled={savingCurrency}
               aria-label="Space currency"
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 outline-none transition-colors focus:border-green-400 disabled:opacity-60 sm:w-56"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 outline-none transition-colors focus:border-blue-400 disabled:opacity-60 sm:w-56"
             >
               {GROUP_CURRENCIES.map(({ code, label }) => (
                 <option key={code} value={code}>{label}</option>

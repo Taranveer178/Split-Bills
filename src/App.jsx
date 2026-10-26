@@ -113,7 +113,7 @@ function LaunchScreen() {
 
 function GroupLoadingSkeleton() {
   return (
-    <main className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-white md:bg-[#F8FAFC]" role="status" aria-label="Opening group">
+    <main className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-white" role="status" aria-label="Opening group">
       <span className="sr-only">Loading group</span>
       <header className="flex flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
         <div className="flex min-w-0 items-center gap-3">
@@ -222,17 +222,8 @@ export default function App() {
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
     localStorage.setItem('rs_theme', theme);
-    const themeColor = document.querySelector('meta[name="theme-color"]');
-    const mobileViewport = window.matchMedia('(max-width: 767px)');
-    const updateThemeColor = () => {
-      themeColor?.setAttribute(
-        'content',
-        theme === 'dark' ? '#000000' : mobileViewport.matches ? '#ffffff' : '#eef2f9'
-      );
-    };
-    updateThemeColor();
-    mobileViewport.addEventListener('change', updateThemeColor);
-    return () => mobileViewport.removeEventListener('change', updateThemeColor);
+    document.querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', theme === 'dark' ? '#000000' : '#f8fafc');
   }, [theme]);
 
   const mutedGroupIds = useMemo(
@@ -848,7 +839,7 @@ export default function App() {
 
   return (
     <div
-      className="fixed inset-x-0 top-[var(--app-top,0px)] z-0 flex h-[var(--app-height,100dvh)] w-full flex-col overflow-hidden bg-white font-sans text-slate-900 md:bg-[#F8FAFC]"
+      className="fixed inset-x-0 top-[var(--app-top,0px)] z-0 flex h-[var(--app-height,100dvh)] w-full flex-col overflow-hidden bg-white font-sans text-slate-900"
     >
       <Toast toast={toast} />
       {incomingChat && (

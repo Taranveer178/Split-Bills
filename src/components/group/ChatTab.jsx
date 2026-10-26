@@ -1031,11 +1031,7 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
   }, [deleteCandidates, currentUser?.id, group?.createdBy]);
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden bg-slate-100/60 font-sans select-none">
-      
-      {/* Background ambient lighting */}
-      <div className="absolute top-10 right-10 w-96 h-96 bg-sky-300/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-20 left-10 w-96 h-96 bg-green-300/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden bg-white font-sans select-none">
 
       {/* WhatsApp-Style Selection Mode Top Bar */}
       {isSelectMode ? (
@@ -1181,7 +1177,7 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
                             : isDeleted
                               ? 'bg-slate-100 text-slate-400 italic border border-slate-200/80 px-3 py-1.5 rounded-2xl shadow-xs'
                               : isMe
-                                ? 'bg-gradient-to-br from-sky-500 via-green-500 to-green-500 text-white rounded-2xl rounded-br-xs shadow-[0_1px_3px_rgba(14,165,233,0.25)]'
+                                ? 'bg-gradient-to-br from-sky-500 via-blue-500 to-blue-500 text-white rounded-2xl rounded-br-xs shadow-[0_1px_3px_rgba(14,165,233,0.25)]'
                                 : 'bg-white text-slate-800 border border-slate-200/70 rounded-2xl rounded-bl-xs shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
                         }`}
                       >
@@ -1376,7 +1372,7 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
             {/* Highlighted Message Preview: Exact Original Width & 3-4 Lines Clamp */}
             <div className={`w-full p-3.5 rounded-2xl shadow-xl border text-[13.5px] leading-relaxed break-words backdrop-blur-xl ${
               activeContextMenu.isMe
-                ? 'bg-gradient-to-br from-sky-500 via-green-500 to-green-500 text-white border-white/30 shadow-sky-500/20'
+                ? 'bg-gradient-to-br from-sky-500 via-blue-500 to-blue-500 text-white border-white/30 shadow-sky-500/20'
                 : 'bg-white/95 text-slate-800 border-white/80 shadow-slate-900/10'
             }`}>
               {activeContextMenu.message.text ? (
@@ -1823,7 +1819,7 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
               type="button"
               onClick={() => handleSend()}
               disabled={!input.trim()}
-              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-sky-500 to-green-600 text-white shadow-md shadow-sky-500/25 transition-all hover:opacity-95 active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
+              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/25 transition-all hover:opacity-95 active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
               aria-label="Send message"
             >
               <Send size={16} className="-mr-0.5" />

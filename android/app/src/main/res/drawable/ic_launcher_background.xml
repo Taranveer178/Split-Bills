@@ -15,9 +15,12 @@
                 android:endX="108"
                 android:endY="108"
                 android:type="linear">
-                <item android:color="#00802A" android:offset="0.0" />
-                <item android:color="#006622" android:offset="0.5" />
-                <item android:color="#004D1A" android:offset="1.0" />
+                <!-- Tailwind blue-600 -->
+                <item android:color="#2563EB" android:offset="0.0" />
+                <!-- Tailwind blue-700 -->
+                <item android:color="#1D4ED8" android:offset="0.5" />
+                <!-- Tailwind indigo-900 -->
+                <item android:color="#312E81" android:offset="1.0" />
             </gradient>
         </aapt:attr>
     </path>

@@ -288,11 +288,11 @@ export default function AdminPanel() {
           <form onSubmit={handleLogin} className="mt-5 space-y-3">
             <label className="block text-sm font-medium text-slate-700">
               Username
-              <input value={loginUsername} onChange={(event) => setLoginUsername(event.target.value)} autoComplete="username" required className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100" />
+              <input value={loginUsername} onChange={(event) => setLoginUsername(event.target.value)} autoComplete="username" required className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
             </label>
             <label className="block text-sm font-medium text-slate-700">
               Password
-              <input type="password" value={loginPassword} onChange={(event) => setLoginPassword(event.target.value)} autoComplete="current-password" required className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100" />
+              <input type="password" value={loginPassword} onChange={(event) => setLoginPassword(event.target.value)} autoComplete="current-password" required className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
             </label>
             <button type="submit" disabled={saving} className="w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60">
               {saving ? 'Signing in...' : 'Sign in securely'}
@@ -351,7 +351,7 @@ export default function AdminPanel() {
           <section className="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white">
             <div className="flex items-center justify-between gap-2 border-b border-slate-200 p-3 sm:p-4">
               <div className="flex min-w-0 items-center gap-2">
-                <ActiveIcon size={18} className="flex-shrink-0 text-green-600" />
+                <ActiveIcon size={18} className="flex-shrink-0 text-blue-600" />
                 <h2 className="truncate text-sm font-bold sm:text-base">{COLLECTIONS.find((item) => item.id === activeCollection)?.label}</h2>
                 <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-xs text-slate-500">{records.length}{truncated ? '+' : ''}</span>
               </div>
@@ -359,7 +359,7 @@ export default function AdminPanel() {
                 <button type="button" onClick={() => void refreshRecords()} disabled={loadingRecords} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-50" title="Refresh records" aria-label="Refresh records">
                   <RefreshCw size={16} className={loadingRecords ? 'animate-spin' : ''} />
                 </button>
-                <button type="button" onClick={handleCreate} className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-2.5 py-2 text-xs font-semibold text-white hover:bg-green-700 sm:px-3 sm:text-sm">
+                <button type="button" onClick={handleCreate} className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-2.5 py-2 text-xs font-semibold text-white hover:bg-blue-700 sm:px-3 sm:text-sm">
                   <FilePlus2 size={15} /> New
                 </button>
               </div>
@@ -367,7 +367,7 @@ export default function AdminPanel() {
 
             <label className="relative block border-b border-slate-100 px-3 py-2.5 sm:px-4">
               <Search size={16} className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 sm:left-7" />
-              <input value={searchText} onChange={(event) => setSearchText(event.target.value)} placeholder="Search records" className="w-full rounded-lg bg-slate-50 py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-green-100" />
+              <input value={searchText} onChange={(event) => setSearchText(event.target.value)} placeholder="Search records" className="w-full rounded-lg bg-slate-50 py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-blue-100" />
             </label>
 
             {error && <p role="alert" className="mx-3 mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700 sm:mx-4">{error}</p>}
@@ -385,7 +385,7 @@ export default function AdminPanel() {
                   type="button"
                   onClick={() => void handleSelectRecord(record)}
                   className={`flex w-full min-w-0 items-center gap-3 border-b border-slate-100 px-3 py-3 text-left transition-colors last:border-b-0 sm:px-4 ${
-                    selectedRecord?.id === record.id ? 'bg-green-50' : 'hover:bg-slate-50'
+                    selectedRecord?.id === record.id ? 'bg-blue-50' : 'hover:bg-slate-50'
                   }`}
                 >
                   <div className="min-w-0 flex-1">
@@ -425,10 +425,10 @@ export default function AdminPanel() {
                   value={editorText}
                   onChange={(event) => setEditorText(event.target.value)}
                   spellCheck="false"
-                  className="mt-2 min-h-[44dvh] w-full resize-y rounded-lg border border-slate-300 bg-slate-950 p-3 font-mono text-xs leading-relaxed text-slate-100 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 sm:min-h-[55dvh]"
+                  className="mt-2 min-h-[44dvh] w-full resize-y rounded-lg border border-slate-300 bg-slate-950 p-3 font-mono text-xs leading-relaxed text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 sm:min-h-[55dvh]"
                 />
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                  <button type="button" onClick={() => void handleSaveRecord()} disabled={saving} className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50">
+                  <button type="button" onClick={() => void handleSaveRecord()} disabled={saving} className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
                     <Save size={16} />{saving ? 'Saving...' : selectedRecord ? 'Save changes' : 'Create record'}
                   </button>
                   {selectedRecord && (

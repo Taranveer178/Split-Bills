@@ -31,7 +31,7 @@
     <meta property="twitter:image" content="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1200&h=630&q=80" />
 
     <!-- Mobile UI & PWA Capabilities -->
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="#f8fafc" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -65,10 +65,7 @@
         color: #0f172a;
         text-align: center;
         font-family: system-ui, -apple-system, sans-serif;
-        background:
-          radial-gradient(ellipse at 50% 42%, rgb(0 128 42 / 9%), transparent 42%),
-          radial-gradient(ellipse at 15% 85%, rgb(16 185 129 / 7%), transparent 35%),
-          #f8fafc;
+        background: #ffffff;
       }
       .launch-screen__logo-frame {
         display: grid;
@@ -79,7 +76,7 @@
         border: 1px solid rgb(226 232 240 / 85%);
         border-radius: 24px;
         background: #ffffff;
-        box-shadow: 0 18px 40px rgb(0 128 42 / 14%), 0 4px 12px rgb(15 23 42 / 6%);
+        box-shadow: 0 18px 40px rgb(15 23 42 / 8%), 0 4px 12px rgb(15 23 42 / 5%);
       }
       .launch-screen__logo {
         width: 72px;
@@ -104,8 +101,8 @@
         width: 24px;
         height: 24px;
         margin-top: 28px;
-        border: 2.5px solid rgb(0 128 42 / 15%);
-        border-top-color: #00802a;
+        border: 2.5px solid rgb(148 163 184 / 20%);
+        border-top-color: #2563eb;
         border-radius: 50%;
         animation: launch-spin 0.8s linear infinite;
       }
@@ -122,7 +119,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/roomsplit-icon-192.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="/roomsplit-icon-192.png" />
   </head>
-  <body class="bg-[#F8FAFC] font-sans antialiased text-slate-900 selection:bg-slate-900 selection:text-white">
+  <body class="bg-white font-sans antialiased text-slate-900 selection:bg-slate-900 selection:text-white">
     <div id="root">
       <main class="launch-screen" role="status" aria-label="Loading RoomSplit">
         <div class="launch-screen__logo-frame">

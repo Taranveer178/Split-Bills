@@ -400,8 +400,8 @@ export default function ExpensesTab({
                 </button>
               </div>
 
-              <div className="mb-4 rounded-2xl border border-white/20 bg-gradient-to-br from-green-600 via-green-600 to-slate-900 p-4 text-center text-white shadow-lg shadow-green-600/15">
-                <span className="block text-[10px] font-semibold uppercase tracking-wider text-green-100/80">
+              <div className="mb-4 rounded-2xl border border-slate-200/80 bg-white p-4 text-center text-slate-900 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.16)]">
+                <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                   Total Bill
                 </span>
                 <div className="mt-1 font-mono text-2xl font-bold">
@@ -468,7 +468,7 @@ export default function ExpensesTab({
                         className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-xs"
                       >
                         <span className="flex min-w-0 items-center gap-2.5">
-                          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-br from-green-100 to-green-100 text-[11px] font-extrabold text-green-700 shadow-sm">
+                          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-br from-blue-100 to-blue-100 text-[11px] font-extrabold text-blue-700 shadow-sm">
                             {member?.photoDataUrl || (isUser && currentUser.photoDataUrl) ? (
                               <img
                                 src={member?.photoDataUrl || currentUser.photoDataUrl}
