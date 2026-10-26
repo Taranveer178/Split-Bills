@@ -16,11 +16,7 @@ import {
 import { calculateSettlements, GROUP_DELETE_BALANCE_TOLERANCE } from './utils/settlement';
 import { formatCurrency } from './utils/currency';
 import { auth, db, hasFirebase, signInAnonymously } from './firebase';
-import {
-  INITIAL_EXPENSES,
-  INITIAL_GROUPS,
-  INITIAL_USERS,
-} from './utils/constants';
+import { INITIAL_EXPENSES } from './utils/constants';
 import AuthScreen from './components/auth/AuthScreen';
 import Dashboard from './components/dashboard/Dashboard';
 import CreateGroupModal from './components/dashboard/CreateGroupModal';
@@ -103,6 +99,17 @@ const removeDemoExpenses = (items) => (
   items.filter((expense) => !(expense.id === 'exp_1' && expense.title === 'Pizza Dinner'))
 );
 
+const legacyDemoUserIds = new Set(['usr_taran', 'usr_sushant', 'usr_tushar']);
+const legacyDemoGroupId = 'grp_room302';
+
+const removeLegacyDemoUsers = (items) => (
+  items.filter((user) => !legacyDemoUserIds.has(user.id))
+);
+
+const removeLegacyDemoGroups = (items) => (
+  items.filter((group) => group.id !== legacyDemoGroupId)
+);
+
 function LaunchScreen() {
   return (
     <main className="launch-screen" role="status" aria-label="Loading RoomSplit">
@@ -167,7 +174,14 @@ if (!Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
 export default function App() {
   const [initialRoute] = useState(getRouteFromLocation);
   const [activeUserId, setActiveUserId] = useState(
-    () => localStorage.getItem('rs_active_user_id')
+    () => {
+      const storedUserId = localStorage.getItem('rs_active_user_id');
+      if (legacyDemoUserIds.has(storedUserId)) {
+        localStorage.removeItem('rs_active_user_id');
+        return null;
+      }
+      return storedUserId;
+    }
   );
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null);
   const [isAppInstalled, setIsAppInstalled] = useState(
@@ -182,11 +196,15 @@ export default function App() {
     return value ? JSON.parse(value) : fallback;
   };
   const [users, setUsers] = useState(
-    () => hasInitialLocalSession ? readStoredData('rs_users', INITIAL_USERS) : []
+    () => hasInitialLocalSession
+      ? removeLegacyDemoUsers(readStoredData('rs_users', []))
+      : []
   );
   const [usersLoaded, setUsersLoaded] = useState(hasInitialLocalSession);
   const [groups, setGroups] = useState(
-    () => hasInitialLocalSession ? readStoredData('rs_groups', INITIAL_GROUPS) : []
+    () => hasInitialLocalSession
+      ? removeLegacyDemoGroups(readStoredData('rs_groups', []))
+      : []
   );
   const [expenses, setExpenses] = useState(
     () => hasInitialLocalSession
@@ -409,15 +427,8 @@ export default function App() {
         if (!auth.currentUser) await signInAnonymously(auth);
         if (isCancelled) return;
         unsubscribers.push(onSnapshot(collection(db, 'users'), (snapshot) => {
-          const loadedUsers = snapshot.empty
-            ? INITIAL_USERS
-            : snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
-          if (!snapshot.empty) {
-            setUsers(loadedUsers);
-          } else {
-            INITIAL_USERS.forEach((user) => setDoc(doc(db, 'users', user.id), user).catch(() => {}));
-            setUsers(loadedUsers);
-          }
+          const loadedUsers = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+          setUsers(loadedUsers);
           if (activeUserId && !loadedUsers.some((user) => user.id === activeUserId)) {
             localStorage.removeItem('rs_active_user_id');
             setActiveUserId(null);
@@ -543,7 +554,8 @@ export default function App() {
   const loadUsersForAuth = async () => {
     if (!hasFirebase || !db || !auth) {
       const savedUsers = localStorage.getItem('rs_users');
-      const loadedUsers = savedUsers ? JSON.parse(savedUsers) : INITIAL_USERS;
+      const loadedUsers = removeLegacyDemoUsers(savedUsers ? JSON.parse(savedUsers) : []);
+      localStorage.setItem('rs_users', JSON.stringify(loadedUsers));
       setUsers(loadedUsers);
       setUsersLoaded(true);
       return loadedUsers;
@@ -552,12 +564,7 @@ export default function App() {
     await auth.authStateReady();
     if (!auth.currentUser) await signInAnonymously(auth);
     const snapshot = await getDocs(collection(db, 'users'));
-    const loadedUsers = snapshot.empty
-      ? INITIAL_USERS
-      : snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
-    if (snapshot.empty) {
-      INITIAL_USERS.forEach((user) => setDoc(doc(db, 'users', user.id), user).catch(() => {}));
-    }
+    const loadedUsers = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
     setUsers(loadedUsers);
     setUsersLoaded(true);
     return loadedUsers;
@@ -579,7 +586,9 @@ export default function App() {
       const savedExpenses = localStorage.getItem('rs_expenses');
       const savedMonthlyRents = localStorage.getItem('rs_monthly_rents');
       const savedNotifications = localStorage.getItem('rs_notifications');
-      setGroups(savedGroups ? JSON.parse(savedGroups) : INITIAL_GROUPS);
+      const loadedGroups = removeLegacyDemoGroups(savedGroups ? JSON.parse(savedGroups) : []);
+      localStorage.setItem('rs_groups', JSON.stringify(loadedGroups));
+      setGroups(loadedGroups);
       setExpenses(removeDemoExpenses(savedExpenses ? JSON.parse(savedExpenses) : INITIAL_EXPENSES));
       setMonthlyRents(savedMonthlyRents ? JSON.parse(savedMonthlyRents) : []);
       setNotifications(savedNotifications ? JSON.parse(savedNotifications) : []);
