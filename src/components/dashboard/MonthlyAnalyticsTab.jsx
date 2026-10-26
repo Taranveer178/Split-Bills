@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ArrowUpRight,
@@ -58,7 +58,7 @@ const getCategoryMeta = (name = 'Other') => CATEGORY_META[name] || CATEGORY_META
 export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [], rentRecords = [] }) {
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedBreakdown, setSelectedBreakdown] = useState(null);
-  const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const monthPickerInputRef = useRef(null);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -70,7 +70,17 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [], 
   });
 
   const openMonthPicker = () => {
-    setShowMonthPicker(true);
+    const input = monthPickerInputRef.current;
+    if (!input) return;
+    try {
+      if (typeof input.showPicker === 'function') {
+        input.showPicker();
+      } else {
+        input.click();
+      }
+    } catch {
+      input.click();
+    }
   };
 
   const monthlyExpenses = useMemo(() => {
@@ -205,6 +215,20 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [], 
           >
             <CalendarDays size={15} />
           </button>
+          <input
+            ref={monthPickerInputRef}
+            type="month"
+            aria-label="Choose report month"
+            value={`${year}-${String(month + 1).padStart(2, '0')}`}
+            onChange={(event) => {
+              const [selectedYear, selectedMonth] = event.target.value.split('-').map(Number);
+              if (selectedYear && selectedMonth) {
+                setCurrentDate(new Date(selectedYear, selectedMonth - 1, 1));
+              }
+            }}
+            className="pointer-events-none absolute h-px w-px opacity-0"
+            tabIndex={-1}
+          />
         </div>
       </div>
 
@@ -471,55 +495,6 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [], 
           document.body
         )}
 
-      {showMonthPicker &&
-        createPortal(
-          <div
-            className="app-modal-overlay fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs"
-            onClick={() => setShowMonthPicker(false)}
-          >
-            <section
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="month-picker-title"
-              className="app-modal-surface w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-4 shadow-xl"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <header className="mb-4 flex items-center justify-between">
-                <h2 id="month-picker-title" className="text-base font-bold text-slate-900">
-                  Choose month
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setShowMonthPicker(false)}
-                  aria-label="Close month picker"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
-                >
-                  <X size={16} />
-                </button>
-              </header>
-              <label className="relative flex h-12 items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-800">
-                <span>
-                  {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                </span>
-                <CalendarDays size={18} className="text-blue-600" />
-                <input
-                  type="month"
-                  aria-label="Choose report month"
-                  value={`${year}-${String(month + 1).padStart(2, '0')}`}
-                  onChange={(event) => {
-                    const [selectedYear, selectedMonth] = event.target.value.split('-').map(Number);
-                    if (selectedYear && selectedMonth) {
-                      setCurrentDate(new Date(selectedYear, selectedMonth - 1, 1));
-                      setShowMonthPicker(false);
-                    }
-                  }}
-                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                />
-              </label>
-            </section>
-          </div>,
-          document.body
-        )}
     </div>
   );
 }
