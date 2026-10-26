@@ -33,6 +33,7 @@ export default function SpaceLongPressActions({
   useEffect(() => () => clearLongPress(), []);
 
   const handlePointerDown = (event) => {
+    if (window.matchMedia('(min-width: 768px)').matches) return;
     if (event.button !== 0 || event.target.closest('button, a, input, select, textarea')) return;
     startPointRef.current = { x: event.clientX, y: event.clientY };
     timerRef.current = window.setTimeout(() => {
@@ -59,6 +60,10 @@ export default function SpaceLongPressActions({
   };
 
   const handleContextMenu = (event) => {
+    if (window.matchMedia('(min-width: 768px)').matches) {
+      event.preventDefault();
+      return;
+    }
     if (event.target.closest('button, a, input, select, textarea')) return;
     event.preventDefault();
     suppressClickRef.current = true;

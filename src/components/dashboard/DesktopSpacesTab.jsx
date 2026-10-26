@@ -1,12 +1,15 @@
 import {
   Bell,
   BellOff,
-  CircleDollarSign,
-  ChevronDown,
+  Archive,
+  ArchiveRestore,
   Check,
+  ChevronDown,
+  CircleDollarSign,
   Copy,
   MessageSquare,
   Pin,
+  PinOff,
   Plus,
   Users,
 } from 'lucide-react';
@@ -269,6 +272,38 @@ export default function DesktopSpacesTab({
                   </div>
 
                   <div className="flex flex-shrink-0 items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onUpdateGroupPreference(group.id, 'pinnedGroupIds', !isPinned);
+                      }}
+                      title={isPinned ? 'Unpin space' : 'Pin space'}
+                      aria-label={isPinned ? `Unpin ${group.name}` : `Pin ${group.name}`}
+                      className={`hidden h-7 w-7 items-center justify-center rounded-xl md:flex ${
+                        isPinned
+                          ? 'bg-blue-50 text-blue-600'
+                          : 'text-slate-400 hover:bg-white hover:text-blue-600'
+                      }`}
+                    >
+                      {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onUpdateGroupPreference(group.id, 'archivedGroupIds', !isArchived);
+                      }}
+                      title={isArchived ? 'Restore space' : 'Archive space'}
+                      aria-label={isArchived ? `Restore ${group.name}` : `Archive ${group.name}`}
+                      className={`hidden h-7 w-7 items-center justify-center rounded-xl md:flex ${
+                        isArchived
+                          ? 'bg-blue-50 text-blue-600'
+                          : 'text-slate-400 hover:bg-white hover:text-blue-600'
+                      }`}
+                    >
+                      {isArchived ? <ArchiveRestore size={14} /> : <Archive size={14} />}
+                    </button>
                     <button
                       type="button"
                       onClick={(event) => {
