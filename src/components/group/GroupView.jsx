@@ -228,7 +228,7 @@ export default function GroupView({
           className={`relative min-w-0 min-h-0 flex-1 overscroll-y-contain ${
             activeTab === 'chat'
               ? 'flex flex-col overflow-hidden pb-0'
-              : 'overflow-y-auto pb-20 scrollbar-hide'
+              : 'overflow-x-hidden overflow-y-auto pb-20 scrollbar-hide'
           }`}
         >
           {(activeTab === 'expenses' || !activeTab) && (

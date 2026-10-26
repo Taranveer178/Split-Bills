@@ -216,7 +216,7 @@ export default function MembersTab({
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4 p-4 sm:p-6 lg:p-8 pb-20">
+    <div className="mx-auto w-full min-w-0 max-w-4xl space-y-4 overflow-x-hidden p-4 pb-20 sm:p-6 lg:p-8">
       {/* Space Identity Card */}
       <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">
         <div className="flex items-center justify-between gap-3">
@@ -367,7 +367,7 @@ export default function MembersTab({
 
             return (
               <div key={memberId} className="p-3.5 sm:p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex min-w-0 items-center gap-3">
                   {user?.photoDataUrl ? (
                     <img
                       src={user.photoDataUrl}
@@ -379,14 +379,14 @@ export default function MembersTab({
                       {user ? user.username.charAt(0).toUpperCase() : '?'}
                     </div>
                   )}
-                  <div>
+                  <div className="min-w-0">
                     <span className="font-bold text-slate-900 text-xs sm:text-sm block">
                       {user ? user.username : 'Unknown User'}
                       {isMe && (
                         <span className="text-xs text-emerald-700 font-semibold ml-1.5">(You)</span>
                       )}
                     </span>
-                    <span className="text-[11px] text-slate-400">
+                    <span className="block truncate text-[11px] text-slate-400">
                       {user?.email || 'Active roommate'}
                     </span>
                   </div>
