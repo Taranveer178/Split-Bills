@@ -135,15 +135,15 @@ export default function GroupRentPanel({
   };
 
   return (
-    <section className={`rounded-2xl border border-slate-200/90 bg-white shadow-xs ${sidebar ? 'p-3' : compact ? 'p-4' : 'p-4 sm:p-5'}`}>
-      <header className={`flex items-center justify-between gap-2 ${sidebar ? 'mb-2' : 'mb-4'}`}>
-        <h2 className={`flex min-w-0 items-center gap-2 font-bold text-slate-900 ${sidebar ? 'text-xs' : 'text-sm'}`}>
+    <section className={`w-full min-w-0 rounded-2xl border border-slate-200/90 bg-white shadow-xs ${sidebar ? 'p-3' : compact ? 'p-4' : 'p-4 sm:p-5'}`}>
+      <header className={`flex min-w-0 flex-wrap items-center justify-between gap-2 ${sidebar ? 'mb-2' : 'mb-4'}`}>
+        <h2 className={`flex min-w-0 flex-1 items-center gap-2 font-bold text-slate-900 ${sidebar ? 'text-xs' : 'text-sm'}`}>
           <span className={`flex flex-shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 ${sidebar ? 'h-7 w-7' : 'h-8 w-8'}`}>
             <Home size={16} />
           </span>
           <span>Monthly rent</span>
         </h2>
-        <label className="relative flex flex-shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs font-semibold text-slate-700">
+        <label className="relative flex flex-shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs font-semibold text-slate-700">
           <span>{formatMonthShort(selectedMonth)}</span>
           <CalendarDays size={14} className="flex-shrink-0 text-blue-600" />
           <input
