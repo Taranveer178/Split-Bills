@@ -23,30 +23,30 @@ export default function TransactionExportModal({
 }) {
   const [scope, setScope] = useState('all');
   const [dateRange, setDateRange] = useState('all');
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
 
   const filteredTransactions = useMemo(() => {
     const now = new Date();
     const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-      .toISOString()
-      .slice(0, 10);
+    const formatDate = (date) =>
+      `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const todayDate = formatDate(now);
+    const ninetyDaysAgo = new Date(now);
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 89);
+    const ninetyDayStart = formatDate(ninetyDaysAgo);
 
     return transactions.filter((expense) => {
       const isSettlement = expense.isSettlement || expense.category === 'Settlement';
       if (scope === 'mine' && expense.paidBy !== user?.id) return false;
       if (scope === 'settlements' && !isSettlement) return false;
-      if (dateRange === 'this-month' && (expense.date < monthStart || expense.date > monthEnd)) {
+      if (dateRange === 'this-month' && (!expense.date || expense.date < monthStart || expense.date > todayDate)) {
         return false;
       }
-      if (dateRange === 'custom') {
-        if (startDate && expense.date < startDate) return false;
-        if (endDate && expense.date > endDate) return false;
+      if (dateRange === 'last-90-days' && (!expense.date || expense.date < ninetyDayStart || expense.date > todayDate)) {
+        return false;
       }
       return true;
     });
-  }, [transactions, scope, dateRange, startDate, endDate, user?.id]);
+  }, [transactions, scope, dateRange, user?.id]);
 
   const rows = filteredTransactions.map((expense) => {
     const group = groups.find((item) => item.id === expense.groupId);
@@ -125,16 +125,9 @@ export default function TransactionExportModal({
             <select value={dateRange} onChange={(event) => setDateRange(event.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800">
               <option value="all">All dates</option>
               <option value="this-month">This month</option>
-              <option value="custom">Custom dates</option>
+              <option value="last-90-days">Last 90 days</option>
             </select>
           </fieldset>
-
-          {dateRange === 'custom' && (
-            <div className="grid grid-cols-2 gap-3">
-              <label className="text-xs font-semibold text-slate-700">From<input type="date" value={startDate} max={endDate || undefined} onChange={(event) => setStartDate(event.target.value)} className="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-sm" /></label>
-              <label className="text-xs font-semibold text-slate-700">To<input type="date" value={endDate} min={startDate || undefined} onChange={(event) => setEndDate(event.target.value)} className="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-sm" /></label>
-            </div>
-          )}
 
           <p className="text-xs text-slate-500">{filteredTransactions.length} transaction{filteredTransactions.length === 1 ? '' : 's'} selected</p>
           <div className="grid grid-cols-2 gap-2">
