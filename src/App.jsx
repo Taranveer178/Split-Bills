@@ -223,7 +223,7 @@ export default function App() {
     document.documentElement.classList.toggle('dark', theme === 'dark');
     localStorage.setItem('rs_theme', theme);
     document.querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', theme === 'dark' ? '#000000' : '#f8fafc');
+      ?.setAttribute('content', theme === 'dark' ? '#000000' : '#eef2f9');
   }, [theme]);
 
   const mutedGroupIds = useMemo(
