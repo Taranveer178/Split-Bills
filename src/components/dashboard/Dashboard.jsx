@@ -583,8 +583,8 @@ export default function Dashboard({
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-white font-sans md:flex-row md:bg-[#EEF2F9]">
       {/* Soft Refractive Mesh Backdrop for Liquid Glass */}
       <div className="pointer-events-none fixed inset-0 z-0 hidden overflow-hidden md:block">
-        <div className="absolute -top-24 -left-24 h-80 w-80 rounded-full bg-blue-300/25 blur-3xl" />
-        <div className="absolute top-1/3 -right-24 h-80 w-80 rounded-full bg-indigo-300/20 blur-3xl" />
+        <div className="absolute -top-24 -left-24 h-80 w-80 rounded-full bg-green-300/25 blur-3xl" />
+        <div className="absolute top-1/3 -right-24 h-80 w-80 rounded-full bg-green-300/20 blur-3xl" />
         <div className="absolute -bottom-24 left-1/4 h-72 w-72 rounded-full bg-cyan-200/25 blur-3xl" />
       </div>
 
@@ -607,7 +607,7 @@ export default function Dashboard({
             <span className="block truncate text-xs font-extrabold tracking-tight text-slate-900 leading-none">
               RoomSplit
             </span>
-            <span className="mt-0.5 block truncate text-[9px] font-semibold text-blue-600 leading-none">
+            <span className="mt-0.5 block truncate text-[9px] font-semibold text-green-600 leading-none">
               Hi, {user?.username}
             </span>
           </div>
@@ -619,9 +619,9 @@ export default function Dashboard({
             onClick={onJoinGroup}
             title="Join space with code"
             aria-label="Join space with code"
-            className="liquid-glass-interactive flex h-9 items-center gap-1 rounded-full border border-blue-200/70 bg-white/90 px-3 text-[11px] font-bold text-slate-700 shadow-sm transition-transform active:scale-95"
+            className="liquid-glass-interactive flex h-9 items-center gap-1 rounded-full border border-green-200/70 bg-white/90 px-3 text-[11px] font-bold text-slate-700 shadow-sm transition-transform active:scale-95"
           >
-            <UserPlus size={13} className="text-blue-600" />
+            <UserPlus size={13} className="text-green-600" />
             <span>Join</span>
           </button>
           <button
@@ -629,7 +629,7 @@ export default function Dashboard({
             onClick={onCreateGroup}
             title="Create new space"
             aria-label="Create space"
-            className="flex h-9 items-center gap-1 rounded-full bg-gradient-to-b from-blue-600 to-indigo-600 px-3 text-[11px] font-bold text-white shadow-sm shadow-blue-600/20 transition-transform active:scale-95"
+            className="flex h-9 items-center gap-1 rounded-full bg-gradient-to-b from-green-600 to-green-600 px-3 text-[11px] font-bold text-white shadow-sm shadow-green-600/20 transition-transform active:scale-95"
           >
             <Plus size={13} strokeWidth={2.5} />
             <span>Create</span>
@@ -642,17 +642,17 @@ export default function Dashboard({
             aria-expanded={isActivityOpen}
             className={`relative flex h-9 w-9 items-center justify-center rounded-full border shadow-sm transition-all active:scale-95 ${
               isActivityOpen
-                ? 'border-blue-500 bg-blue-50 text-blue-600'
-                : 'border-white/80 bg-white/80 text-slate-600 hover:text-blue-600'
+                ? 'border-green-500 bg-green-50 text-green-600'
+                : 'border-white/80 bg-white/80 text-slate-600 hover:text-green-600'
             }`}
           >
             <Bell
               size={15}
               className={
                 isActivityOpen
-                  ? 'fill-blue-600/20 text-blue-600'
+                  ? 'fill-green-600/20 text-green-600'
                   : unreadNotifications.length > 0
-                    ? 'text-blue-600'
+                    ? 'text-green-600'
                     : 'text-slate-600'
               }
             />
@@ -684,11 +684,11 @@ export default function Dashboard({
               }`}
             >
               {/* 1. Native Wallet Hero Card */}
-              <div className="relative overflow-hidden rounded-[26px] border border-white/30 bg-gradient-to-br from-blue-600 via-indigo-600 to-slate-900 p-4 text-white shadow-lg shadow-blue-600/20">
+              <div className="relative overflow-hidden rounded-[26px] border border-white/30 bg-gradient-to-br from-green-600 via-green-600 to-slate-900 p-4 text-white shadow-lg shadow-green-600/20">
                 <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
                 <div className="relative z-10 flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-blue-100/90">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-green-100/90">
                       Net Position
                     </span>
                     <div className="mt-0.5 flex items-baseline gap-2">
@@ -699,7 +699,7 @@ export default function Dashboard({
                             ? `-₹${Math.abs(groupMetrics.totalNetBalance).toFixed(0)}`
                             : '₹0'}
                       </span>
-                      <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-semibold text-blue-100 backdrop-blur-md">
+                      <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-semibold text-green-100 backdrop-blur-md">
                         {groupMetrics.totalNetBalance > 0.01
                           ? 'To receive'
                           : groupMetrics.totalNetBalance < -0.01
@@ -722,13 +722,13 @@ export default function Dashboard({
                 {/* Inner Frosted Glass Pill Strip */}
                 <div className="relative z-10 mt-3 grid grid-cols-3 divide-x divide-white/15 rounded-2xl border border-white/20 bg-white/10 p-2 text-center backdrop-blur-md">
                   <div>
-                    <p className="text-[10px] font-medium text-blue-100/80">To Receive</p>
+                    <p className="text-[10px] font-medium text-green-100/80">To Receive</p>
                     <p className="mt-0.5 font-mono text-xs font-extrabold text-emerald-300">
                       +₹{groupMetrics.totalOwedToYou.toFixed(0)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-medium text-blue-100/80">To Pay</p>
+                    <p className="text-[10px] font-medium text-green-100/80">To Pay</p>
                     <p className="mt-0.5 font-mono text-xs font-extrabold text-rose-300">
                       -₹{groupMetrics.totalYouOwe.toFixed(0)}
                     </p>
@@ -738,7 +738,7 @@ export default function Dashboard({
                     onClick={() => handleTabSwitch('monthly')}
                     className="text-center"
                   >
-                    <p className="text-[10px] font-medium text-blue-100/80">
+                    <p className="text-[10px] font-medium text-green-100/80">
                       {monthlySummary.monthLabel.split(' ')[0]} Share
                     </p>
                     <p className="mt-0.5 font-mono text-xs font-extrabold text-white">
@@ -756,7 +756,7 @@ export default function Dashboard({
                     onClick={() => setMobileSection('spaces')}
                     className={`relative flex items-center justify-center gap-1.5 rounded-xl py-1.5 text-xs font-semibold transition-all duration-200 ${
                       mobileSection === 'spaces'
-                        ? 'bg-gradient-to-b from-blue-600 to-indigo-600 text-white shadow-sm'
+                        ? 'bg-gradient-to-b from-green-600 to-green-600 text-white shadow-sm'
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
@@ -769,7 +769,7 @@ export default function Dashboard({
                     onClick={() => setMobileSection('dues')}
                     className={`rounded-xl py-1.5 text-xs font-semibold transition-all duration-200 ${
                       mobileSection === 'dues'
-                        ? 'bg-gradient-to-b from-blue-600 to-indigo-600 text-white shadow-sm'
+                        ? 'bg-gradient-to-b from-green-600 to-green-600 text-white shadow-sm'
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
@@ -785,13 +785,13 @@ export default function Dashboard({
                   title={spaceFilter === 'archived' ? 'View active spaces' : 'View archived spaces'}
                   className={`liquid-glass-interactive col-span-1 flex h-9 items-center justify-center gap-1 rounded-2xl border px-1.5 text-[10px] font-semibold whitespace-nowrap ${
                     spaceFilter === 'archived'
-                      ? 'border-blue-400 bg-blue-50 text-blue-600 shadow-sm'
+                      ? 'border-green-400 bg-green-50 text-green-600 shadow-sm'
                       : 'border-slate-200/80 text-slate-600'
                   }`}
                 >
                   {spaceFilter === 'archived' ? (
                     <>
-                      <ArchiveRestore size={13} className="text-blue-600" />
+                      <ArchiveRestore size={13} className="text-green-600" />
                       <span>Active</span>
                     </>
                   ) : (
@@ -837,7 +837,7 @@ export default function Dashboard({
                             className="liquid-glass-interactive flex items-center justify-between gap-2.5 rounded-2xl px-3.5 py-2.5 cursor-pointer shadow-sm"
                           >
                             <div className="flex min-w-0 items-center gap-3">
-                              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-sm">
+                              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-green-600 to-green-600 text-xs font-bold text-white shadow-sm">
                                 {group.imageDataUrl ? (
                                   <img
                                     src={group.imageDataUrl}
@@ -854,7 +854,7 @@ export default function Dashboard({
                                     {group.name}
                                   </h3>
                                   {isPinned && !isArchived && (
-                                    <Pin size={10} className="flex-shrink-0 text-blue-600" />
+                                    <Pin size={10} className="flex-shrink-0 text-green-600" />
                                   )}
                                   {isMuted && (
                                     <BellOff size={10} className="flex-shrink-0 text-amber-500" />
@@ -905,7 +905,7 @@ export default function Dashboard({
                                     updateGroupPreference(group.id, 'pinnedGroupIds', !isPinned);
                                   }}
                                   className={`flex h-7 w-7 items-center justify-center rounded-lg ${
-                                    isPinned ? 'bg-blue-50 text-blue-600' : 'text-slate-400 hover:text-slate-600'
+                                    isPinned ? 'bg-green-50 text-green-600' : 'text-slate-400 hover:text-slate-600'
                                   }`}
                                   aria-label={isPinned ? `Unpin ${group.name}` : `Pin ${group.name}`}
                                 >
@@ -929,7 +929,7 @@ export default function Dashboard({
                                 aria-label={isArchived ? `Restore ${group.name}` : `Archive ${group.name}`}
                                 title={isArchived ? `Restore ${group.name}` : `Archive ${group.name}`}
                               >
-                                {isArchived ? <ArchiveRestore size={13} className="text-blue-600" /> : <Archive size={13} />}
+                                {isArchived ? <ArchiveRestore size={13} className="text-green-600" /> : <Archive size={13} />}
                               </button>
                             </div>
                           </div>
@@ -979,7 +979,7 @@ export default function Dashboard({
                                 0
                               )}
                             </span>
-                            <span className="rounded-xl bg-gradient-to-b from-blue-600 to-indigo-600 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
+                            <span className="rounded-xl bg-gradient-to-b from-green-600 to-green-600 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
                               Settle
                             </span>
                           </div>
@@ -1046,7 +1046,7 @@ export default function Dashboard({
                 }`}
               >
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-blue-600">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-green-600">
                     <span>Command Center</span>
                     <span>·</span>
                     <span>
@@ -1064,7 +1064,7 @@ export default function Dashboard({
 
                 <div className="flex flex-shrink-0 flex-nowrap items-center gap-2">
                   <div className="group relative w-36 lg:w-48 xl:w-56">
-                    <span className="pointer-events-none absolute left-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100/80 text-slate-500 transition-colors group-focus-within:bg-blue-50 group-focus-within:text-blue-600">
+                    <span className="pointer-events-none absolute left-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100/80 text-slate-500 transition-colors group-focus-within:bg-green-50 group-focus-within:text-green-600">
                       <Search size={14} strokeWidth={2.25} />
                     </span>
                     <input
@@ -1073,7 +1073,7 @@ export default function Dashboard({
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search spaces..."
                       aria-label="Search spaces"
-                      className="relative z-0 h-10 w-full rounded-full border border-white/90 bg-white/70 pl-11 pr-9 text-xs font-semibold text-slate-800 shadow-[0_4px_16px_rgba(15,23,42,0.06)] backdrop-blur-xl transition-all placeholder:text-slate-400 hover:bg-white/90 focus:border-blue-200 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+                      className="relative z-0 h-10 w-full rounded-full border border-white/90 bg-white/70 pl-11 pr-9 text-xs font-semibold text-slate-800 shadow-[0_4px_16px_rgba(15,23,42,0.06)] backdrop-blur-xl transition-all placeholder:text-slate-400 hover:bg-white/90 focus:border-green-200 focus:bg-white focus:outline-none focus:ring-4 focus:ring-green-500/10"
                     />
                     {searchQuery && (
                       <button
@@ -1103,14 +1103,14 @@ export default function Dashboard({
                     onClick={onJoinGroup}
                     className="liquid-glass-interactive inline-flex h-9 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-xs font-semibold text-slate-700"
                   >
-                    <UserPlus size={13} className="text-blue-600" />
+                    <UserPlus size={13} className="text-green-600" />
                     <span>Join with Code</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={onCreateGroup}
-                    className="inline-flex h-9 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-gradient-to-b from-blue-600 to-indigo-600 px-3.5 text-xs font-semibold text-white shadow-sm shadow-blue-600/25 transition-all hover:from-blue-500 hover:to-indigo-600 active:scale-95"
+                    className="inline-flex h-9 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-gradient-to-b from-green-600 to-green-600 px-3.5 text-xs font-semibold text-white shadow-sm shadow-green-600/25 transition-all hover:from-green-500 hover:to-green-600 active:scale-95"
                   >
                     <Plus size={14} />
                     <span>New Space</span>
@@ -1124,17 +1124,17 @@ export default function Dashboard({
                     aria-label="Activity & Notifications"
                     className={`relative inline-flex h-9 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border px-3 text-xs font-semibold shadow-sm transition-all active:scale-95 ${
                       isActivityOpen
-                        ? 'border-blue-400 bg-blue-50 text-blue-600'
-                        : 'border-slate-200/90 bg-white/90 text-slate-700 hover:bg-white hover:text-blue-600'
+                        ? 'border-green-400 bg-green-50 text-green-600'
+                        : 'border-slate-200/90 bg-white/90 text-slate-700 hover:bg-white hover:text-green-600'
                     }`}
                   >
                     <Bell
                       size={14}
                       className={
                         isActivityOpen
-                          ? 'fill-blue-600/20 text-blue-600'
+                          ? 'fill-green-600/20 text-green-600'
                           : unreadNotifications.length > 0
-                            ? 'text-blue-600'
+                            ? 'text-green-600'
                             : 'text-slate-500'
                       }
                     />
@@ -1206,7 +1206,7 @@ export default function Dashboard({
                     <span className="text-xs font-bold text-slate-500">
                       {monthlySummary.monthLabel} Share
                     </span>
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-green-50 text-green-600 border border-green-100">
                       <PieChart size={16} />
                     </span>
                   </div>
@@ -1220,8 +1220,8 @@ export default function Dashboard({
                       <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-slate-200/80">
                         {monthlySummary.categories.slice(0, 4).map((cat, i) => {
                           const barColors = [
-                            'bg-blue-600',
-                            'bg-indigo-500',
+                            'bg-green-600',
+                            'bg-green-500',
                             'bg-cyan-400',
                             'bg-amber-400',
                           ];
@@ -1241,7 +1241,7 @@ export default function Dashboard({
                         <span className="truncate pr-1">
                           {monthlySummary.categories.slice(0, 2).map((c) => `${c.name} ${c.pct}%`).join(' · ')}
                         </span>
-                        <span className="flex-shrink-0 text-blue-600 font-bold hover:underline">
+                        <span className="flex-shrink-0 text-green-600 font-bold hover:underline">
                           Analytics →
                         </span>
                       </div>
@@ -1263,7 +1263,7 @@ export default function Dashboard({
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-500">You Paid Out</span>
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-green-50 text-green-600 border border-green-100">
                       <Wallet size={16} />
                     </span>
                   </div>
@@ -1349,7 +1349,7 @@ export default function Dashboard({
                       {activeTab === 'transactions' ? (
                         <>
                           <div className="flex min-w-0 items-center gap-2.5 rounded-full border border-white/90 bg-white/75 p-2 pr-4 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
-                            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-sm">
+                            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-green-600 to-green-600 text-xs font-bold text-white shadow-sm">
                               {user?.photoDataUrl ? (
                                 <img src={user.photoDataUrl} alt="" className="h-full w-full object-cover" />
                               ) : (
@@ -1373,7 +1373,7 @@ export default function Dashboard({
                                 aria-pressed={ledgerFilter === filter.id}
                                 className={`rounded-full px-3 py-2 text-xs font-semibold transition-colors ${
                                   ledgerFilter === filter.id
-                                    ? 'bg-gradient-to-b from-blue-600 to-indigo-600 text-white shadow-sm'
+                                    ? 'bg-gradient-to-b from-green-600 to-green-600 text-white shadow-sm'
                                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                                 }`}
                               >
@@ -1411,7 +1411,7 @@ export default function Dashboard({
                               <button
                                 type="button"
                                 onClick={() => handleTabSwitch('transactions')}
-                                className="rounded-xl px-3 py-1.5 text-xs font-semibold text-blue-600 transition-colors hover:bg-blue-50"
+                                className="rounded-xl px-3 py-1.5 text-xs font-semibold text-green-600 transition-colors hover:bg-green-50"
                               >
                                 See all
                                 <span aria-hidden="true"> →</span>
@@ -1429,7 +1429,7 @@ export default function Dashboard({
                                   onClick={() => setLedgerFilter(tab.id)}
                                   className={`rounded-xl px-3 py-1 text-xs font-semibold transition-all ${
                                     ledgerFilter === tab.id
-                                      ? 'bg-white text-blue-600 shadow-sm'
+                                      ? 'bg-white text-green-600 shadow-sm'
                                       : 'text-slate-600 hover:text-slate-900'
                                   }`}
                                 >
@@ -1473,7 +1473,7 @@ export default function Dashboard({
                               className="flex items-center justify-between gap-4 rounded-2xl border border-white/80 bg-white/60 px-3.5 py-3 hover:bg-white/95 transition-all cursor-pointer"
                             >
                               <div className="flex min-w-0 items-center gap-3">
-                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-600 border border-green-100">
                                   <Receipt size={16} />
                                 </div>
                                 <div className="min-w-0">
@@ -1481,7 +1481,7 @@ export default function Dashboard({
                                     <p className="truncate text-sm font-bold text-slate-900">
                                       {exp.title}
                                     </p>
-                                    <span className="rounded-lg bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                                    <span className="rounded-lg bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700">
                                       {grp?.name || 'Room'}
                                     </span>
                                   </div>
@@ -1556,7 +1556,7 @@ export default function Dashboard({
                             {totalUnreadSpacesCount > 99 ? '99+' : totalUnreadSpacesCount} unread
                           </span>
                         )}
-                        <span className="rounded-lg bg-blue-50 px-2 py-0.5 font-mono text-xs font-bold text-blue-700">
+                        <span className="rounded-lg bg-green-50 px-2 py-0.5 font-mono text-xs font-bold text-green-700">
                           {pinnedGroups.length}
                         </span>
                       </div>
@@ -1564,7 +1564,7 @@ export default function Dashboard({
 
                     {pinnedGroups.length === 0 ? (
                       <div className="rounded-2xl border border-dashed border-slate-300 bg-white/40 px-4 py-8 text-center">
-                        <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                        <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-green-50 text-green-600">
                           <Pin size={18} />
                         </div>
                         <p className="text-xs font-bold text-slate-800">
@@ -1586,7 +1586,7 @@ export default function Dashboard({
                               className="liquid-glass-interactive group flex items-center justify-between gap-3 rounded-2xl cursor-pointer px-3.5 py-3 shadow-sm"
                             >
                               <div className="flex min-w-0 items-center gap-3">
-                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-sm font-extrabold text-white shadow-sm">
+                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-green-600 to-green-600 text-sm font-extrabold text-white shadow-sm">
                                   {group.imageDataUrl ? (
                                     <img
                                       src={group.imageDataUrl}
@@ -1600,7 +1600,7 @@ export default function Dashboard({
 
                                 <div className="min-w-0">
                                   <div className="flex items-center gap-2">
-                                    <h3 className="truncate text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
+                                    <h3 className="truncate text-sm font-semibold text-slate-900 group-hover:text-green-600 transition-colors">
                                       {group.name}
                                     </h3>
                                     {unreadCount > 0 && (
@@ -1622,7 +1622,7 @@ export default function Dashboard({
                                 className={`relative flex h-8 w-8 items-center justify-center rounded-xl transition-colors ${
                                   unreadCount > 0
                                     ? 'bg-rose-50 text-rose-600'
-                                    : 'text-slate-400 hover:bg-white hover:text-blue-600'
+                                    : 'text-slate-400 hover:bg-white hover:text-green-600'
                                 }`}
                               >
                                 <MessageSquare size={16} />
@@ -1645,7 +1645,7 @@ export default function Dashboard({
                           Smart optimized dues across spaces
                         </p>
                       </div>
-                      <span className="rounded-lg bg-blue-50 px-2 py-0.5 font-mono text-xs font-bold text-blue-700">
+                      <span className="rounded-lg bg-green-50 px-2 py-0.5 font-mono text-xs font-bold text-green-700">
                         {groupMetrics.allMySettlements.length}
                       </span>
                     </div>
@@ -1685,7 +1685,7 @@ export default function Dashboard({
                                     myGroups.find((group) => group.id === s.groupId)?.currency
                                   )}
                                 </span>
-                                <span className="rounded-xl bg-gradient-to-b from-blue-600 to-indigo-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
+                                <span className="rounded-xl bg-gradient-to-b from-green-600 to-green-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
                                   Settle
                                 </span>
                               </div>
@@ -1741,7 +1741,7 @@ export default function Dashboard({
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-200/70 pb-4">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50 text-green-600 border border-green-100">
                   <Bell size={18} />
                 </div>
                 <div>
@@ -1780,7 +1780,7 @@ export default function Dashboard({
             <div className="flex-1 overflow-y-auto py-3 space-y-2.5 scrollbar-hide">
               {userNotifications.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center py-16 text-center">
-                  <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 border border-blue-100">
+                  <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-50 text-green-600 border border-green-100">
                     <CheckCircle2 size={26} />
                   </div>
                   <h3 className="text-sm font-bold text-slate-800">You're all caught up!</h3>
@@ -1805,12 +1805,12 @@ export default function Dashboard({
                         }
                       }}
                       className={`liquid-glass-interactive group relative flex items-start justify-between gap-3 rounded-2xl p-3 cursor-pointer border ${
-                        !n.read ? 'border-blue-200/90 bg-blue-50/40' : 'border-slate-200/60 bg-white/80'
+                        !n.read ? 'border-green-200/90 bg-green-50/40' : 'border-slate-200/60 bg-white/80'
                       }`}
                     >
                       <div className="flex items-start gap-2.5 min-w-0">
                         <div className={`mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg ${
-                          isChat ? 'bg-indigo-50 text-indigo-600' : 'bg-emerald-50 text-emerald-600'
+                          isChat ? 'bg-green-50 text-green-600' : 'bg-emerald-50 text-emerald-600'
                         }`}>
                           {isChat ? <MessageSquare size={13} /> : <Receipt size={13} />}
                         </div>
@@ -1819,7 +1819,7 @@ export default function Dashboard({
                             {n.message || 'New activity in your space'}
                           </p>
                           <div className="mt-1 flex items-center gap-2 text-[10px] text-slate-500">
-                            {grp && <span className="font-semibold text-blue-600">{grp.name}</span>}
+                            {grp && <span className="font-semibold text-green-600">{grp.name}</span>}
                             {grp && <span>·</span>}
                             <span>
                               {n.createdAt
@@ -1831,7 +1831,7 @@ export default function Dashboard({
                       </div>
 
                       {!n.read && (
-                        <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-blue-600 ring-2 ring-white" />
+                        <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-green-600 ring-2 ring-white" />
                       )}
                     </div>
                   );
@@ -1875,7 +1875,7 @@ export default function Dashboard({
                 <select
                   value={quickGroupId}
                   onChange={(e) => setQuickGroupId(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200/90 bg-white/80 px-3.5 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-2xl border border-slate-200/90 bg-white/80 px-3.5 py-2.5 text-sm font-bold text-slate-900 focus:border-green-500 focus:outline-none"
                 >
                   {myGroups.map((g) => (
                     <option key={g.id} value={g.id}>
@@ -1891,7 +1891,7 @@ export default function Dashboard({
                     Total Amount ({getCurrencySymbol(myGroups.find((group) => group.id === quickGroupId)?.currency)})
                   </label>
                   <div className="relative">
-                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-blue-600">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-green-600">
                       {getCurrencySymbol(myGroups.find((group) => group.id === quickGroupId)?.currency)}
                     </span>
                     <input
@@ -1902,7 +1902,7 @@ export default function Dashboard({
                       value={quickAmount}
                       onChange={(e) => setQuickAmount(e.target.value)}
                       required
-                      className="w-full rounded-2xl border border-slate-200/90 bg-white/80 py-2.5 pl-8 pr-3 font-mono text-sm font-extrabold text-slate-900 focus:border-blue-500 focus:outline-none"
+                      className="w-full rounded-2xl border border-slate-200/90 bg-white/80 py-2.5 pl-8 pr-3 font-mono text-sm font-extrabold text-slate-900 focus:border-green-500 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -1912,7 +1912,7 @@ export default function Dashboard({
                   <select
                     value={quickCategory}
                     onChange={(e) => setQuickCategory(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200/90 bg-white/80 px-3.5 py-2.5 text-sm font-semibold text-slate-900 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-2xl border border-slate-200/90 bg-white/80 px-3.5 py-2.5 text-sm font-semibold text-slate-900 focus:border-green-500 focus:outline-none"
                   >
                     {CATEGORIES.map((c) => (
                       <option key={c} value={c}>
@@ -1934,7 +1934,7 @@ export default function Dashboard({
                     value={quickTitle}
                     onChange={(e) => setQuickTitle(e.target.value)}
                     required
-                    className="w-full rounded-2xl border border-slate-200/90 bg-white/80 px-3.5 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-2xl border border-slate-200/90 bg-white/80 px-3.5 py-2.5 text-sm text-slate-900 focus:border-green-500 focus:outline-none"
                   />
                 </div>
                 <div>
@@ -1942,7 +1942,7 @@ export default function Dashboard({
                   <select
                     value={quickMethod}
                     onChange={(e) => setQuickMethod(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200/90 bg-white/80 px-2.5 py-2.5 text-sm font-semibold text-slate-900 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-2xl border border-slate-200/90 bg-white/80 px-2.5 py-2.5 text-sm font-semibold text-slate-900 focus:border-green-500 focus:outline-none"
                   >
                     {PAYMENT_METHODS.map((m) => (
                       <option key={m} value={m}>
@@ -1961,7 +1961,7 @@ export default function Dashboard({
                     setQuickExpenseOpen(false);
                     if (gId) handleOpenGroup(gId, 'add');
                   }}
-                  className="text-xs font-bold text-blue-600 hover:underline"
+                  className="text-xs font-bold text-green-600 hover:underline"
                 >
                   Custom split →
                 </button>
@@ -1976,7 +1976,7 @@ export default function Dashboard({
                   <button
                     type="submit"
                     disabled={savingQuick}
-                    className="rounded-2xl bg-gradient-to-b from-blue-600 to-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/25 disabled:opacity-50"
+                    className="rounded-2xl bg-gradient-to-b from-green-600 to-green-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-green-600/25 disabled:opacity-50"
                   >
                     {savingQuick ? 'Saving…' : 'Save Bill'}
                   </button>
@@ -2012,7 +2012,7 @@ export default function Dashboard({
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mx-auto mb-5 h-1.5 w-10 rounded-full bg-slate-300 sm:hidden" />
-            <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-[20px] border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-100 text-blue-600 shadow-sm">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-[20px] border border-green-100 bg-gradient-to-br from-green-50 to-green-100 text-green-600 shadow-sm">
               <img src={roomsplitIcon} alt="" className="h-full w-full scale-110 object-cover" />
             </div>
             <h2
@@ -2027,7 +2027,7 @@ export default function Dashboard({
             {!deferredPromptAvailable && (
               <div className="mt-4 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-3.5">
                 <div className="flex items-start gap-2.5">
-                  <Smartphone size={17} className="mt-0.5 flex-shrink-0 text-blue-600" />
+                  <Smartphone size={17} className="mt-0.5 flex-shrink-0 text-green-600" />
                   <p className="text-xs leading-relaxed text-slate-600">
                     {/iphone|ipad|ipod/i.test(navigator.userAgent)
                       ? 'To install, tap Share in your browser, then choose “Add to Home Screen”.'
@@ -2047,7 +2047,7 @@ export default function Dashboard({
               <button
                 type="button"
                 onClick={deferredPromptAvailable ? handleInstallClick : () => setInstallDialogOpen(false)}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-b from-blue-600 to-indigo-600 text-sm font-bold text-white shadow-md shadow-blue-600/20 transition-transform hover:brightness-105 active:scale-[0.98]"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-b from-green-600 to-green-600 text-sm font-bold text-white shadow-md shadow-green-600/20 transition-transform hover:brightness-105 active:scale-[0.98]"
               >
                 <Download size={16} />
                 {deferredPromptAvailable ? 'Install app' : 'Got it'}

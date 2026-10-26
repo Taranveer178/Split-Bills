@@ -277,7 +277,7 @@ export default function ProfileTab({
     <div className="mx-auto w-full max-w-4xl p-4 sm:p-6 lg:p-8 pb-20">
       <div className="mb-5 flex items-center justify-between gap-2.5">
         <div className="flex min-w-0 items-center gap-2.5 rounded-full border border-white/90 bg-white/75 p-2 pr-4 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
-          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-sm">
+          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-green-600 to-green-600 text-xs font-bold text-white shadow-sm">
             {photoDataUrl ? (
               <img src={photoDataUrl} alt="" className="h-full w-full object-cover" />
             ) : (
@@ -309,7 +309,7 @@ export default function ProfileTab({
               }}
               aria-label="Edit profile"
               title="Edit profile"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-green-50 hover:text-green-600"
             >
               <Edit2 size={16} />
             </button>
@@ -323,18 +323,18 @@ export default function ProfileTab({
             <button
               type="button"
               onClick={onInstallApp}
-              className="flex w-full items-center gap-4 rounded-3xl border border-white/90 bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 p-4 text-left text-white shadow-lg shadow-blue-900/10 transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 sm:p-5"
+              className="flex w-full items-center gap-4 rounded-3xl border border-white/90 bg-gradient-to-r from-green-600 via-green-600 to-green-600 p-4 text-left text-white shadow-lg shadow-green-900/10 transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 sm:p-5"
             >
               <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/15">
                 <Download size={20} />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-extrabold">Install RoomSplit</span>
-                <span className="mt-0.5 block text-xs text-blue-100">
+                <span className="mt-0.5 block text-xs text-green-100">
                   Get quick access from your home screen
                 </span>
               </span>
-              <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-blue-700">
+              <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-green-700">
                 Install
               </span>
             </button>
@@ -423,7 +423,7 @@ export default function ProfileTab({
                 aria-label="Dark mode"
                 onClick={() => onThemeChange?.(theme === 'dark' ? 'light' : 'dark')}
                 className={`relative h-7 w-12 flex-shrink-0 rounded-full transition-colors ${
-                  theme === 'dark' ? 'bg-blue-600' : 'bg-slate-300'
+                  theme === 'dark' ? 'bg-green-600' : 'bg-slate-300'
                 }`}
               >
                 <span

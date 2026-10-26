@@ -19,7 +19,7 @@ export default function IncomingChatAlert({ message, sender, group, onOpen, onCl
     >
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_16px_48px_rgba(15,23,42,0.22)]">
         <div className="flex items-start gap-3 p-3.5">
-          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-sm font-extrabold text-blue-700">
+          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-green-100 text-sm font-extrabold text-green-700">
             {sender?.photoDataUrl ? (
               <img src={sender.photoDataUrl} alt="" className="h-full w-full object-cover" />
             ) : (
@@ -27,7 +27,7 @@ export default function IncomingChatAlert({ message, sender, group, onOpen, onCl
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 text-[11px] font-bold text-blue-700">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold text-green-700">
               <MessageCircle size={13} />
               <span className="truncate">{group?.name || 'Group chat'}</span>
             </div>
@@ -36,7 +36,7 @@ export default function IncomingChatAlert({ message, sender, group, onOpen, onCl
             <button
               type="button"
               onClick={onOpen}
-              className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 hover:text-blue-800"
+              className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-green-700 hover:text-green-800"
             >
               Open chat <ArrowUpRight size={13} />
             </button>

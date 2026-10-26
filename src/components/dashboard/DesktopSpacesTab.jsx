@@ -40,7 +40,7 @@ export default function DesktopSpacesTab({
     <section className="w-full rounded-3xl ">
       <div className="mb-4 flex items-center justify-between gap-2.5">
         <div className="flex min-w-0 items-center gap-2.5 rounded-full border border-white/90 bg-white/75 p-2 pr-4 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
-          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-sm">
+          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-green-600 to-green-600 text-xs font-bold text-white shadow-sm">
             {user?.photoDataUrl ? (
               <img src={user.photoDataUrl} alt="" className="h-full w-full object-cover" />
             ) : (
@@ -64,7 +64,7 @@ export default function DesktopSpacesTab({
               aria-pressed={spaceFilter === filter.id}
               className={`rounded-full px-3 py-2 text-xs font-semibold transition-colors ${
                 spaceFilter === filter.id
-                  ? 'bg-gradient-to-b from-blue-600 to-indigo-600 text-white shadow-sm'
+                  ? 'bg-gradient-to-b from-green-600 to-green-600 text-white shadow-sm'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
@@ -92,7 +92,7 @@ export default function DesktopSpacesTab({
 
       {groups.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white/40 px-6 py-10 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-green-50 text-green-600">
             <Users size={22} />
           </div>
           <p className="text-sm font-bold text-slate-800">
@@ -139,7 +139,7 @@ export default function DesktopSpacesTab({
                 <div>
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-base font-extrabold text-white shadow-sm">
+                      <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-green-600 to-green-600 text-base font-extrabold text-white shadow-sm">
                         {group.imageDataUrl ? (
                           <img src={group.imageDataUrl} alt="" className="h-full w-full object-cover" />
                         ) : (
@@ -148,7 +148,7 @@ export default function DesktopSpacesTab({
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <h2 className="truncate text-sm font-extrabold text-slate-900 transition-colors group-hover:text-blue-600">
+                          <h2 className="truncate text-sm font-extrabold text-slate-900 transition-colors group-hover:text-green-600">
                             {group.name}
                           </h2>
                           {showUnreadIndicators && unreadCount > 0 && !isArchived && (
@@ -159,7 +159,7 @@ export default function DesktopSpacesTab({
                               {unreadCount > 99 ? '99+' : unreadCount}
                             </span>
                           )}
-                          {isPinned && <Pin size={12} className="flex-shrink-0 text-blue-600" />}
+                          {isPinned && <Pin size={12} className="flex-shrink-0 text-green-600" />}
                           {isMuted && <BellOff size={12} className="flex-shrink-0 text-amber-500" />}
                         </div>
                         <p className="truncate text-xs text-slate-500">
@@ -216,7 +216,7 @@ export default function DesktopSpacesTab({
                           <span
                             key={memberId}
                             title={label}
-                            className="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-blue-100 text-[10px] font-extrabold text-blue-700"
+                            className="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green-100 text-[10px] font-extrabold text-green-700"
                           >
                             {(label || 'M').charAt(0).toUpperCase()}
                           </span>
@@ -248,7 +248,7 @@ export default function DesktopSpacesTab({
                         onQuickAdd(group.id);
                       }}
                       title="Quick add bill to this space"
-                      className="inline-flex h-7 items-center gap-1 rounded-xl bg-gradient-to-b from-blue-600 to-indigo-600 px-2.5 text-[11px] font-bold text-white shadow-sm hover:opacity-95"
+                      className="inline-flex h-7 items-center gap-1 rounded-xl bg-gradient-to-b from-green-600 to-green-600 px-2.5 text-[11px] font-bold text-white shadow-sm hover:opacity-95"
                     >
                       <Plus size={12} />
                       <span>Bill</span>
@@ -266,7 +266,7 @@ export default function DesktopSpacesTab({
                       className={`relative flex h-7 w-7 items-center justify-center rounded-xl ${
                         showUnreadIndicators && unreadChatCount > 0
                           ? 'bg-rose-50 text-rose-600'
-                          : 'text-slate-400 hover:bg-white hover:text-blue-600'
+                          : 'text-slate-400 hover:bg-white hover:text-green-600'
                       }`}
                     >
                       <MessageSquare size={14} />
@@ -298,7 +298,7 @@ export default function DesktopSpacesTab({
                       }}
                       aria-label={isPinned ? `Unpin ${group.name}` : `Pin ${group.name}`}
                       className={`flex h-7 w-7 items-center justify-center rounded-xl ${
-                        isPinned ? 'bg-blue-50 text-blue-600' : 'text-slate-400 hover:bg-white'
+                        isPinned ? 'bg-green-50 text-green-600' : 'text-slate-400 hover:bg-white'
                       }`}
                     >
                       {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
