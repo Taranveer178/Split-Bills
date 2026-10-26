@@ -41,7 +41,7 @@ export default function PrimaryNav({
           aria-label="Mobile navigation"
           className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 pointer-events-none md:hidden"
         >
-          <div className="liquid-nav-dock pointer-events-auto mx-auto grid h-16 w-full max-w-[25rem] grid-cols-5 items-center gap-0 rounded-[28px] p-1.5">
+          <div className="liquid-nav-dock pointer-events-auto mx-auto grid h-16 w-full max-w-[25rem] grid-cols-5 items-center gap-0 rounded-[28px] p-1.5 shadow-xl bg-white/80 backdrop-blur-xl border border-white/40">
             {/* Left 2 items: Overview & Transactions */}
             {MOBILE_ITEMS.slice(0, 2).map(({ id, mobileLabel, icon: Icon }) => {
               const isActive = activeItem === id;
@@ -52,16 +52,16 @@ export default function PrimaryNav({
                   onClick={() => onNavigate(id)}
                   aria-label={mobileLabel}
                   aria-current={isActive ? 'page' : undefined}
-                  className="relative flex h-full min-w-0 items-center justify-center rounded-[22px] text-slate-600 transition-all duration-200 active:scale-95"
+                  className="relative flex h-full min-w-0 items-center justify-center rounded-[22px] text-slate-700 transition-all duration-200 active:scale-95"
                 >
                   <span
-                    className={`relative inline-flex h-10 w-10 items-center justify-center rounded-2xl transition-all ${
+                    className={`relative inline-flex h-11 w-11 items-center justify-center rounded-2xl transition-all ${
                       isActive
-                        ? 'bg-gradient-to-b from-blue-600 to-blue-600 text-white shadow-md shadow-blue-600/25'
-                        : 'hover:bg-white/60 hover:text-slate-900'
+                        ? 'bg-gradient-to-b from-blue-600 to-blue-700 text-white shadow-md shadow-blue-600/30'
+                        : 'hover:bg-slate-200/60 hover:text-slate-950'
                     }`}
                   >
-                    <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                    <Icon size={20} strokeWidth={isActive ? 3 : 2.5} />
                   </span>
                   <span className="sr-only">{mobileLabel}</span>
                 </button>
@@ -74,9 +74,9 @@ export default function PrimaryNav({
                 type="button"
                 onClick={onQuickAction}
                 aria-label="Quick add bill"
-                className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[20px] bg-gradient-to-tr from-slate-900 via-slate-800 to-blue-900 text-white shadow-lg shadow-slate-900/25 border border-white/30 transition-transform active:scale-90"
+                className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[20px] bg-gradient-to-tr from-slate-950 via-slate-900 to-blue-900 text-white shadow-lg shadow-slate-900/30 border border-white/30 transition-transform active:scale-90"
               >
-                <Plus size={22} strokeWidth={2.75} />
+                <Plus size={24} strokeWidth={3} />
               </button>
             )}
 
@@ -90,32 +90,32 @@ export default function PrimaryNav({
                   onClick={() => onNavigate(id)}
                   aria-label={mobileLabel}
                   aria-current={isActive ? 'page' : undefined}
-                  className="relative flex h-full min-w-0 items-center justify-center rounded-[22px] text-slate-600 transition-all duration-200 active:scale-95"
+                  className="relative flex h-full min-w-0 items-center justify-center rounded-[22px] text-slate-700 transition-all duration-200 active:scale-95"
                 >
-                    <span
-                      className={`relative inline-flex h-10 w-10 items-center justify-center rounded-2xl transition-all ${
-                        isActive
-                          ? 'bg-gradient-to-b from-blue-600 to-blue-600 text-white shadow-md shadow-blue-600/25'
-                          : 'hover:bg-white/60 hover:text-slate-900'
-                      }`}
-                    >
-                      {id === 'profile' ? (
-                        <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-blue-600 to-blue-600 text-[10px] font-extrabold text-white ring-2 ring-white/80">
-                          {user?.photoDataUrl ? (
-                            <img
-                              src={user.photoDataUrl}
-                              alt=""
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            (user?.username || 'U').charAt(0).toUpperCase()
-                          )}
-                        </span>
-                      ) : (
-                        <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
-                      )}
-                    </span>
-                    <span className="sr-only">{mobileLabel}</span>
+                  <span
+                    className={`relative inline-flex h-11 w-11 items-center justify-center rounded-2xl transition-all ${
+                      isActive
+                        ? 'bg-gradient-to-b from-blue-600 to-blue-700 text-white shadow-md shadow-blue-600/30'
+                        : 'hover:bg-slate-200/60 hover:text-slate-950'
+                    }`}
+                  >
+                    {id === 'profile' ? (
+                      <span className={`flex h-7 w-7 items-center justify-center overflow-hidden rounded-full ${isActive ? 'bg-white text-blue-700' : 'bg-gradient-to-tr from-blue-600 to-blue-700 text-white'} text-[11px] font-extrabold ring-2 ring-white/90 shadow-sm`}>
+                        {user?.photoDataUrl ? (
+                          <img
+                            src={user.photoDataUrl}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          (user?.username || 'U').charAt(0).toUpperCase()
+                        )}
+                      </span>
+                    ) : (
+                      <Icon size={20} strokeWidth={isActive ? 3 : 2.5} />
+                    )}
+                  </span>
+                  <span className="sr-only">{mobileLabel}</span>
                 </button>
               );
             })}
@@ -161,7 +161,7 @@ export default function PrimaryNav({
             </span>
           </div>
 
-          {/* Desktop Navigation Items (Activity excluded) */}
+          {/* Desktop Navigation Items */}
           <div className="space-y-1.5">
             {ITEMS.map(({ id, label, icon: Icon }) => {
               const isActive = activeItem === id;

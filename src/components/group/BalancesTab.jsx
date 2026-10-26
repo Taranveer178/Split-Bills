@@ -315,12 +315,12 @@ export default function BalancesTab({
           {myBalance > 0.01 ? (
             <>
               <ArrowDownLeft size={15} />
-              <span>You are owed overall</span>
+              <span>You need to receive overall</span>
             </>
           ) : myBalance < -0.01 ? (
             <>
               <ArrowUpRight size={15} />
-              <span>You owe overall</span>
+              <span>You need to pay overall</span>
             </>
           ) : (
             <>
@@ -391,10 +391,10 @@ export default function BalancesTab({
               let amountBadge = 'text-slate-800 bg-slate-100';
 
               if (iAmFrom) {
-                statusText = `You owe ${toName}`;
+                statusText = `You need to pay ${toName}`;
                 amountBadge = 'text-rose-700 bg-rose-50 border border-rose-200/70';
               } else if (iAmTo) {
-                statusText = `${fromName} owes you`;
+                statusText = `You need to receive from ${fromName}`;
                 amountBadge = 'text-emerald-700 bg-emerald-50 border border-emerald-200/70';
               }
               const avatarMemberId = iAmFrom ? settlement.to : settlement.from;
@@ -607,7 +607,11 @@ export default function BalancesTab({
                   <div className="min-w-0">
                     <h3 className="text-base font-extrabold text-slate-900">Expense Breakdown</h3>
                     <p className="truncate text-xs text-slate-500">
-                      {breakdownData.fromName} owes {breakdownData.toName}
+                      {breakdownData.from === currentUser.id
+                        ? `You need to pay ${breakdownData.toName}`
+                        : breakdownData.to === currentUser.id
+                          ? `You need to receive from ${breakdownData.fromName}`
+                          : `${breakdownData.fromName} pays ${breakdownData.toName}`}
                     </p>
                   </div>
                 </div>
