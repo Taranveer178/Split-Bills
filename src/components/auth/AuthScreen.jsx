@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { AlertCircle, Eye, EyeOff, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, ArrowLeft, CheckCircle2, Moon, Sun } from 'lucide-react';
 import {
   createUserWithEmailAndPassword,
   deleteUser,
@@ -14,7 +14,14 @@ import roomsplitIcon from '../../assets/roomsplit-icon.webp';
 import { Button } from '../common/UI';
 import { auth } from '../../firebase';
 
-export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogin }) {
+export default function AuthScreen({
+  users = [],
+  onLoadUsers,
+  onSaveUser,
+  onLogin,
+  theme = 'light',
+  onThemeChange,
+}) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -510,6 +517,16 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
 
   return (
     <main className="auth-page-shell min-h-[100dvh] w-full font-sans flex items-center justify-center md:p-6 relative overflow-hidden">
+      <button
+        type="button"
+        onClick={() => onThemeChange?.(theme === 'dark' ? 'light' : 'dark')}
+        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        className="fixed right-4 top-4 z-[60] hidden h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/90 text-slate-700 shadow-md backdrop-blur transition-colors hover:bg-white md:flex"
+      >
+        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+      </button>
+
       {/* MOBILE LAYOUT */}
       <div className="md:hidden fixed inset-0 flex flex-col w-full h-full overflow-hidden bg-blue-600">
         <div className="flex-1 flex flex-col justify-between">
@@ -567,6 +584,15 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
                   ? 'Sign in'
                   : 'Create account'}
             </h2>
+            <button
+              type="button"
+              onClick={() => onThemeChange?.(theme === 'dark' ? 'light' : 'dark')}
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              className="ml-auto flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+            >
+              {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
           </div>
           <div className="flex-1 overflow-y-auto px-6 pt-6 pb-10">
             <form onSubmit={handleSubmit} className="w-full">

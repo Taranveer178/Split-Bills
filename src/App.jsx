@@ -869,6 +869,8 @@ export default function App() {
           onLoadUsers={loadUsersForAuth}
           onSaveUser={saveUser}
           onLogin={handleLogin}
+          theme={theme}
+          onThemeChange={setTheme}
         />
       ) : currentView === 'dashboard' ? (
         <Dashboard
