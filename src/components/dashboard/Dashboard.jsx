@@ -22,6 +22,7 @@ import {
   Trash2,
   LogOut,
   Smartphone,
+  FileDown,
 } from 'lucide-react';
 import roomsplitIcon from '../../assets/roomsplit-icon.webp';
 import PrimaryNav from '../common/PrimaryNav';
@@ -29,6 +30,7 @@ import MonthlyAnalyticsTab from './MonthlyAnalyticsTab';
 import ProfileTabView from './ProfileTab';
 import DesktopSpacesTab from './DesktopSpacesTab';
 import TransactionsTab from './TransactionsTab';
+import TransactionExportModal from './TransactionExportModal';
 import { calculateSettlements } from '../../utils/settlement';
 import { CATEGORIES, PAYMENT_METHODS } from '../../utils/constants';
 import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
@@ -62,6 +64,7 @@ export default function Dashboard({
   const [spaceFilter, setSpaceFilter] = useState('active'); // 'active' | 'pinned' | 'archived'
   const [searchQuery, setSearchQuery] = useState('');
   const [ledgerFilter, setLedgerFilter] = useState('all'); // 'all' | 'mine' | 'settlements'
+  const [transactionExportOpen, setTransactionExportOpen] = useState(false);
   const [mobileSection, setMobileSection] = useState('spaces'); // 'spaces' | 'dues'
   const [copiedCodeId, setCopiedCodeId] = useState(null);
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
@@ -436,6 +439,11 @@ export default function Dashboard({
 
     return list;
   }, [expenses, myGroups, ledgerFilter, user?.id, searchQuery]);
+
+  const exportTransactions = useMemo(() => {
+    const myGroupIds = new Set(myGroups.map((group) => group.id));
+    return expenses.filter((expense) => myGroupIds.has(expense.groupId));
+  }, [expenses, myGroups]);
 
   const updateGroupPreference = async (groupId, preference, enabled) => {
     const currentIds = user?.[preference] || [];
@@ -998,6 +1006,7 @@ export default function Dashboard({
                   onOpenGroup={handleOpenGroup}
                   ledgerFilter={ledgerFilter}
                   onLedgerFilterChange={setLedgerFilter}
+                  onOpenExport={() => setTransactionExportOpen(true)}
                 />
               </div>
             )}
@@ -1354,6 +1363,7 @@ export default function Dashboard({
                               Transactions
                             </h1>
                           </div>
+                          <div className="flex items-center gap-2">
                           <div className="page-heading-controls hidden items-center gap-0.5 rounded-full p-1 md:flex">
                             {[
                               { id: 'all', label: 'All' },
@@ -1389,6 +1399,10 @@ export default function Dashboard({
                               <option value="settlements">Settlements</option>
                             </select>
                           </label>
+                          <button type="button" onClick={() => setTransactionExportOpen(true)} aria-label="Export transactions" title="Export transactions" className="page-heading-controls flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-blue-600">
+                            <FileDown size={16} />
+                          </button>
+                          </div>
                         </>
                       ) : (
                         <>
@@ -1992,6 +2006,17 @@ export default function Dashboard({
         isAppInstalled={isAppInstalled}
         user={user}
       />
+
+      {transactionExportOpen && (
+        <TransactionExportModal
+          transactions={exportTransactions}
+          groups={myGroups}
+          users={users}
+          user={user}
+          getUserName={getUserName}
+          onClose={() => setTransactionExportOpen(false)}
+        />
+      )}
 
       {installDialogOpen && !isAppInstalled && (
         <div

@@ -138,11 +138,11 @@ export default function PrimaryNav({
             aria-label="Go to RoomSplit home"
             className="flex w-full items-center gap-3 rounded-2xl px-2 py-1.5 text-left transition-opacity hover:opacity-90"
           >
-            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-200/70">
+            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm border border-slate-200/70">
               <img
                 src={roomsplitIcon}
                 alt="RoomSplit"
-                className="h-full w-full scale-110 rounded-[14px] object-cover"
+                className="h-full w-full rounded-full object-cover"
               />
             </span>
             <div>
@@ -221,7 +221,7 @@ export default function PrimaryNav({
               onClick={() => onNavigate('profile')}
               className="flex items-center gap-3 rounded-2xl bg-white/70 border border-white/90 p-2.5 shadow-sm hover:bg-white cursor-pointer transition-all"
             >
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-tr from-blue-600 to-blue-600 text-xs font-bold text-white shadow-sm">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-blue-600 to-blue-600 text-xs font-bold text-white shadow-sm">
                 {user.photoDataUrl ? (
                   <img src={user.photoDataUrl} alt="" className="h-full w-full object-cover" />
                 ) : (

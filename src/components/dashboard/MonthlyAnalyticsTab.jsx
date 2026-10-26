@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ArrowUpRight,
@@ -54,6 +54,7 @@ const getCategoryMeta = (name = 'Other') => CATEGORY_META[name] || CATEGORY_META
 export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [] }) {
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedBreakdown, setSelectedBreakdown] = useState(null);
+  const monthInputRef = useRef(null);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -68,6 +69,17 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [] }
     if (!event.target.value) return;
     const [selectedYear, selectedMonth] = event.target.value.split('-').map(Number);
     setCurrentDate(new Date(selectedYear, selectedMonth - 1, 1));
+  };
+
+  const openMonthPicker = () => {
+    const monthInput = monthInputRef.current;
+    if (!monthInput) return;
+    if (typeof monthInput.showPicker === 'function') {
+      monthInput.showPicker();
+    } else {
+      monthInput.focus();
+      monthInput.click();
+    }
   };
 
   const monthlyExpenses = useMemo(() => {
@@ -163,18 +175,22 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [] }
           </h1>
         </div>
 
-        <label className="page-heading-controls relative flex h-10 min-w-0 max-w-[58%] flex-shrink items-center gap-2 rounded-full px-3 text-xs font-semibold text-slate-700">
+        <div className="relative min-w-0 max-w-[58%] flex-shrink">
+          <button type="button" onClick={openMonthPicker} className="page-heading-controls flex h-10 w-full min-w-0 items-center gap-2 rounded-full px-3 text-left text-xs font-semibold text-slate-700">
           <CalendarDays size={14} className="flex-shrink-0 text-blue-600" />
           <span className="truncate">{formattedMonthLabel}</span>
           <ChevronDown size={14} className="flex-shrink-0 text-slate-400" />
+          </button>
           <input
+            ref={monthInputRef}
             type="month"
             aria-label="Choose report month"
             value={`${year}-${String(month + 1).padStart(2, '0')}`}
             onChange={handleMonthChange}
-            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+            className="pointer-events-none absolute left-0 top-0 h-px w-px opacity-0"
+            tabIndex={-1}
           />
-        </label>
+        </div>
       </div>
 
       {/* 3-Card Summary Row */}

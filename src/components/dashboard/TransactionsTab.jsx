@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Receipt } from 'lucide-react';
+import { ChevronDown, ChevronRight, Download, Receipt } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
 
 export default function TransactionsTab({
@@ -12,6 +12,7 @@ export default function TransactionsTab({
   onSeeAll,
   ledgerFilter = 'all',
   onLedgerFilterChange,
+  onOpenExport,
 }) {
   const visibleTransactions = preview ? transactions.slice(0, 4) : transactions;
 
@@ -31,6 +32,7 @@ export default function TransactionsTab({
               Transactions
             </h1>
           </div>
+          <div className="flex items-center gap-2">
           <div className="page-heading-controls hidden items-center gap-0.5 rounded-full p-1 md:flex">
             {[
               { id: 'all', label: 'All' },
@@ -66,6 +68,10 @@ export default function TransactionsTab({
               <option value="settlements">Settlements</option>
             </select>
           </label>
+          <button type="button" onClick={onOpenExport} aria-label="Export transactions" title="Export transactions" className="page-heading-controls flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-blue-600">
+            <Download size={16} />
+          </button>
+          </div>
         </div>
       )}
       {preview && (

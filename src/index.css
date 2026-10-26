@@ -288,6 +288,19 @@ html.dark .app-modal-surface select {
   color: #f8fafc !important;
 }
 
+html.dark .transaction-export-scope {
+  background: #242832 !important;
+}
+
+html.dark .transaction-export-scope button {
+  color: #cbd5e1 !important;
+}
+
+html.dark .transaction-export-scope button[aria-pressed="true"] {
+  background: #3158bd !important;
+  color: #fff !important;
+}
+
 html.dark .popup-close-button {
   background: #4c151b !important;
   border-color: #7f1d1d !important;
