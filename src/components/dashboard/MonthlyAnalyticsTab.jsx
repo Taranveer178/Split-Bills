@@ -186,7 +186,7 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [], 
           </h1>
         </div>
 
-        <div className="flex min-w-0 max-w-[62%] flex-shrink items-center gap-1">
+        <div className="relative flex min-w-0 max-w-[62%] flex-shrink items-center gap-1">
           <button
             type="button"
             onClick={() => setCurrentDate(new Date(year, month - 1, 1))}
@@ -215,6 +215,8 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [], 
           >
             <CalendarDays size={15} />
           </button>
+          
+          {/* Fixed iOS input positioning: overlays the button invisibly with opacity-0 so iOS accepts the direct touch interaction */}
           <input
             ref={monthPickerInputRef}
             type="month"
@@ -226,7 +228,7 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [], 
                 setCurrentDate(new Date(selectedYear, selectedMonth - 1, 1));
               }
             }}
-            className="pointer-events-none absolute h-px w-px opacity-0"
+            className="absolute right-0 h-8 w-8 cursor-pointer opacity-0"
             tabIndex={-1}
           />
         </div>
@@ -494,7 +496,6 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [], 
           </div>,
           document.body
         )}
-
     </div>
   );
 }
