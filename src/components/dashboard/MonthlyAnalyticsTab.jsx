@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ArrowUpRight,
@@ -55,7 +55,8 @@ const getCategoryMeta = (name = 'Other') => CATEGORY_META[name] || CATEGORY_META
 export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [] }) {
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedBreakdown, setSelectedBreakdown] = useState(null);
-  const monthInputRef = useRef(null);
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [pickerYear, setPickerYear] = useState(() => new Date().getFullYear());
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -66,21 +67,9 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [] }
     year: 'numeric',
   });
 
-  const handleMonthChange = (event) => {
-    if (!event.target.value) return;
-    const [selectedYear, selectedMonth] = event.target.value.split('-').map(Number);
-    setCurrentDate(new Date(selectedYear, selectedMonth - 1, 1));
-  };
-
   const openMonthPicker = () => {
-    const monthInput = monthInputRef.current;
-    if (!monthInput) return;
-    if (typeof monthInput.showPicker === 'function') {
-      monthInput.showPicker();
-    } else {
-      monthInput.focus();
-      monthInput.click();
-    }
+    setPickerYear(year);
+    setShowMonthPicker(true);
   };
 
   const monthlyExpenses = useMemo(() => {
@@ -196,26 +185,15 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [] }
           >
             <ChevronRight size={16} />
           </button>
-          <div className="relative flex-shrink-0">
-            <button
-              type="button"
-              onClick={openMonthPicker}
-              aria-label="Choose month"
-              title="Choose month"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm hover:bg-blue-700"
-            >
-              <CalendarDays size={15} />
-            </button>
-            <input
-              ref={monthInputRef}
-              type="month"
-              aria-label="Choose report month"
-              value={`${year}-${String(month + 1).padStart(2, '0')}`}
-              onChange={handleMonthChange}
-              className="pointer-events-none absolute left-0 top-0 h-px w-px opacity-0"
-              tabIndex={-1}
-            />
-          </div>
+          <button
+            type="button"
+            onClick={openMonthPicker}
+            aria-label="Choose month"
+            title="Choose month"
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm hover:bg-blue-700"
+          >
+            <CalendarDays size={15} />
+          </button>
         </div>
       </div>
 
@@ -432,6 +410,84 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [] }
                       })}
                   </ul>
                 )}
+              </div>
+            </section>
+          </div>,
+          document.body
+        )}
+
+      {showMonthPicker &&
+        createPortal(
+          <div
+            className="app-modal-overlay fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs"
+            onClick={() => setShowMonthPicker(false)}
+          >
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="month-picker-title"
+              className="app-modal-surface w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-4 shadow-xl"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <header className="mb-4 flex items-center justify-between">
+                <h2 id="month-picker-title" className="text-base font-bold text-slate-900">
+                  Choose month
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setShowMonthPicker(false)}
+                  aria-label="Close month picker"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
+                >
+                  <X size={16} />
+                </button>
+              </header>
+              <div className="mb-3 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setPickerYear((currentYear) => currentYear - 1)}
+                  aria-label="Previous year"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <span className="text-sm font-bold text-slate-900">{pickerYear}</span>
+                <button
+                  type="button"
+                  onClick={() => setPickerYear((currentYear) => currentYear + 1)}
+                  aria-label="Next year"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {Array.from({ length: 12 }, (_, monthIndex) => {
+                  const monthLabel = new Date(pickerYear, monthIndex, 1).toLocaleDateString(
+                    'en-US',
+                    { month: 'short' }
+                  );
+                  const isSelected = pickerYear === year && monthIndex === month;
+
+                  return (
+                    <button
+                      key={monthIndex}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => {
+                        setCurrentDate(new Date(pickerYear, monthIndex, 1));
+                        setShowMonthPicker(false);
+                      }}
+                      className={`h-11 rounded-xl text-sm font-semibold transition-colors ${
+                        isSelected
+                          ? 'bg-blue-600 text-white'
+                          : 'text-slate-700 hover:bg-blue-50 hover:text-blue-700'
+                      }`}
+                    >
+                      {monthLabel}
+                    </button>
+                  );
+                })}
               </div>
             </section>
           </div>,
