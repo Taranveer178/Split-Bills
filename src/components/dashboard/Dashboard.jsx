@@ -580,15 +580,6 @@ export default function Dashboard({
     }
   }, [activeTab, unreadNotifications, onMarkNotificationsRead]);
 
-  useEffect(() => {
-    if (isAppInstalled || sessionStorage.getItem('roomsplit-install-prompt-shown')) return undefined;
-    const timer = window.setTimeout(() => {
-      setInstallDialogOpen(true);
-      sessionStorage.setItem('roomsplit-install-prompt-shown', 'true');
-    }, 900);
-    return () => window.clearTimeout(timer);
-  }, [isAppInstalled]);
-
   const handleInstallClick = async () => {
     if (!deferredPromptAvailable) {
       setInstallDialogOpen(true);
@@ -1857,8 +1848,6 @@ export default function Dashboard({
                   user={user}
                   onUpdateUser={onUpdateUser}
                   onLogout={() => setShowLogoutConfirmation(true)}
-                  onInstallApp={handleInstallClick}
-                  isAppInstalled={isAppInstalled}
                   theme={theme}
                   onThemeChange={onThemeChange}
                   showToast={showToast}

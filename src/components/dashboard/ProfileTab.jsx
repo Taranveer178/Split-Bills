@@ -13,7 +13,6 @@ import {
   Bell,
   LogOut,
   Edit2,
-  Download,
   Moon,
   Sun,
 } from 'lucide-react';
@@ -35,8 +34,6 @@ export default function ProfileTab({
   user,
   onUpdateUser,
   onLogout,
-  onInstallApp,
-  isAppInstalled = false,
   theme = 'light',
   onThemeChange,
   showToast,
@@ -319,26 +316,6 @@ export default function ProfileTab({
 
       {!isEditing ? (
         <div className="space-y-4">
-          {!isAppInstalled && onInstallApp && (
-            <button
-              type="button"
-              onClick={onInstallApp}
-              className="flex w-full items-center gap-4 rounded-3xl border border-slate-200/80 bg-white p-4 text-left text-slate-900 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.16)] transition-all hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 sm:p-5"
-            >
-                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-blue-700">
-                <Download size={20} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-extrabold">Install SplitBills</span>
-                <span className="mt-0.5 block text-xs text-slate-500">
-                  Get quick access from your home screen
-                </span>
-              </span>
-              <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-blue-700">
-                Install
-              </span>
-            </button>
-          )}
           <div className="rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="relative inline-block">

@@ -185,7 +185,9 @@ export default function App() {
   );
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null);
   const [isAppInstalled, setIsAppInstalled] = useState(
-    () => window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true
+    () => Capacitor.isNativePlatform()
+      || window.matchMedia?.('(display-mode: standalone)').matches
+      || window.navigator.standalone === true
   );
   const [theme, setTheme] = useState(
     () => localStorage.getItem('rs_theme') === 'dark' ? 'dark' : 'light'
