@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Plus,
   UserPlus,
@@ -23,6 +24,7 @@ import {
   LogOut,
   Smartphone,
   FileDown,
+  Home,
 } from 'lucide-react';
 import roomsplitIcon from '../../assets/roomsplit-icon.webp';
 import PrimaryNav from '../common/PrimaryNav';
@@ -47,6 +49,7 @@ export default function Dashboard({
   onJoinGroup,
   onSaveExpense,
   rentRecords = [],
+  onMarkRentPaid,
   onSendNotification,
   onUpdateUser,
   onMarkNotificationsRead,
@@ -70,6 +73,7 @@ export default function Dashboard({
   const [copiedCodeId, setCopiedCodeId] = useState(null);
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [dailyRentReminderRecords, setDailyRentReminderRecords] = useState([]);
 
   // Activity Drawer / Notification Center Popup State
   const [isActivityOpen, setIsActivityOpen] = useState(false);
@@ -104,6 +108,48 @@ export default function Dashboard({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [installDialogOpen]);
+
+  useEffect(() => {
+    if (!user?.id) return undefined;
+
+    const now = new Date();
+    const localDateKey = [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, '0'),
+      String(now.getDate()).padStart(2, '0'),
+    ].join('-');
+    const storageKey = `rs_rent_reminders:${user.id}:${localDateKey}`;
+    const seenRentIds = (() => {
+      try {
+        return JSON.parse(localStorage.getItem(storageKey) || '[]');
+      } catch {
+        return [];
+      }
+    })();
+
+    const seenRentIdSet = new Set(seenRentIds);
+    if (activeTab !== 'groups') {
+      const timeout = window.setTimeout(() => setDailyRentReminderRecords([]), 0);
+      return () => window.clearTimeout(timeout);
+    }
+
+    const pendingRents = rentRecords.filter((rent) => (
+      Number(rent.shares?.[user.id]) > 0 && !rent.payments?.[user.id]?.paid
+    ));
+    const unseenRents = pendingRents.filter((rent) => !seenRentIdSet.has(rent.id));
+    if (!unseenRents.length) return undefined;
+
+    const nextSeenRentIds = [...seenRentIdSet, ...unseenRents.map((rent) => rent.id)];
+    const timeout = window.setTimeout(() => {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(nextSeenRentIds));
+      } catch (error) {
+        console.warn('Could not save the daily rent reminder state:', error);
+      }
+      setDailyRentReminderRecords(unseenRents);
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [activeTab, rentRecords, user?.id]);
 
   const confirmLogout = async () => {
     if (!onLogout || isSigningOut) return;
@@ -276,6 +322,15 @@ export default function Dashboard({
     let totalOwedToYou = 0;
     let totalYouOwe = 0;
     const allMySettlements = [];
+    const myUnpaidRents = rentRecords
+      .filter((rent) => (
+        Number(rent.shares?.[user?.id]) > 0 && !rent.payments?.[user?.id]?.paid
+      ))
+      .map((rent) => ({
+        ...rent,
+        groupName: myGroups.find((group) => group.id === rent.groupId)?.name || 'Space',
+      }))
+      .sort((first, second) => second.month.localeCompare(first.month));
 
     myGroups.forEach((group) => {
       const grpExpenses = expenses.filter((e) => e.groupId === group.id);
@@ -328,8 +383,9 @@ export default function Dashboard({
       totalOwedToYou: Math.round(totalOwedToYou * 100) / 100,
       totalYouOwe: Math.round(totalYouOwe * 100) / 100,
       allMySettlements,
+      myUnpaidRents,
     };
-  }, [myGroups, expenses, user?.id, archivedGroupIds, unreadMessagesByGroup]);
+  }, [myGroups, expenses, rentRecords, user?.id, archivedGroupIds, unreadMessagesByGroup]);
 
   const monthlySummary = useMemo(() => {
     const now = new Date();
@@ -1273,24 +1329,27 @@ export default function Dashboard({
                 <button
                   type="button"
                   onClick={() => {
-                    setLedgerFilter('settlements');
-                    handleTabSwitch('transactions');
+                    const firstRent = groupMetrics.myUnpaidRents[0];
+                    if (firstRent) {
+                      handleOpenGroup(firstRent.groupId, 'members');
+                    } else {
+                      setLedgerFilter('settlements');
+                      handleTabSwitch('transactions');
+                    }
                   }}
                   className="liquid-glass-interactive w-full cursor-pointer rounded-3xl p-5 text-left"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-500">Pending Settlements</span>
+                    <span className="text-xs font-bold text-slate-500">Pending Rent &amp; Settlements</span>
                     <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
                       <CheckCircle2 size={16} />
                     </span>
                   </div>
                   <p className="mt-2 font-mono text-2xl font-extrabold tracking-tight text-slate-900">
-                    {groupMetrics.allMySettlements.length}
+                    {groupMetrics.myUnpaidRents.length + groupMetrics.allMySettlements.length}
                   </p>
                   <p className="mt-2 text-[11px] font-semibold text-slate-500">
-                    {groupMetrics.allMySettlements.length === 0
-                      ? 'Every room is settled'
-                      : 'Active dues ready to settle'}
+                    {groupMetrics.myUnpaidRents.length} rent share{groupMetrics.myUnpaidRents.length === 1 ? '' : 's'} · {groupMetrics.allMySettlements.length} settlement{groupMetrics.allMySettlements.length === 1 ? '' : 's'}
                   </p>
                 </button>
               </div>
@@ -1639,24 +1698,46 @@ export default function Dashboard({
                     <div className="mb-3.5 flex items-center justify-between border-b border-slate-200/60 pb-3">
                       <div>
                         <h3 className="text-sm font-extrabold text-slate-900">
-                          Balances & Settlements
+                          Rent & Settlements
                         </h3>
                         <p className="text-[11px] text-slate-500">
                           Smart optimized dues across spaces
                         </p>
                       </div>
                       <span className="rounded-lg bg-blue-50 px-2 py-0.5 font-mono text-xs font-bold text-blue-700">
-                        {groupMetrics.allMySettlements.length}
+                        {groupMetrics.myUnpaidRents.length + groupMetrics.allMySettlements.length}
                       </span>
                     </div>
 
-                    {groupMetrics.allMySettlements.length === 0 ? (
+                    {groupMetrics.myUnpaidRents.length === 0 && groupMetrics.allMySettlements.length === 0 ? (
                       <div className="rounded-2xl bg-emerald-50/70 border border-emerald-200/70 p-4 text-center">
                         <CheckCircle2 size={20} className="mx-auto mb-1 text-emerald-600" />
                         <p className="text-xs font-bold text-emerald-950">All Settled Up</p>
                       </div>
                     ) : (
                       <div className="space-y-2.5">
+                        {groupMetrics.myUnpaidRents.slice(0, 5).map((rent) => (
+                          <div
+                            key={`rent-${rent.id}`}
+                            onClick={() => handleOpenGroup(rent.groupId, 'members')}
+                            className="flex items-center justify-between gap-3 rounded-2xl border border-amber-200/80 bg-amber-50/70 p-3 transition-all hover:bg-amber-50 cursor-pointer shadow-sm"
+                          >
+                            <div className="min-w-0">
+                              <p className="truncate text-xs font-bold text-slate-900">
+                                {rent.groupName} · {new Date(`${rent.month}-01T00:00:00`).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} rent
+                              </p>
+                              <p className="truncate text-[11px] text-slate-500">Unpaid rent share</p>
+                            </div>
+                            <div className="flex flex-shrink-0 items-center gap-2">
+                              <span className="font-mono text-xs font-extrabold text-amber-800">
+                                {formatCurrency(rent.shares?.[user?.id], rent.currency)}
+                              </span>
+                              <span className="rounded-xl bg-amber-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
+                                Rent
+                              </span>
+                            </div>
+                          </div>
+                        ))}
                         {groupMetrics.allMySettlements.slice(0, 5).map((s, idx) => {
                           const iOwe = s.from === user?.id;
                           const counterparty = getUserName(iOwe ? s.to : s.from);
@@ -2014,6 +2095,105 @@ export default function Dashboard({
           onClose={() => setTransactionExportOpen(false)}
         />
       )}
+
+      {dailyRentReminderRecords.length > 0 &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[160] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm"
+            onClick={() => setDailyRentReminderRecords([])}
+          >
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="daily-rent-reminder-title"
+              className="app-modal-surface max-h-[min(80dvh,40rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-white/70 bg-white p-5 shadow-2xl"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <header className="mb-4 flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+                    <Home size={19} />
+                  </span>
+                  <div>
+                    <h2 id="daily-rent-reminder-title" className="text-base font-bold text-slate-900">
+                      Rent payment reminder
+                    </h2>
+                    <p className="mt-0.5 text-xs text-slate-500">Your unpaid shares for today</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDailyRentReminderRecords([])}
+                  aria-label="Dismiss rent reminders for today"
+                  className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
+                >
+                  <X size={17} />
+                </button>
+              </header>
+              <div className="space-y-3">
+                {dailyRentReminderRecords.map((rent) => {
+                  const group = myGroups.find((item) => item.id === rent.groupId);
+                  const monthLabel = new Date(`${rent.month}-01T00:00:00`).toLocaleDateString(
+                    'en-US',
+                    { month: 'long', year: 'numeric' }
+                  );
+                  const share = Number(rent.shares?.[user.id]) || 0;
+
+                  return (
+                    <article key={rent.id} className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-bold text-slate-900">
+                            {group?.name || 'Shared space'} · {monthLabel}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-500">Your rent share</p>
+                        </div>
+                        <span className="flex-shrink-0 font-mono text-sm font-bold text-slate-900">
+                          {formatCurrency(share, rent.currency)}
+                        </span>
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await onMarkRentPaid?.(rent.id, user.id);
+                              setDailyRentReminderRecords((previous) => previous.filter((item) => item.id !== rent.id));
+                              showToast?.('Your rent share was marked as paid.');
+                            } catch (error) {
+                              showToast?.(error.message || 'Could not update rent payment.', 'error');
+                            }
+                          }}
+                          className="h-9 rounded-lg bg-emerald-600 px-2 text-xs font-bold text-white hover:bg-emerald-700"
+                        >
+                          Mark paid
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDailyRentReminderRecords([]);
+                            onOpenGroup?.(rent.groupId, 'members');
+                          }}
+                          className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                        >
+                          View rent
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={() => setDailyRentReminderRecords([])}
+                className="mt-4 h-10 w-full rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-100"
+              >
+                Remind me tomorrow
+              </button>
+            </section>
+          </div>,
+          document.body
+        )}
 
       {installDialogOpen && !isAppInstalled && (
         <div

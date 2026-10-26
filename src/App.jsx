@@ -14,6 +14,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { calculateSettlements, GROUP_DELETE_BALANCE_TOLERANCE } from './utils/settlement';
+import { formatCurrency } from './utils/currency';
 import { auth, db, hasFirebase, signInAnonymously } from './firebase';
 import {
   INITIAL_EXPENSES,
@@ -30,6 +31,7 @@ import {
   listenToForegroundMessages,
   requestNotificationPermission,
   setPushNotificationActionHandler,
+  triggerPushNotification,
   unregisterPushNotifications,
 } from './utils/notifications';
 
@@ -768,16 +770,56 @@ export default function App() {
         }
         transaction.set(rentRef, newRent);
       });
-      return;
+    } else {
+      if (monthlyRents.some((rent) => rent.id === newRent.id)) {
+        throw new Error('Rent has already been added for this month.');
+      }
+      setMonthlyRents((previous) => {
+        const next = [...previous, newRent];
+        localStorage.setItem('rs_monthly_rents', JSON.stringify(next));
+        return next;
+      });
     }
 
-    if (monthlyRents.some((rent) => rent.id === newRent.id)) {
-      throw new Error('Rent has already been added for this month.');
+    const group = groups.find((item) => item.id === newRent.groupId);
+    if (!group) return;
+
+    const createdAt = new Date().toISOString();
+    const senderName = activeUser?.username || 'A roommate';
+    const monthLabel = new Date(`${newRent.month}-01T00:00:00`).toLocaleDateString(
+      'en-US',
+      { month: 'long', year: 'numeric' }
+    );
+    const rentNotifications = group.members
+      .filter((memberId) => memberId !== activeUserId)
+      .map((recipientId) => ({
+        id: `rent_added_${newRent.id}_${recipientId}`,
+        recipientId,
+        senderId: activeUserId,
+        createdBy: activeUserId,
+        createdByName: senderName,
+        groupId: group.id,
+        type: 'RENT_ADDED',
+        message: `${senderName} added ${monthLabel} rent in ${group.name}. Your share is ${formatCurrency(newRent.shares?.[recipientId], newRent.currency)}.`,
+        createdAt,
+        read: false,
+      }));
+
+    try {
+      await saveNotifications(rentNotifications);
+    } catch (error) {
+      console.warn('Rent activity notification failed:', error);
     }
-    setMonthlyRents((previous) => {
-      const next = [...previous, newRent];
-      localStorage.setItem('rs_monthly_rents', JSON.stringify(next));
-      return next;
+    rentNotifications.forEach((notification) => {
+      const recipient = users.find((item) => item.id === notification.recipientId);
+      if (recipient?.mutedGroupIds?.includes(group.id)) return;
+      triggerPushNotification({
+        senderId: activeUserId,
+        recipientId: notification.recipientId,
+        title: `${group.name}: rent added`,
+        message: notification.message,
+        groupId: group.id,
+      }).catch((error) => console.warn('Rent push notification failed:', error));
     });
   };
 
@@ -797,6 +839,26 @@ export default function App() {
         ? { ...rent, payments: { ...rent.payments, [memberId]: payment }, updatedAt: payment.paidAt }
         : rent
       );
+      localStorage.setItem('rs_monthly_rents', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const deleteMonthlyRent = async (rentId) => {
+    const rent = monthlyRents.find((item) => item.id === rentId);
+    const group = groups.find((item) => item.id === rent?.groupId);
+    if (!rent || !group) throw new Error('Rent record no longer exists.');
+    if (group.createdBy !== activeUserId) {
+      throw new Error('Only the group admin can delete rent.');
+    }
+
+    if (db) {
+      await deleteDoc(doc(db, 'monthlyRents', rentId));
+      return;
+    }
+
+    setMonthlyRents((previous) => {
+      const next = previous.filter((item) => item.id !== rentId);
       localStorage.setItem('rs_monthly_rents', JSON.stringify(next));
       return next;
     });
@@ -952,6 +1014,7 @@ export default function App() {
           expenses={expenses}
           rentRecords={monthlyRents}
           monthlyRents={monthlyRents}
+          onMarkRentPaid={markMonthlyRentPaid}
           onLogout={handleLogout}
           onOpenGroup={(id, initialTab = 'expenses', unreadChatCount = 0) => {
             const group = groups.find((item) => item.id === id);
@@ -1035,6 +1098,7 @@ export default function App() {
             monthlyRents={monthlyRents.filter((rent) => rent.groupId === activeGroup.id)}
             onCreateRent={saveMonthlyRent}
             onMarkRentPaid={markMonthlyRentPaid}
+            onDeleteRent={deleteMonthlyRent}
             onSaveExpense={saveExpense}
             onDeleteExpense={deleteExpense}
             onDeleteGroup={deleteGroup}

@@ -42,6 +42,7 @@ export default function GroupView({
   onSaveExpense,
   onCreateRent,
   onMarkRentPaid,
+  onDeleteRent,
   onDeleteExpense,
   onDeleteGroup,
   onUpdateGroup,
@@ -387,6 +388,7 @@ export default function GroupView({
                     users={users}
                     onCreateRent={onCreateRent}
                     onMarkRentPaid={onMarkRentPaid}
+                    onDeleteRent={onDeleteRent}
                     showToast={showToast}
                     compact
                   />
@@ -442,6 +444,7 @@ export default function GroupView({
               monthlyRents={monthlyRents}
               onCreateRent={onCreateRent}
               onMarkRentPaid={onMarkRentPaid}
+              onDeleteRent={onDeleteRent}
               onUpdateGroup={onUpdateGroup}
               onDeleteGroup={onDeleteGroup}
               showToast={showToast}

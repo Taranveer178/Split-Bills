@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CalendarDays, Check, CircleDollarSign, Home, LoaderCircle } from 'lucide-react';
+import { CalendarDays, Check, CircleDollarSign, Home, LoaderCircle, Trash2, X } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
 
 const getCurrentMonth = () => {
@@ -34,6 +34,7 @@ export default function GroupRentPanel({
   users = [],
   onCreateRent,
   onMarkRentPaid,
+  onDeleteRent,
   showToast,
   compact = false,
 }) {
@@ -41,12 +42,15 @@ export default function GroupRentPanel({
   const [amount, setAmount] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isMarkingPaid, setIsMarkingPaid] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const rent = rentRecords.find(
     (record) => record.groupId === group.id && record.month === selectedMonth
   );
   const myShare = Number(rent?.shares?.[currentUser.id]) || 0;
   const myPayment = rent?.payments?.[currentUser.id];
+  const isAdmin = group.createdBy === currentUser.id;
 
   const handleCreateRent = async (event) => {
     event.preventDefault();
@@ -102,6 +106,20 @@ export default function GroupRentPanel({
       showToast?.(error.message || 'Could not update rent payment.', 'error');
     } finally {
       setIsMarkingPaid(false);
+    }
+  };
+
+  const handleDeleteRent = async () => {
+    if (!rent || !isAdmin || !onDeleteRent) return;
+    setIsDeleting(true);
+    try {
+      await onDeleteRent(rent.id);
+      setConfirmDelete(false);
+      showToast?.(`Rent for ${formatMonth(rent.month)} deleted.`);
+    } catch (error) {
+      showToast?.(error.message || 'Could not delete rent.', 'error');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -180,6 +198,42 @@ export default function GroupRentPanel({
             <p className="mt-3 flex items-center justify-center gap-1.5 rounded-xl bg-emerald-50 py-2 text-xs font-semibold text-emerald-700">
               <Check size={14} /> Your share is marked paid
             </p>
+          )}
+          {isAdmin && onDeleteRent && (
+            confirmDelete ? (
+              <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3">
+                <p className="text-xs font-semibold text-rose-800">
+                  Delete this month’s rent and all payment statuses?
+                </p>
+                <div className="mt-2 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(false)}
+                    disabled={isDeleting}
+                    className="flex h-9 flex-1 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 disabled:opacity-60"
+                  >
+                    <X size={14} /> Keep rent
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDeleteRent}
+                    disabled={isDeleting}
+                    className="flex h-9 flex-1 items-center justify-center gap-1 rounded-lg bg-rose-600 text-xs font-bold text-white disabled:opacity-60"
+                  >
+                    {isDeleting ? <LoaderCircle size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                    Delete rent
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="mt-3 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-white text-xs font-semibold text-rose-700 hover:bg-rose-50"
+              >
+                <Trash2 size={14} /> Delete rent
+              </button>
+            )
           )}
         </div>
       ) : (

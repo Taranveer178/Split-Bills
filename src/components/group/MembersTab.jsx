@@ -32,6 +32,7 @@ export default function MembersTab({
   monthlyRents = [],
   onCreateRent,
   onMarkRentPaid,
+  onDeleteRent,
   onDeleteGroup,
   onUpdateGroup,
   onLeaveGroup,
@@ -435,6 +436,7 @@ export default function MembersTab({
         users={users}
         onCreateRent={onCreateRent}
         onMarkRentPaid={onMarkRentPaid}
+        onDeleteRent={onDeleteRent}
         showToast={showToast}
       />
 
