@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "814016879682-gkmi6bum61gr9e902obfnripjiau703t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.taranveer.splitbills",
+            "certificate_hash": "1a6f8d4272f7935dd65f5f6b1ccdf64379cbed90"
+          }
+        },
+        {
           "client_id": "814016879682-55oa6uc952c1ulojtaj12qnjn1dpjian.apps.googleusercontent.com",
           "client_type": 3
         }
