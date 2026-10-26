@@ -3,6 +3,7 @@ import {
   ArchiveRestore,
   Bell,
   BellOff,
+  CircleDollarSign,
   ChevronDown,
   Check,
   Copy,
@@ -22,6 +23,7 @@ export default function DesktopSpacesTab({
   spaceFilter,
   onSpaceFilterChange,
   groupMetrics,
+  rentRecords = [],
   unreadMessagesByGroup = {},
   unreadChatByGroup = {},
   showUnreadIndicators = false,
@@ -120,6 +122,11 @@ export default function DesktopSpacesTab({
             const isArchived = archivedGroupIds.includes(group.id);
             const unreadCount = unreadMessagesByGroup[group.id] || 0;
             const unreadChatCount = unreadChatByGroup[group.id] || 0;
+            const hasRentDue = rentRecords.some((rent) => (
+              rent.groupId === group.id &&
+              Number(rent.shares?.[user?.id]) > 0 &&
+              !rent.payments?.[user?.id]?.paid
+            ));
 
             return (
               <article
@@ -151,6 +158,20 @@ export default function DesktopSpacesTab({
                           <h2 className="truncate text-base font-extrabold text-slate-900 transition-colors group-hover:text-blue-600 md:text-sm">
                             {group.name}
                           </h2>
+                          {hasRentDue && (
+                            <button
+                              type="button"
+                              title="Rent is due · Open rent details"
+                              aria-label={`Rent is due in ${group.name}. Open rent details.`}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                onOpenGroup(group.id, 'members');
+                              }}
+                              className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 transition-colors hover:bg-amber-200"
+                            >
+                              <CircleDollarSign size={15} />
+                            </button>
+                          )}
                           {showUnreadIndicators && unreadCount > 0 && !isArchived && (
                             <span
                               title={`${unreadCount} unread item${unreadCount === 1 ? '' : 's'}`}

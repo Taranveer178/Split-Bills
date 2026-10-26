@@ -37,8 +37,9 @@ export default function GroupRentPanel({
   onDeleteRent,
   showToast,
   compact = false,
+  initialMonth,
 }) {
-  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth);
+  const [selectedMonth, setSelectedMonth] = useState(() => initialMonth || getCurrentMonth());
   const [amount, setAmount] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isMarkingPaid, setIsMarkingPaid] = useState(false);

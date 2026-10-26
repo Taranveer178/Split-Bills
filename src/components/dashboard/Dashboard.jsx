@@ -25,6 +25,7 @@ import {
   Smartphone,
   FileDown,
   Home,
+  CircleDollarSign,
 } from 'lucide-react';
 import roomsplitIcon from '../../assets/roomsplit-icon.webp';
 import PrimaryNav from '../common/PrimaryNav';
@@ -906,6 +907,20 @@ export default function Dashboard({
                                   <h3 className="truncate text-sm font-semibold text-slate-900">
                                     {group.name}
                                   </h3>
+                                  {groupMetrics.myUnpaidRents.some((rent) => rent.groupId === group.id) && (
+                                    <button
+                                      type="button"
+                                      title="Rent is due · Open rent details"
+                                      aria-label={`Rent is due in ${group.name}. Open rent details.`}
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        handleOpenGroup(group.id, 'members');
+                                      }}
+                                      className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 transition-colors hover:bg-amber-200"
+                                    >
+                                      <CircleDollarSign size={15} />
+                                    </button>
+                                  )}
                                   {isMuted && (
                                     <BellOff size={10} className="flex-shrink-0 text-amber-500" />
                                   )}
@@ -1070,6 +1085,7 @@ export default function Dashboard({
                   spaceFilter={spaceFilter}
                   onSpaceFilterChange={setSpaceFilter}
                   groupMetrics={groupMetrics}
+                  rentRecords={rentRecords}
                   unreadMessagesByGroup={unreadMessagesByGroup}
                   unreadChatByGroup={unreadChatByGroup}
                   users={users}
@@ -1373,6 +1389,7 @@ export default function Dashboard({
                       spaceFilter={spaceFilter}
                       onSpaceFilterChange={setSpaceFilter}
                       groupMetrics={groupMetrics}
+                      rentRecords={rentRecords}
                       unreadMessagesByGroup={unreadMessagesByGroup}
                       unreadChatByGroup={unreadChatByGroup}
                       showUnreadIndicators
@@ -1931,14 +1948,13 @@ export default function Dashboard({
       {/* --- QUICK EXPENSE MODAL --- */}
       {quickExpenseOpen && (
         <div
-          className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-slate-900/40 p-0 sm:p-4 backdrop-blur-md"
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-md"
           onClick={() => !savingQuick && setQuickExpenseOpen(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-t-[32px] sm:rounded-[32px] border border-white/80 bg-white/90 p-5 sm:p-6 shadow-2xl backdrop-blur-2xl"
+            className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-[28px] border border-white/80 bg-white/95 p-5 shadow-2xl backdrop-blur-2xl sm:p-6"
           >
-            <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-slate-300/80 sm:hidden" />
             <div className="flex items-center justify-between border-b border-slate-200/60 pb-3.5">
               <div>
                 <h3 className="text-base font-extrabold text-slate-900">Quick Log Expense</h3>
