@@ -2099,14 +2099,14 @@ export default function Dashboard({
       {dailyRentReminderRecords.length > 0 &&
         createPortal(
           <div
-            className="fixed inset-0 z-[160] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-[160] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-md"
             onClick={() => setDailyRentReminderRecords([])}
           >
             <section
               role="dialog"
               aria-modal="true"
               aria-labelledby="daily-rent-reminder-title"
-              className="app-modal-surface max-h-[min(80dvh,40rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-white/70 bg-white p-5 shadow-2xl"
+              className="app-modal-surface max-h-[min(88dvh,42rem)] w-full max-w-md overflow-y-auto rounded-[28px] border border-white/80 bg-white/95 p-5 shadow-2xl backdrop-blur-2xl animate-in zoom-in-95 duration-200"
               onClick={(event) => event.stopPropagation()}
             >
               <header className="mb-4 flex items-start justify-between gap-3">

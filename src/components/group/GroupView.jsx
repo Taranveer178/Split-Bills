@@ -455,20 +455,30 @@ export default function GroupView({
         {showRentReminder &&
           createPortal(
             <div
-              className="fixed inset-0 z-[155] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm sm:hidden"
+              className="fixed inset-0 z-[155] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-md"
               onClick={() => setRentReminderDismissed(true)}
             >
               <section
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="rent-reminder-title"
-                className="w-full max-w-sm rounded-2xl border border-white/70 bg-white p-5 shadow-2xl"
+                className="app-modal-surface w-full max-w-sm rounded-[28px] border border-white/80 bg-white/95 p-5 shadow-2xl backdrop-blur-2xl animate-in zoom-in-95 duration-200"
                 onClick={(event) => event.stopPropagation()}
               >
                 <header className="mb-4 flex items-start justify-between gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
-                    <Home size={20} />
-                  </span>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                      <Home size={20} />
+                    </span>
+                    <div className="min-w-0">
+                      <h2 id="rent-reminder-title" className="text-lg font-bold text-slate-900">
+                        Rent is due
+                      </h2>
+                      <p className="mt-1 truncate text-sm text-slate-500">
+                        {group.name} · {new Date(`${currentRent.month}-01T00:00:00`).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                      </p>
+                    </div>
+                  </div>
                   <button
                     type="button"
                     onClick={() => setRentReminderDismissed(true)}
@@ -478,12 +488,6 @@ export default function GroupView({
                     <X size={17} />
                   </button>
                 </header>
-                <h2 id="rent-reminder-title" className="text-lg font-bold text-slate-900">
-                  Rent is due
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  {group.name} · {new Date(`${currentRent.month}-01T00:00:00`).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                </p>
                 <div className="my-4 rounded-xl bg-slate-50 p-4 text-center">
                   <p className="text-xs font-medium text-slate-500">Your share</p>
                   <p className="mt-1 font-mono text-2xl font-bold text-slate-900">
