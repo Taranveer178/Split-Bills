@@ -70,7 +70,7 @@ export default function ProfileTab({
         senderId: user.id,
         recipientId: user.id,
         title: 'Test Push Notification',
-        message: 'Push notifications are working correctly on RoomSplit!',
+        message: 'Push notifications are working correctly on SplitBills!',
         groupId: '',
       });
       setTestPushStatus('Success! Test push notification sent to your device.');
@@ -248,7 +248,7 @@ export default function ProfileTab({
     } catch (error) {
       console.error('Profile update error:', error);
       if (error.code === 'auth/email-already-in-use' || error.code === 'auth/credential-already-in-use') {
-        setLocalError('This email is already linked to Firebase. Enter its current Firebase password to link this RoomSplit profile.');
+        setLocalError('This email is already linked to Firebase. Enter its current Firebase password to link this SplitBills profile.');
       } else if (
         error.code === 'auth/invalid-credential'
         || error.code === 'auth/wrong-password'
@@ -329,7 +329,7 @@ export default function ProfileTab({
                 <Download size={20} />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-extrabold">Install RoomSplit</span>
+                <span className="block text-sm font-extrabold">Install SplitBills</span>
                 <span className="mt-0.5 block text-xs text-slate-500">
                   Get quick access from your home screen
                 </span>

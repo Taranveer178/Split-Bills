@@ -281,7 +281,7 @@ export default function AdminPanel() {
           <div className="mb-6 flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-white">
             <ShieldCheck size={21} />
           </div>
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">RoomSplit</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">SplitBills</p>
           <h1 className="mt-1 text-2xl font-bold text-slate-900">Admin sign in</h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-500">This area is restricted to the super administrator.</p>
           {error && <p role="alert" className="mt-4 rounded-lg bg-rose-50 px-3 py-2.5 text-sm text-rose-700">{error}</p>}

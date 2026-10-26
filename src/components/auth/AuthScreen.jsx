@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { AlertCircle, Eye, EyeOff, ArrowLeft, CheckCircle2, Moon, Sun } from 'lucide-react';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
+import { Capacitor } from '@capacitor/core';
 import {
   createUserWithEmailAndPassword,
   deleteUser,
@@ -8,6 +10,7 @@ import {
   sendPasswordResetEmail,
   signInAnonymously,
   signInWithEmailAndPassword,
+  signInWithCredential,
   signInWithPopup,
 } from 'firebase/auth';
 import roomsplitIcon from '../../assets/roomsplit-icon.webp';
@@ -96,7 +99,7 @@ export default function AuthScreen({
       case 'auth/account-exists-with-different-credential':
         return 'An account already uses this email with another sign-in method. Sign in with that method first.';
       case 'auth/credential-already-in-use':
-        return 'This Google account is already linked to another RoomSplit profile.';
+        return 'This Google account is already linked to another SplitBills profile.';
       default:
         return 'Could not complete the request. Please try again.';
     }
@@ -114,8 +117,19 @@ export default function AuthScreen({
 
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
-      const result = await signInWithPopup(auth, provider);
-      const googleUser = result.user;
+      let googleUser;
+      if (Capacitor.getPlatform() === 'android') {
+        const nativeResult = await FirebaseAuthentication.signInWithGoogle();
+        const idToken = nativeResult.credential?.idToken;
+        if (!idToken) {
+          throw new Error('Google sign-in did not return an ID token. Please try again.');
+        }
+        const result = await signInWithCredential(auth, GoogleAuthProvider.credential(idToken));
+        googleUser = result.user;
+      } else {
+        const result = await signInWithPopup(auth, provider);
+        googleUser = result.user;
+      }
       const userEmail = googleUser.email?.trim().toLowerCase();
       if (!userEmail) throw new Error('Google did not provide an email address for this account.');
       const authUsers = await onLoadUsers();
@@ -532,7 +546,7 @@ export default function AuthScreen({
         <div className="flex-1 flex flex-col justify-between">
           <div className="mobile-auth-hero relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-blue-600 px-7 pb-8 text-center">
             <div className="relative mb-6 flex h-[76px] w-[76px] items-center justify-center overflow-hidden rounded-[26px] border border-slate-200/80 bg-white p-2.5 shadow-[0_12px_30px_rgba(15,23,42,0.1)]">
-              <img src={roomsplitIcon} alt="RoomSplit Logo" className="h-full w-full rounded-[18px] object-cover" />
+              <img src={roomsplitIcon} alt="SplitBills logo" className="h-full w-full rounded-[18px] object-cover" />
             </div>
             <span className="relative rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white">
               Room Split
@@ -547,10 +561,10 @@ export default function AuthScreen({
 
           <div className="mobile-auth-panel w-full rounded-t-[28px] border-t border-slate-200/80 bg-white px-6 pt-6 pb-[max(2rem,env(safe-area-inset-bottom))] flex flex-col gap-3">
             <Button onClick={() => handleOpenSheet('login')} className="w-full h-11 text-sm">
-              Sign in to RoomSplit
+              Sign in to SplitBills
             </Button>
             <div className="text-center mt-1">
-              <span className="text-slate-500 text-xs">New to RoomSplit? </span>
+              <span className="text-slate-500 text-xs">New to SplitBills? </span>
               <button
                 type="button"
                 onClick={() => handleOpenSheet('signup')}
@@ -608,9 +622,9 @@ export default function AuthScreen({
           <div>
             <div className="flex items-center gap-3 mb-8">
               <div className="w-10 h-10 overflow-hidden bg-white rounded-xl p-1.5 flex items-center justify-center">
-                <img src={roomsplitIcon} alt="RoomSplit Logo" className="h-full w-full rounded-lg object-cover" />
+                <img src={roomsplitIcon} alt="SplitBills logo" className="h-full w-full rounded-lg object-cover" />
               </div>
-              <span className="text-lg font-bold tracking-tight">RoomSplit</span>
+              <span className="text-lg font-bold tracking-tight">SplitBills</span>
             </div>
             <h2 className="text-3xl font-bold leading-tight tracking-tight mb-3">
               Clear shared accounting for modern households.
@@ -635,7 +649,7 @@ export default function AuthScreen({
             </ul>
           </div>
 
-          <p className="text-slate-500 text-xs">© {new Date().getFullYear()} RoomSplit</p>
+          <p className="text-slate-500 text-xs">© {new Date().getFullYear()} SplitBills</p>
         </div>
 
         <div className="w-[55%] bg-white p-10 flex flex-col justify-center items-center">

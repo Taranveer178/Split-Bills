@@ -1,8 +1,12 @@
 {
-  "appId": "com.taranveer.roomsplit",
-  "appName": "RoomSplit",
+  "appId": "com.taranveer.splitbills",
+  "appName": "SplitBills",
   "webDir": "dist",
   "plugins": {
+    "FirebaseAuthentication": {
+      "skipNativeAuth": true,
+      "providers": ["google.com"]
+    },
     "PushNotifications": {
       "presentationOptions": ["badge", "sound", "alert"]
     },

@@ -7,20 +7,30 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:814016879682:android:2ce2c92bdb2f9735c310e7",
+        "mobilesdk_app_id": "1:814016879682:android:261e34acd0fc6c6c16a1db",
         "android_client_info": {
-          "package_name": "com.taranveer.roomsplit"
+          "package_name": "com.taranveer.splitbills"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "814016879682-55oa6uc952c1ulojtaj12qnjn1dpjian.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyC_OIt7n0Q1ECHVRRe8ePSodS3pDBDTwPo"
+          "current_key": "AIzaSyCHGBIm9yCvrHL2zbcD6Dxn83PdjYRkrlI"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "814016879682-55oa6uc952c1ulojtaj12qnjn1dpjian.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

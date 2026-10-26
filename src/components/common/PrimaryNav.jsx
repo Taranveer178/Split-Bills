@@ -135,19 +135,19 @@ export default function PrimaryNav({
           <button
             type="button"
             onClick={() => onNavigate('groups')}
-            aria-label="Go to RoomSplit home"
+            aria-label="Go to SplitBills home"
             className="flex w-full items-center gap-3 rounded-2xl px-2 py-1.5 text-left transition-opacity hover:opacity-90"
           >
             <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm border border-slate-200/70">
               <img
                 src={roomsplitIcon}
-                alt="RoomSplit"
+                alt="SplitBills"
                 className="h-full w-full rounded-full object-cover"
               />
             </span>
             <div>
               <span className="block text-base font-extrabold tracking-tight text-slate-900 leading-none">
-                RoomSplit
+                SplitBills
               </span>
               <span className="mt-1 block text-[11px] font-semibold text-blue-600 leading-none">
                 Shared Ledger
@@ -209,7 +209,7 @@ export default function PrimaryNav({
                 <Download size={17} />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="desktop-install-card__title block text-xs font-bold text-slate-900">Install RoomSplit</span>
+                <span className="desktop-install-card__title block text-xs font-bold text-slate-900">Install SplitBills</span>
                 <span className="desktop-install-card__description mt-0.5 block text-[10px] text-slate-500">
                   Add the app to your device
                 </span>

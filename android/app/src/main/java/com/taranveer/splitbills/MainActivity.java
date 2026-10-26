@@ -1,4 +1,4 @@
-package com.taranveer.roomsplit;
+package com.taranveer.splitbills;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -35,7 +35,7 @@ public class MainActivity extends BridgeActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             String channelId = "default";
             CharSequence name = "Default Notifications";
-            String description = "RoomSplit notifications and updates";
+            String description = "SplitBills notifications and updates";
             int importance = NotificationManager.IMPORTANCE_HIGH;
 
             NotificationChannel channel = new NotificationChannel(channelId, name, importance);

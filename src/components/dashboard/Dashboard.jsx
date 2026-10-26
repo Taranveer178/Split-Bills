@@ -715,7 +715,7 @@ export default function Dashboard({
         <button
           type="button"
           onClick={() => handleTabSwitch('groups')}
-          aria-label="Go to RoomSplit home"
+          aria-label="Go to SplitBills home"
           className="flex min-w-0 items-center gap-2 border-0 bg-transparent py-1 text-left shadow-none focus-visible:outline-none"
         >
           <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/90 bg-white shadow-sm">
@@ -2401,7 +2401,7 @@ export default function Dashboard({
               id="install-app-title"
               className="mt-4 text-center text-lg font-extrabold tracking-tight text-slate-900"
             >
-              Take RoomSplit with you
+              Take SplitBills with you
             </h2>
             <p className="mt-1.5 text-center text-sm leading-relaxed text-slate-500">
               Install the app for quick access and a full-screen experience.
@@ -2459,7 +2459,7 @@ export default function Dashboard({
               id="logout-confirmation-title"
               className="mt-4 text-base font-bold tracking-tight text-slate-900"
             >
-              Sign out of RoomSplit?
+              Sign out of SplitBills?
             </h2>
             <p
               id="logout-confirmation-description"

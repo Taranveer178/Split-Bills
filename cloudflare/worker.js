@@ -507,7 +507,18 @@ async function handlePushRequest(request, env) {
               data: { groupId, recipientId, url: '/' },
               android: {
                 priority: 'HIGH',
-                notification: { channel_id: 'default', sound: 'default' },
+                notification: {
+                  channel_id: 'default',
+                  sound: 'default',
+                  icon: 'ic_stat_roomsplit',
+                  color: '#2563EB',
+                },
+              },
+              webpush: {
+                notification: {
+                  icon: 'https://split-bills.taranveer.in/roomsplit-icon-192.png',
+                  badge: 'https://split-bills.taranveer.in/roomsplit-icon-192.png',
+                },
               },
               apns: { payload: { aps: { sound: 'default' } } },
             },

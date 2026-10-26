@@ -108,7 +108,7 @@ export default function MembersTab({
     try {
       if (navigator.share) {
         await navigator.share({
-          title: `Join ${group.name} on RoomSplit`,
+          title: `Join ${group.name} on SplitBills`,
           text: `Join our shared group "${group.name}". Use code: ${group.inviteCode}`,
           url: inviteUrl,
         });

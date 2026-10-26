@@ -1,7 +1,7 @@
 {
-  "name": "RoomSplit",
-  "short_name": "RoomSplit",
-  "description": "Effortlessly track flat expenses, split UPI bills, and manage roommate balances.",
+  "name": "SplitBills",
+  "short_name": "SplitBills",
+  "description": "Split bills with roommates, track rent and shared expenses, and settle up with clear balances.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
