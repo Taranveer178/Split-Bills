@@ -326,7 +326,7 @@ export default function App() {
       if (!isActive) return;
       const title = payload.notification?.title || payload.data?.title || 'SplitBills';
       const message = payload.notification?.body || payload.data?.message || 'You have a new update.';
-      setToast({ message: `${title}: ${message}`, type: 'success' });
+      setToast({ message: `${title}: ${message}`, type: 'success', brandIcon: true });
       window.setTimeout(() => setToast(null), 3000);
     }).then((stopListening) => {
       if (isActive) unsubscribe = stopListening;

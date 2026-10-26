@@ -512,6 +512,7 @@ async function handlePushRequest(request, env) {
                   sound: 'default',
                   icon: 'ic_stat_roomsplit',
                   color: '#2563EB',
+                  image: 'https://split-bills.taranveer.in/roomsplit-icon-192.png',
                 },
               },
               webpush: {

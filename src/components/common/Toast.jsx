@@ -19,7 +19,14 @@ export default function Toast({ toast }) {
         ) : (
           <CheckCircle2 size={16} className="text-emerald-400 flex-shrink-0" />
         )}
-        <span className="truncate">{toast.message}</span>
+        <span className="min-w-0 flex-1 truncate">{toast.message}</span>
+        {toast.brandIcon && (
+          <img
+            src="/roomsplit-icon-192.png"
+            alt=""
+            className="h-8 w-8 flex-shrink-0 rounded-lg object-cover"
+          />
+        )}
       </div>
     </div>
   );
