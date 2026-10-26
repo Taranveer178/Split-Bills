@@ -129,7 +129,7 @@ export default function TransactionsTab({
                       <p className="truncate text-sm font-bold text-slate-900">
                         {expense.title}
                       </p>
-                      <span className="rounded-lg bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                      <span className="rounded-lg bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-700">
                         {group?.name || 'Room'}
                       </span>
                     </div>
@@ -140,7 +140,7 @@ export default function TransactionsTab({
                       paid {formatCurrency(total, currency)} via {expense.paymentMethod || 'UPI'} ·{' '}
                       {expense.date}
                     </p>
-                    <p className="mt-0.5 max-w-[min(65vw,28rem)] truncate text-[11px] text-slate-500">
+                    <p className="mt-0.5 max-w-[min(65vw,28rem)] truncate text-xs text-slate-500">
                       <span className="font-semibold text-slate-600">Split: </span>
                       {splitNames.join(', ')}
                     </p>
@@ -164,7 +164,7 @@ export default function TransactionsTab({
                           ? `-${formatCurrency(Math.abs(myImpact), currency)}`
                           : formatCurrency(total, currency)}
                     </span>
-                    <span className="text-[10px] text-slate-400">
+                    <span className="text-xs text-slate-400">
                       {myImpact > 0.01
                         ? 'you lent'
                         : myImpact < -0.01

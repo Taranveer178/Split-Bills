@@ -185,7 +185,7 @@ export default function DesktopSpacesTab({
 
                   <div className="mt-3.5 grid grid-cols-2 gap-2 rounded-xl border border-white/80 bg-white/60 px-3 py-2 text-xs">
                     <div>
-                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      <span className="block text-xs font-bold uppercase tracking-wider text-slate-400 md:text-[10px]">
                         Room Spend
                       </span>
                       <span className="font-mono font-extrabold text-slate-800">
@@ -193,7 +193,7 @@ export default function DesktopSpacesTab({
                       </span>
                     </div>
                     <div className="min-w-0">
-                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      <span className="block text-xs font-bold uppercase tracking-wider text-slate-400 md:text-[10px]">
                         Latest Bill
                       </span>
                       <span className="block truncate font-semibold text-slate-700">
@@ -227,7 +227,7 @@ export default function DesktopSpacesTab({
                         type="button"
                         onClick={(event) => onCopyInvite(event, group)}
                         title="Copy invite code"
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200/80 bg-white/80 px-2 py-0.5 font-mono text-[10px] font-bold text-slate-600 hover:bg-white"
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200/80 bg-white/80 px-2 py-0.5 font-mono text-xs font-bold text-slate-600 hover:bg-white md:text-[10px]"
                       >
                         {copiedCodeId === group.id ? (
                           <Check size={10} className="text-emerald-600" />
@@ -247,7 +247,7 @@ export default function DesktopSpacesTab({
                         onQuickAdd(group.id);
                       }}
                       title="Quick add bill to this space"
-                      className="inline-flex h-7 items-center gap-1 rounded-xl bg-gradient-to-b from-blue-600 to-blue-600 px-2.5 text-[11px] font-bold text-white shadow-sm hover:opacity-95"
+                      className="inline-flex h-7 items-center gap-1 rounded-xl bg-gradient-to-b from-blue-600 to-blue-600 px-2.5 text-xs font-bold text-white shadow-sm hover:opacity-95"
                     >
                       <Plus size={12} />
                       <span>Bill</span>

@@ -690,7 +690,7 @@ export default function Dashboard({
               <div className="relative overflow-hidden rounded-[26px] border border-slate-200/80 bg-white p-4 text-slate-900 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.16)]">
                 <div className="relative z-10 flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                    <span className="text-xs font-bold uppercase tracking-widest text-slate-500">
                       Net Position
                     </span>
                     <div className="mt-0.5 flex items-baseline gap-2">
@@ -701,7 +701,7 @@ export default function Dashboard({
                             ? `-₹${Math.abs(groupMetrics.totalNetBalance).toFixed(0)}`
                             : '₹0'}
                       </span>
-                      <span className="rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                      <span className="rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
                         {groupMetrics.totalNetBalance > 0.01
                           ? 'To receive'
                           : groupMetrics.totalNetBalance < -0.01
@@ -724,13 +724,13 @@ export default function Dashboard({
                 {/* Inner Frosted Glass Pill Strip */}
                 <div className="relative z-10 mt-3 grid grid-cols-3 divide-x divide-slate-200 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-2 text-center">
                   <div>
-                    <p className="text-[10px] font-medium text-slate-500">To Receive</p>
+                    <p className="text-xs font-medium text-slate-500">To Receive</p>
                     <p className="mt-0.5 font-mono text-xs font-extrabold text-emerald-700">
                       +₹{groupMetrics.totalOwedToYou.toFixed(0)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-medium text-slate-500">To Pay</p>
+                    <p className="text-xs font-medium text-slate-500">To Pay</p>
                     <p className="mt-0.5 font-mono text-xs font-extrabold text-rose-700">
                       -₹{groupMetrics.totalYouOwe.toFixed(0)}
                     </p>
@@ -740,7 +740,7 @@ export default function Dashboard({
                     onClick={() => handleTabSwitch('monthly')}
                     className="text-center"
                   >
-                    <p className="text-[10px] font-medium text-slate-500">
+                    <p className="text-xs font-medium text-slate-500">
                       {monthlySummary.monthLabel.split(' ')[0]} Share
                     </p>
                     <p className="mt-0.5 font-mono text-xs font-extrabold text-slate-900">
@@ -759,7 +759,7 @@ export default function Dashboard({
                     setMobileSection('spaces');
                   }}
                   aria-pressed={mobileSection === 'spaces' && spaceFilter === 'active'}
-                  className={`flex h-8 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-semibold transition-all duration-200 ${
+                  className={`flex h-8 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-xs font-semibold transition-all duration-200 ${
                     mobileSection === 'spaces' && spaceFilter === 'active'
                       ? 'bg-gradient-to-b from-blue-600 to-blue-600 text-white shadow-sm'
                       : 'text-slate-600 hover:text-slate-900'
@@ -775,7 +775,7 @@ export default function Dashboard({
                     setMobileSection('spaces');
                   }}
                   aria-pressed={mobileSection === 'spaces' && spaceFilter === 'archived'}
-                  className={`flex h-8 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-semibold transition-all duration-200 ${
+                  className={`flex h-8 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-xs font-semibold transition-all duration-200 ${
                     mobileSection === 'spaces' && spaceFilter === 'archived'
                       ? 'bg-gradient-to-b from-blue-600 to-blue-600 text-white shadow-sm'
                       : 'text-slate-600 hover:text-slate-900'
@@ -788,7 +788,7 @@ export default function Dashboard({
                   type="button"
                   onClick={() => setMobileSection('dues')}
                   aria-pressed={mobileSection === 'dues'}
-                  className={`flex h-8 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-semibold transition-all duration-200 ${
+                  className={`flex h-8 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-xs font-semibold transition-all duration-200 ${
                     mobileSection === 'dues'
                       ? 'bg-gradient-to-b from-blue-600 to-blue-600 text-white shadow-sm'
                       : 'text-slate-600 hover:text-slate-900'
@@ -858,7 +858,7 @@ export default function Dashboard({
                                     </span>
                                   )}
                                 </div>
-                                <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                                <div className="flex items-center gap-1.5 text-xs text-slate-500">
                                   <span>{group.members.length} members</span>
                                   <span>·</span>
                                   <span>{formatCurrency(metrics.roomSpend, group.currency, 0)}</span>
@@ -972,7 +972,7 @@ export default function Dashboard({
                                 0
                               )}
                             </span>
-                            <span className="rounded-xl bg-gradient-to-b from-blue-600 to-blue-600 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
+                              <span className="rounded-xl bg-gradient-to-b from-blue-600 to-blue-600 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
                               Settle
                             </span>
                           </div>

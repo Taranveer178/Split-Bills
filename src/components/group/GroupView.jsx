@@ -128,7 +128,7 @@ export default function GroupView({
                 <h1 className="text-sm sm:text-base leading-tight font-extrabold text-slate-900 truncate tracking-tight">
                   {group.name}
                 </h1>
-                <p className="text-[11px] leading-tight font-semibold text-slate-500 mt-0.5 truncate">
+                <p className="text-xs leading-tight font-semibold text-slate-500 mt-0.5 truncate">
                   {group.members.length} members · {formatCurrency(totalRoomSpend, group.currency, 0)} spent
                 </p>
               </div>

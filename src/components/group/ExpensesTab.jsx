@@ -285,7 +285,7 @@ export default function ExpensesTab({
                       <h3 className="font-bold text-slate-900 text-xs sm:text-sm truncate">
                         {getExpenseTitle(exp)}
                       </h3>
-                      <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                      <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
                         {exp.paymentMethod || 'UPI'}
                       </span>
                     </div>
@@ -299,7 +299,7 @@ export default function ExpensesTab({
                         {formatCurrency(exp.totalAmount, currency)}
                       </span>{' '}
                     </p>
-                    <p className="mt-0.5 max-w-[min(65vw,28rem)] truncate text-[11px] text-slate-500">
+                    <p className="mt-0.5 max-w-[min(65vw,28rem)] truncate text-xs text-slate-500">
                       <span className="font-semibold text-slate-600">Split: </span>
                       {participants.map(getMemberName).join(', ')}
                     </p>
@@ -327,9 +327,9 @@ export default function ExpensesTab({
                         <span>{statusAmount}</span>
                       </div>
                     ) : (
-                      <span className="text-[11px] font-medium text-slate-400">Not involved</span>
+                      <span className="text-xs font-medium text-slate-400">Not involved</span>
                     )}
-                    <div className="text-[10px] text-slate-400 mt-0.5">{exp.date}</div>
+                    <div className="text-xs text-slate-400 mt-0.5">{exp.date}</div>
                   </div>
 
                   {isSelectMode ? (
