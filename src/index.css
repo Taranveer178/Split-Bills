@@ -5,12 +5,19 @@
 @layer base {
   html,
   body {
-    background-color: #eef2f9;
+    background-color: #fff;
     color: #0f172a;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     -webkit-font-smoothing: antialiased;
     overscroll-behavior-y: none;
     user-select: none;
+  }
+}
+
+@media (min-width: 768px) {
+  html,
+  body {
+    background-color: #eef2f9;
   }
 }
 

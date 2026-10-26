@@ -94,9 +94,9 @@ export default function GroupView({
   };
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[#EEF2F9] font-sans md:flex-row">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-white font-sans md:flex-row md:bg-[#EEF2F9]">
       {/* Soft Refractive Mesh Backdrop */}
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+      <div className="pointer-events-none fixed inset-0 z-0 hidden overflow-hidden md:block">
         <div className="absolute -top-20 right-10 h-72 w-72 rounded-full bg-blue-300/20 blur-3xl" />
         <div className="absolute bottom-10 left-10 h-72 w-72 rounded-full bg-indigo-300/20 blur-3xl" />
       </div>

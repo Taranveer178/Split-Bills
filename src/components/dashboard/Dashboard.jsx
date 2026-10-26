@@ -580,9 +580,9 @@ export default function Dashboard({
   };
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[#EEF2F9] font-sans md:flex-row">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-white font-sans md:flex-row md:bg-[#EEF2F9]">
       {/* Soft Refractive Mesh Backdrop for Liquid Glass */}
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+      <div className="pointer-events-none fixed inset-0 z-0 hidden overflow-hidden md:block">
         <div className="absolute -top-24 -left-24 h-80 w-80 rounded-full bg-blue-300/25 blur-3xl" />
         <div className="absolute top-1/3 -right-24 h-80 w-80 rounded-full bg-indigo-300/20 blur-3xl" />
         <div className="absolute -bottom-24 left-1/4 h-72 w-72 rounded-full bg-cyan-200/25 blur-3xl" />

@@ -509,23 +509,21 @@ export default function AuthScreen({ users = [], onLoadUsers, onSaveUser, onLogi
   );
 
   return (
-    <main className="min-h-[100dvh] w-full bg-[#F8FAFC] font-sans flex items-center justify-center md:p-6 relative overflow-hidden">
+    <main className="min-h-[100dvh] w-full bg-white font-sans flex items-center justify-center md:bg-[#F8FAFC] md:p-6 relative overflow-hidden">
       {/* MOBILE LAYOUT */}
-      <div className="md:hidden fixed inset-0 flex flex-col w-full h-full overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-slate-900">
+      <div className="md:hidden fixed inset-0 flex flex-col w-full h-full overflow-hidden bg-white">
         <div className="flex-1 flex flex-col justify-between">
           <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-7 pb-8 text-center">
-            <div className="pointer-events-none absolute -top-20 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-sky-300/20 blur-3xl" />
-            <div className="pointer-events-none absolute bottom-8 -left-20 h-48 w-48 rounded-full bg-blue-400/20 blur-3xl" />
-            <div className="relative mb-6 flex h-[76px] w-[76px] items-center justify-center overflow-hidden rounded-[26px] border border-white/80 bg-white p-2.5 shadow-[0_16px_40px_rgba(15,23,42,0.25)]">
+            <div className="relative mb-6 flex h-[76px] w-[76px] items-center justify-center overflow-hidden rounded-[26px] border border-slate-100 bg-white p-2.5 shadow-[0_12px_30px_rgba(15,23,42,0.1)]">
               <img src={roomsplitIcon} alt="RoomSplit Logo" className="h-full w-full rounded-[18px] object-cover" />
             </div>
-            <span className="relative rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-blue-100 shadow-sm backdrop-blur-sm">
+            <span className="relative rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">
               Room Split
             </span>
-            <h1 className="relative mt-4 max-w-sm text-[32px] font-bold leading-[1.08] tracking-[-0.045em] text-white">
+            <h1 className="relative mt-4 max-w-sm text-[32px] font-bold leading-[1.08] tracking-[-0.045em] text-slate-900">
               Split bills. Stay balanced.
             </h1>
-            <p className="relative mt-3 max-w-xs text-sm leading-relaxed text-blue-100/85">
+            <p className="relative mt-3 max-w-xs text-sm leading-relaxed text-slate-600">
               Track shared apartment expenses, UPI reimbursements, and roommate balances without clutter.
             </p>
           </div>
