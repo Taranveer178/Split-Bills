@@ -19,7 +19,8 @@ import {
   CheckSquare,
   Check,
   Search,
-  Loader2
+  Loader2,
+  Reply,
 } from 'lucide-react';
 import { 
   collection, 
@@ -238,6 +239,7 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
   const [typingMessages, setTypingMessages] = useState([]);
   const [typingNow, setTypingNow] = useState(0);
   const [input, setInput] = useState('');
+  const [replyingTo, setReplyingTo] = useState(null);
   const [pickerTab, setPickerTab] = useState(null);
   const [activeStickerPack, setActiveStickerPack] = useState('Reactions');
   const [activeEmojiCat, setActiveEmojiCat] = useState('Recent');
@@ -272,6 +274,7 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
   const fileInputRef = useRef(null);
   const messageInputRef = useRef(null);
   const pressTimerRef = useRef(null);
+  const touchStartRef = useRef(null);
   const typingStopTimerRef = useRef(null);
   const typingDocRef = useMemo(
     () => (db && group?.id && currentUser?.id
@@ -388,6 +391,33 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
 
   const getUser = (userId) => {
     return users.find(u => u.id === userId) || { username: 'Roommate' };
+  };
+
+  const getReplySummary = (message) => {
+    if (message?.text?.trim()) return message.text.trim();
+    if (message?.attachmentType === 'image') return 'Photo';
+    if (message?.attachmentType === 'gif') return 'GIF';
+    if (message?.attachmentType === 'video') return 'Video';
+    if (message?.attachmentType === 'audio') return 'Audio';
+    if (message?.attachmentName) return message.attachmentName;
+    if (message?.type === 'sticker') return 'Sticker';
+    return 'Message';
+  };
+
+  const createReplyReference = (message) => ({
+    id: message.id || '',
+    senderId: message.senderId || '',
+    senderName: message.senderName || getUser(message.senderId).username,
+    text: message.text || '',
+    type: message.type || 'text',
+    attachmentType: message.attachmentType || '',
+    attachmentName: message.attachmentName || '',
+  });
+
+  const beginReply = (message) => {
+    setReplyingTo(createReplyReference(message));
+    setActiveContextMenu(null);
+    window.requestAnimationFrame(() => messageInputRef.current?.focus());
   };
 
   const formatMessageTime = (dateObj) => {
@@ -547,8 +577,8 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
     let xPos = rect.left;
     xPos = Math.max(16, Math.min(xPos, windowWidth - exactWidth - 16));
 
-    // Calculate vertical position (compact preview capped at 3-4 lines)
-    const totalEstimatedHeight = 290;
+    // Calculate vertical position for the reaction bar, preview, and action list.
+    const totalEstimatedHeight = 340;
     let yPos = rect.top - 50;
     if (yPos + totalEstimatedHeight > windowHeight - 16) {
       yPos = windowHeight - totalEstimatedHeight - 16;
@@ -570,6 +600,8 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
   // FIXED: Reaction popup hold time reduced to 280ms for instant feedback
   const handleTouchStart = (event, msg, isMe) => {
     if (msg.isDeletedForEveryone || isSelectMode) return;
+    const touch = event.touches?.[0];
+    touchStartRef.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
     const currentTarget = event.currentTarget;
 
     pressTimerRef.current = setTimeout(() => {
@@ -578,10 +610,20 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
     }, 380);
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (event, message) => {
     if (pressTimerRef.current) {
       clearTimeout(pressTimerRef.current);
       pressTimerRef.current = null;
+    }
+    const start = touchStartRef.current;
+    const touch = event.changedTouches?.[0];
+    touchStartRef.current = null;
+    if (!start || !touch || !message || isSelectMode || message.isDeletedForEveryone) return;
+
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    if (Math.abs(deltaX) >= 64 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
+      beginReply(message);
     }
   };
 
@@ -687,12 +729,14 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
         senderId: currentUser.id,
         senderName: currentUser.username,
         text: cleanText,
+        replyTo: replyingTo,
         timestamp: getTimestamp(),
         createdAt: serverTimestamp(),
         deletedFor: [],
         reactions: {}
       });
 
+      setReplyingTo(null);
       notifyGroupMembers(cleanText);
     } catch (err) {
       console.error("Error sending message:", err);
@@ -712,12 +756,14 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
         senderId: currentUser.id,
         senderName: currentUser.username,
         text: sticker,
+        replyTo: replyingTo,
         type: 'sticker',
         timestamp: getTimestamp(),
         createdAt: serverTimestamp(),
         deletedFor: [],
         reactions: {}
       });
+      setReplyingTo(null);
       notifyGroupMembers('Sent a sticker');
     } catch (error) {
       console.error('Error sending sticker:', error);
@@ -734,6 +780,7 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
         senderId: currentUser.id,
         senderName: currentUser.username,
         text: '',
+        replyTo: replyingTo,
         attachmentType: 'gif',
         attachmentName: 'reaction.gif',
         attachmentData: gifUrl,
@@ -742,6 +789,7 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
         deletedFor: [],
         reactions: {}
       });
+      setReplyingTo(null);
       notifyGroupMembers('Sent a GIF');
     } catch (error) {
       console.error('Error sending gif:', error);
@@ -797,6 +845,7 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
         senderId: currentUser.id,
         senderName: currentUser.username,
         text: '',
+        replyTo: replyingTo,
         attachmentType,
         attachmentName: file.name || (isGif ? 'sticker.gif' : 'keyboard-media.png'),
         attachmentMimeType: file.type || 'application/octet-stream',
@@ -806,6 +855,7 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
         deletedFor: [],
         reactions: {}
       });
+      setReplyingTo(null);
       const attachmentLabel = attachmentType === 'image' ? 'photo' : attachmentType;
       notifyGroupMembers(`Sent a ${attachmentLabel}`);
     } catch (error) {
@@ -1164,7 +1214,8 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
                       <div 
                         onClick={() => handleBubbleClick(msg)}
                         onTouchStart={(e) => handleTouchStart(e, msg, isMe)}
-                        onTouchEnd={handleTouchEnd}
+                        onTouchEnd={(event) => handleTouchEnd(event, msg)}
+                        onTouchCancel={handleTouchEnd}
                         onMouseDown={(e) => handleTouchStart(e, msg, isMe)}
                         onMouseUp={handleTouchEnd}
                         onMouseLeave={handleTouchEnd}
@@ -1209,6 +1260,25 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
                               <div className={`px-3 pt-2 text-[10px] font-semibold italic flex items-center gap-1 ${isMe ? 'text-sky-100/80' : 'text-slate-400'}`}>
                                 <CornerUpRight size={11} />
                                 <span>Forwarded from {msg.forwardedFromGroupName}</span>
+                              </div>
+                            )}
+
+                            {msg.replyTo && (
+                              <div className={`mx-2 mt-2 rounded-lg border-l-[3px] px-2.5 py-1.5 ${
+                                isMe ? 'border-white/80 bg-white/15' : 'border-sky-500 bg-slate-100/90'
+                              }`}>
+                                <span className={`block truncate text-[10px] font-bold ${
+                                  isMe ? 'text-sky-50' : 'text-sky-700'
+                                }`}>
+                                  {msg.replyTo.senderId === currentUser.id
+                                    ? 'You'
+                                    : msg.replyTo.senderName || 'Roommate'}
+                                </span>
+                                <span className={`line-clamp-2 whitespace-pre-wrap break-words text-[11px] leading-snug ${
+                                  isMe ? 'text-white/90' : 'text-slate-600'
+                                }`}>
+                                  {getReplySummary(msg.replyTo)}
+                                </span>
                               </div>
                             )}
 
@@ -1417,6 +1487,15 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
                   <Copy size={15} className="text-slate-400" />
                 </button>
               )}
+
+              <button
+                type="button"
+                onClick={() => beginReply(activeContextMenu.message)}
+                className="flex w-full items-center justify-between px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 transition-colors"
+              >
+                <span>Reply</span>
+                <Reply size={15} className="text-slate-400" />
+              </button>
 
               <button
                 type="button"
@@ -1751,6 +1830,28 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {replyingTo && (
+            <div className="mx-auto mb-2 flex max-w-3xl items-center gap-2 rounded-2xl border border-sky-100 bg-white/95 px-3 py-2 shadow-sm">
+              <Reply size={16} className="flex-shrink-0 text-sky-600" />
+              <div className="min-w-0 flex-1 border-l-2 border-sky-500 pl-2">
+                <p className="truncate text-[11px] font-bold text-sky-700">
+                  Replying to {replyingTo.senderId === currentUser.id ? 'yourself' : replyingTo.senderName || 'Roommate'}
+                </p>
+                <p className="line-clamp-2 whitespace-pre-wrap break-words text-xs leading-snug text-slate-600">
+                  {getReplySummary(replyingTo)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReplyingTo(null)}
+                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                aria-label="Cancel reply"
+              >
+                <X size={15} />
+              </button>
             </div>
           )}
 

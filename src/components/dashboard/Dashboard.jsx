@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Plus,
@@ -24,6 +24,7 @@ import {
   FileDown,
   Home,
   CircleDollarSign,
+  Check,
 } from 'lucide-react';
 import roomsplitIcon from '../../assets/roomsplit-icon.webp';
 import PrimaryNav from '../common/PrimaryNav';
@@ -77,6 +78,16 @@ export default function Dashboard({
 
   // Activity Drawer / Notification Center Popup State
   const [isActivityOpen, setIsActivityOpen] = useState(false);
+  const [activityContextNotification, setActivityContextNotification] = useState(null);
+  const [selectedActivityIds, setSelectedActivityIds] = useState(new Set());
+  const [activityDeleteIds, setActivityDeleteIds] = useState(null);
+  const [isDeletingActivity, setIsDeletingActivity] = useState(false);
+  const activityPressTimerRef = useRef(null);
+  const activityLongPressRef = useRef(false);
+
+  useEffect(() => () => {
+    if (activityPressTimerRef.current) clearTimeout(activityPressTimerRef.current);
+  }, []);
 
   // Quick Expense Modal State
   const [quickExpenseOpen, setQuickExpenseOpen] = useState(false);
@@ -309,10 +320,58 @@ export default function Dashboard({
     onOpenGroup?.(groupId, subTab, unreadChatByGroup[groupId] || 0);
   };
 
-  const handleClearAllActivity = () => {
-    if (onClearNotifications) {
-      onClearNotifications();
+  const handleClearAllActivity = async () => {
+    if (!onClearNotifications) return;
+    try {
+      await onClearNotifications(userNotifications.map((notification) => notification.id));
       showToast?.('All activity notifications cleared');
+    } catch (error) {
+      console.error('Could not clear activity notifications:', error);
+      showToast?.('Could not clear activity. Please try again.', 'error');
+    }
+  };
+
+  const startActivityLongPress = (event, notification) => {
+    if (event.type === 'mousedown' && event.button !== 0) return;
+    if (activityPressTimerRef.current) clearTimeout(activityPressTimerRef.current);
+    activityLongPressRef.current = false;
+    activityPressTimerRef.current = setTimeout(() => {
+      activityLongPressRef.current = true;
+      setActivityContextNotification(notification);
+    }, 450);
+  };
+
+  const stopActivityLongPress = () => {
+    if (activityPressTimerRef.current) {
+      clearTimeout(activityPressTimerRef.current);
+      activityPressTimerRef.current = null;
+    }
+  };
+
+  const toggleActivitySelection = (notificationId) => {
+    setSelectedActivityIds((previous) => {
+      const next = new Set(previous);
+      if (next.has(notificationId)) next.delete(notificationId);
+      else next.add(notificationId);
+      return next;
+    });
+  };
+
+  const confirmActivityDeletion = async () => {
+    if (!activityDeleteIds?.length || !onClearNotifications || isDeletingActivity) return;
+    setIsDeletingActivity(true);
+    try {
+      await onClearNotifications(activityDeleteIds);
+      setSelectedActivityIds((previous) => (
+        new Set([...previous].filter((id) => !activityDeleteIds.includes(id)))
+      ));
+      setActivityDeleteIds(null);
+      showToast?.('Activity deleted');
+    } catch (error) {
+      console.error('Could not delete activity:', error);
+      showToast?.('Could not delete activity. Please try again.', 'error');
+    } finally {
+      setIsDeletingActivity(false);
     }
   };
 
@@ -1837,7 +1896,25 @@ export default function Dashboard({
               </div>
 
               <div className="flex items-center gap-2">
-                {userNotifications.length > 0 && (
+                {selectedActivityIds.size > 0 ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setActivityDeleteIds([...selectedActivityIds])}
+                      className="inline-flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-100 transition-colors shadow-sm"
+                    >
+                      <Trash2 size={12} />
+                      <span>Delete ({selectedActivityIds.size})</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedActivityIds(new Set())}
+                      className="rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : userNotifications.length > 0 && (
                   <button
                     type="button"
                     onClick={handleClearAllActivity}
@@ -1873,10 +1950,32 @@ export default function Dashboard({
                 userNotifications.map((n) => {
                   const grp = myGroups.find((g) => g.id === n.groupId);
                   const isChat = /chat|message/i.test(n.type || n.category || '');
+                  const isSelected = selectedActivityIds.has(n.id);
+                  const isRent = /rent/i.test(n.type || n.category || '');
                   return (
                     <div
                       key={n.id}
+                      onTouchStart={(event) => startActivityLongPress(event, n)}
+                      onTouchEnd={stopActivityLongPress}
+                      onTouchCancel={stopActivityLongPress}
+                      onMouseDown={(event) => startActivityLongPress(event, n)}
+                      onMouseUp={stopActivityLongPress}
+                      onMouseLeave={stopActivityLongPress}
+                      onContextMenu={(event) => {
+                        event.preventDefault();
+                        stopActivityLongPress();
+                        activityLongPressRef.current = true;
+                        setActivityContextNotification(n);
+                      }}
                       onClick={() => {
+                        if (activityLongPressRef.current) {
+                          activityLongPressRef.current = false;
+                          return;
+                        }
+                        if (selectedActivityIds.size > 0) {
+                          toggleActivitySelection(n.id);
+                          return;
+                        }
                         if (!n.read && onMarkNotificationsRead) {
                           onMarkNotificationsRead([n.id]);
                         }
@@ -1886,14 +1985,22 @@ export default function Dashboard({
                         }
                       }}
                       className={`liquid-glass-interactive group relative flex items-start justify-between gap-3 rounded-2xl p-3 cursor-pointer border ${
-                        !n.read ? 'border-blue-200/90 bg-blue-50/40' : 'border-slate-200/60 bg-white/80'
+                        isSelected
+                          ? 'border-blue-400 bg-blue-50/70 ring-1 ring-blue-300'
+                          : !n.read
+                            ? 'border-blue-200/90 bg-blue-50/40'
+                            : 'border-slate-200/60 bg-white/80'
                       }`}
                     >
                       <div className="flex items-start gap-2.5 min-w-0">
                         <div className={`mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg ${
-                          isChat ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'
+                          isSelected
+                            ? 'bg-blue-600 text-white'
+                            : isChat
+                              ? 'bg-blue-50 text-blue-600'
+                              : 'bg-emerald-50 text-emerald-600'
                         }`}>
-                          {isChat ? <MessageSquare size={13} /> : <Receipt size={13} />}
+                          {isSelected ? <Check size={14} /> : isChat ? <MessageSquare size={13} /> : isRent ? <Home size={13} /> : <Receipt size={13} />}
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-semibold text-slate-900 leading-snug">
@@ -1919,6 +2026,91 @@ export default function Dashboard({
                 })
               )}
             </div>
+
+            {activityContextNotification && (
+              <div
+                className="fixed inset-0 z-[100] flex items-end justify-center bg-slate-950/35 p-3 backdrop-blur-sm sm:items-center"
+                onClick={() => {
+                  setActivityContextNotification(null);
+                  activityLongPressRef.current = false;
+                }}
+              >
+                <div
+                  className="w-full max-w-sm overflow-hidden rounded-3xl border border-white/80 bg-white/95 p-2 shadow-2xl backdrop-blur-2xl"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <p className="line-clamp-2 px-3 py-2 text-xs font-medium text-slate-500">
+                    {activityContextNotification.message || 'Activity'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedActivityIds((previous) => new Set([
+                        ...previous,
+                        activityContextNotification.id,
+                      ]));
+                      setActivityContextNotification(null);
+                      activityLongPressRef.current = false;
+                    }}
+                    className="flex w-full items-center justify-between border-t border-slate-100 px-3 py-3 text-sm font-semibold text-slate-800"
+                  >
+                    <span>Select</span>
+                    <Check size={16} className="text-slate-400" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActivityDeleteIds([activityContextNotification.id]);
+                      setActivityContextNotification(null);
+                      activityLongPressRef.current = false;
+                    }}
+                    className="flex w-full items-center justify-between border-t border-slate-100 px-3 py-3 text-sm font-semibold text-rose-600"
+                  >
+                    <span>Delete…</span>
+                    <Trash2 size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActivityContextNotification(null);
+                      activityLongPressRef.current = false;
+                    }}
+                    className="mt-1 w-full rounded-2xl bg-slate-100 px-3 py-3 text-sm font-bold text-slate-700"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {activityDeleteIds && (
+              <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/35 p-4 backdrop-blur-sm">
+                <div className="w-full max-w-xs rounded-3xl border border-white/80 bg-white/95 p-5 text-center shadow-2xl backdrop-blur-2xl">
+                  <h3 className="text-sm font-extrabold text-slate-900">
+                    Delete {activityDeleteIds.length === 1 ? 'this activity' : `${activityDeleteIds.length} activities`}?
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500">This only removes the selected activity from your feed.</p>
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActivityDeleteIds(null)}
+                      disabled={isDeletingActivity}
+                      className="flex-1 rounded-xl bg-slate-100 px-3 py-2.5 text-xs font-bold text-slate-700 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={confirmActivityDeletion}
+                      disabled={isDeletingActivity}
+                      className="flex-1 rounded-xl bg-rose-600 px-3 py-2.5 text-xs font-bold text-white disabled:opacity-50"
+                    >
+                      {isDeletingActivity ? 'Deleting…' : 'Delete'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -800,7 +800,6 @@ export default function App() {
       { month: 'long', year: 'numeric' }
     );
     const rentNotifications = group.members
-      .filter((memberId) => memberId !== activeUserId)
       .map((recipientId) => ({
         id: `rent_added_${newRent.id}_${recipientId}`,
         recipientId,
@@ -811,7 +810,7 @@ export default function App() {
         type: 'RENT_ADDED',
         message: `${senderName} added ${monthLabel} rent in ${group.name}. Your share is ${formatCurrency(newRent.shares?.[recipientId], newRent.currency)}.`,
         createdAt,
-        read: false,
+        read: recipientId === activeUserId,
       }));
 
     try {
@@ -820,6 +819,7 @@ export default function App() {
       console.warn('Rent activity notification failed:', error);
     }
     rentNotifications.forEach((notification) => {
+      if (notification.recipientId === activeUserId) return;
       const recipient = users.find((item) => item.id === notification.recipientId);
       if (recipient?.mutedGroupIds?.includes(group.id)) return;
       triggerPushNotification({
