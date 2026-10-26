@@ -116,13 +116,13 @@ export default function GroupView({
 
       <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {/* LIQUID GLASS HEADER */}
-        <header className="group-view-header z-30 flex h-14 sm:h-16 flex-shrink-0 items-center justify-between border-b border-white/80 bg-white/75 px-3 sm:px-5 backdrop-blur-2xl shadow-sm">
+        <header className="group-view-header z-30 flex h-14 min-w-0 flex-shrink-0 items-center justify-between gap-1 border-b border-white/80 bg-white/75 px-2 sm:h-16 sm:gap-3 sm:px-5 backdrop-blur-2xl shadow-sm">
           {/* Left: Back + Group Identity */}
-          <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
+          <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2 sm:mr-2">
             <button
               type="button"
               onClick={() => onNavigateDashboard(dashboardTab)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 hover:bg-white/80 hover:text-slate-900 flex-shrink-0 transition-colors"
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl text-slate-600 transition-colors hover:bg-white/80 hover:text-slate-900 sm:h-9 sm:w-9"
               title="Back to Dashboard"
               aria-label="Back to dashboard"
             >
@@ -131,10 +131,10 @@ export default function GroupView({
 
             <div
               onClick={() => handleTabSelect('expenses')}
-              className="flex items-center gap-2.5 min-w-0 cursor-pointer select-none"
+              className="flex min-w-0 flex-1 cursor-pointer select-none items-center gap-2 sm:gap-2.5"
               title="View Expenses"
             >
-              <span className="flex h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-blue-600 to-blue-600 text-sm font-extrabold text-white shadow-sm">
+              <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-blue-600 to-blue-600 text-sm font-extrabold text-white shadow-sm sm:h-10 sm:w-10">
                 {group.imageDataUrl ? (
                   <img src={group.imageDataUrl} alt="" className="h-full w-full object-cover" />
                 ) : (
@@ -142,7 +142,7 @@ export default function GroupView({
                 )}
               </span>
 
-              <div className="flex flex-col justify-center min-w-0">
+              <div className="flex min-w-0 flex-1 flex-col justify-center">
                 <h1 className="text-sm sm:text-base leading-tight font-extrabold text-slate-900 truncate tracking-tight">
                   {group.name}
                 </h1>
@@ -154,26 +154,26 @@ export default function GroupView({
           </div>
 
           {/* Right: Segmented Liquid Glass Tabs + Quick Add */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="group-view-tabbar flex items-center gap-1 rounded-2xl bg-slate-200/70 p-1 backdrop-blur-md">
+          <div className="flex flex-shrink-0 items-center gap-1 sm:gap-2">
+            <div className="group-view-tabbar flex items-center gap-0.5 rounded-2xl bg-slate-200/70 p-0.5 backdrop-blur-md sm:gap-1 sm:p-1">
               <button
                 type="button"
                 onClick={() => handleTabSelect('balances')}
-                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                className={`flex items-center gap-1 rounded-xl px-2 py-2 text-xs font-bold transition-all sm:gap-1.5 sm:px-3 ${
                   activeTab === 'balances'
                     ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
                 title="Balances"
               >
-                <Wallet size={19} />
+                <Wallet size={18} />
                 <span className="hidden sm:inline">Balances</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleTabSelect('chat')}
-                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                className={`flex items-center gap-1 rounded-xl px-2 py-2 text-xs font-bold transition-all sm:gap-1.5 sm:px-3 ${
                   activeTab === 'chat'
                     ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
@@ -186,7 +186,7 @@ export default function GroupView({
                   : 'Chat'}
               >
                 <span className="relative inline-flex">
-                  <MessageSquare size={19} />
+                  <MessageSquare size={18} />
                   {unreadChatCount > 0 && activeTab !== 'chat' && (
                     <span
                       aria-hidden="true"
@@ -200,14 +200,14 @@ export default function GroupView({
               <button
                 type="button"
                 onClick={() => handleTabSelect('members')}
-                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                className={`flex items-center gap-1 rounded-xl px-2 py-2 text-xs font-bold transition-all sm:gap-1.5 sm:px-3 ${
                   activeTab === 'members'
                     ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
                 title="Room Settings"
               >
-                <Settings size={19} />
+                <Settings size={18} />
                 <span className="hidden sm:inline">Settings</span>
               </button>
             </div>

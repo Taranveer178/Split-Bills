@@ -59,7 +59,6 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [], 
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedBreakdown, setSelectedBreakdown] = useState(null);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
-  const [pickerYear, setPickerYear] = useState(() => new Date().getFullYear());
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -71,7 +70,6 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [], 
   });
 
   const openMonthPicker = () => {
-    setPickerYear(year);
     setShowMonthPicker(true);
   };
 
@@ -499,53 +497,25 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [], 
                   <X size={16} />
                 </button>
               </header>
-              <div className="mb-3 flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => setPickerYear((currentYear) => currentYear - 1)}
-                  aria-label="Previous year"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100"
-                >
-                  <ChevronLeft size={18} />
-                </button>
-                <span className="text-sm font-bold text-slate-900">{pickerYear}</span>
-                <button
-                  type="button"
-                  onClick={() => setPickerYear((currentYear) => currentYear + 1)}
-                  aria-label="Next year"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100"
-                >
-                  <ChevronRight size={18} />
-                </button>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {Array.from({ length: 12 }, (_, monthIndex) => {
-                  const monthLabel = new Date(pickerYear, monthIndex, 1).toLocaleDateString(
-                    'en-US',
-                    { month: 'short' }
-                  );
-                  const isSelected = pickerYear === year && monthIndex === month;
-
-                  return (
-                    <button
-                      key={monthIndex}
-                      type="button"
-                      aria-pressed={isSelected}
-                      onClick={() => {
-                        setCurrentDate(new Date(pickerYear, monthIndex, 1));
-                        setShowMonthPicker(false);
-                      }}
-                      className={`h-11 rounded-xl text-sm font-semibold transition-colors ${
-                        isSelected
-                          ? 'bg-blue-600 text-white'
-                          : 'text-slate-700 hover:bg-blue-50 hover:text-blue-700'
-                      }`}
-                    >
-                      {monthLabel}
-                    </button>
-                  );
-                })}
-              </div>
+              <label className="relative flex h-12 items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-800">
+                <span>
+                  {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </span>
+                <CalendarDays size={18} className="text-blue-600" />
+                <input
+                  type="month"
+                  aria-label="Choose report month"
+                  value={`${year}-${String(month + 1).padStart(2, '0')}`}
+                  onChange={(event) => {
+                    const [selectedYear, selectedMonth] = event.target.value.split('-').map(Number);
+                    if (selectedYear && selectedMonth) {
+                      setCurrentDate(new Date(selectedYear, selectedMonth - 1, 1));
+                      setShowMonthPicker(false);
+                    }
+                  }}
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                />
+              </label>
             </section>
           </div>,
           document.body
