@@ -276,7 +276,7 @@ export default function ProfileTab({
   return (
     <div className="mx-auto w-full max-w-4xl p-4 sm:p-6 lg:p-8 pb-20">
       <div className="mb-5 flex items-center justify-between gap-2.5">
-        <div className="flex min-w-0 items-center gap-2.5 rounded-full border border-white/90 bg-white/75 p-2 pr-4 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
+        <div className="page-heading flex min-w-0 items-center gap-2.5 rounded-full p-0 pr-4">
           <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-blue-600 to-blue-600 text-xs font-bold text-white shadow-sm">
             {photoDataUrl ? (
               <img src={photoDataUrl} alt="" className="h-full w-full object-cover" />
@@ -289,7 +289,7 @@ export default function ProfileTab({
           </h1>
         </div>
         {!isEditing && (
-          <div className="flex flex-shrink-0 items-center gap-1 rounded-full border border-white/90 bg-white/75 p-1.5 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
+          <div className="page-heading-controls flex flex-shrink-0 items-center gap-1 rounded-full p-1.5">
             {onLogout && (
               <button
                 type="button"
@@ -422,14 +422,10 @@ export default function ProfileTab({
                 aria-checked={theme === 'dark'}
                 aria-label="Dark mode"
                 onClick={() => onThemeChange?.(theme === 'dark' ? 'light' : 'dark')}
-                className={`relative h-7 w-12 flex-shrink-0 rounded-full transition-colors ${
-                  theme === 'dark' ? 'bg-blue-600' : 'bg-slate-300'
-                }`}
+                className="ios-theme-switch"
               >
                 <span
-                  className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
-                    theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
-                  }`}
+                  className="ios-theme-switch__thumb"
                 />
               </button>
             </div>

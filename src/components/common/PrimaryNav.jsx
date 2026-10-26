@@ -41,7 +41,7 @@ export default function PrimaryNav({
           aria-label="Mobile navigation"
           className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 pointer-events-none md:hidden"
         >
-          <div className="liquid-nav-dock pointer-events-auto mx-auto flex h-16 w-full max-w-[25rem] items-center justify-between gap-1 rounded-[28px] p-1.5">
+          <div className="liquid-nav-dock pointer-events-auto mx-auto grid h-16 w-full max-w-[25rem] grid-cols-5 items-center gap-0 rounded-[28px] p-1.5">
             {/* Left 2 items: Overview & Transactions */}
             {MOBILE_ITEMS.slice(0, 2).map(({ id, mobileLabel, icon: Icon }) => {
               const isActive = activeItem === id;
@@ -52,7 +52,7 @@ export default function PrimaryNav({
                   onClick={() => onNavigate(id)}
                   aria-label={mobileLabel}
                   aria-current={isActive ? 'page' : undefined}
-                  className="relative flex h-full flex-1 items-center justify-center rounded-[22px] text-slate-600 transition-all duration-200 active:scale-95"
+                  className="relative flex h-full min-w-0 items-center justify-center rounded-[22px] text-slate-600 transition-all duration-200 active:scale-95"
                 >
                   <span
                     className={`relative inline-flex h-10 w-10 items-center justify-center rounded-2xl transition-all ${
@@ -74,7 +74,7 @@ export default function PrimaryNav({
                 type="button"
                 onClick={onQuickAction}
                 aria-label="Quick add bill"
-                className="mx-0.5 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[20px] bg-gradient-to-tr from-slate-900 via-slate-800 to-blue-900 text-white shadow-lg shadow-slate-900/25 border border-white/30 transition-transform active:scale-90"
+                className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[20px] bg-gradient-to-tr from-slate-900 via-slate-800 to-blue-900 text-white shadow-lg shadow-slate-900/25 border border-white/30 transition-transform active:scale-90"
               >
                 <Plus size={22} strokeWidth={2.75} />
               </button>
@@ -90,7 +90,7 @@ export default function PrimaryNav({
                   onClick={() => onNavigate(id)}
                   aria-label={mobileLabel}
                   aria-current={isActive ? 'page' : undefined}
-                    className="relative flex h-full flex-1 items-center justify-center rounded-[22px] text-slate-600 transition-all duration-200 active:scale-95"
+                  className="relative flex h-full min-w-0 items-center justify-center rounded-[22px] text-slate-600 transition-all duration-200 active:scale-95"
                 >
                     <span
                       className={`relative inline-flex h-10 w-10 items-center justify-center rounded-2xl transition-all ${

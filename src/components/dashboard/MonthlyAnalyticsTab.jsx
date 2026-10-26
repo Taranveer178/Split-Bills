@@ -150,7 +150,7 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [] }
     <div className="mx-auto max-w-5xl space-y-5 p-4 sm:p-6 lg:p-8 pb-20">
       {/* Header & Month Switcher */}
       <div className="flex items-center justify-between gap-2.5">
-        <div className="flex min-w-0 items-center gap-2.5 rounded-full border border-white/90 bg-white/75 p-2 pr-4 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
+        <div className="page-heading flex min-w-0 items-center gap-2.5 rounded-full p-0 pr-4">
           <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-blue-600 to-blue-600 text-xs font-bold text-white shadow-sm">
             {user?.photoDataUrl ? (
               <img src={user.photoDataUrl} alt="" className="h-full w-full object-cover" />
@@ -163,7 +163,7 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [] }
           </h1>
         </div>
 
-        <label className="relative flex h-10 min-w-0 max-w-[58%] flex-shrink items-center gap-2 rounded-full border border-white/90 bg-white/75 px-3 text-xs font-semibold text-slate-700 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
+        <label className="page-heading-controls relative flex h-10 min-w-0 max-w-[58%] flex-shrink items-center gap-2 rounded-full px-3 text-xs font-semibold text-slate-700">
           <CalendarDays size={14} className="flex-shrink-0 text-blue-600" />
           <span className="truncate">{formattedMonthLabel}</span>
           <ChevronDown size={14} className="flex-shrink-0 text-slate-400" />

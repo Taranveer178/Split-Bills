@@ -592,16 +592,13 @@ export default function Dashboard({
           type="button"
           onClick={() => handleTabSwitch('groups')}
           aria-label="Go to RoomSplit home"
-          className="liquid-glass-interactive flex min-w-0 items-center gap-2 rounded-full border border-white/90 bg-white/80 py-1 pl-1 pr-3 text-left shadow-sm focus-visible:outline-none"
+          className="flex min-w-0 items-center gap-2 border-0 bg-transparent py-1 text-left shadow-none focus-visible:outline-none"
         >
           <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/90 bg-white shadow-sm">
             <img src={roomsplitIcon} alt="" className="h-full w-full scale-110 rounded-full object-cover" />
           </span>
           <div className="min-w-0">
-            <span className="block truncate text-xs font-extrabold tracking-tight text-slate-900 leading-none">
-              RoomSplit
-            </span>
-            <span className="mt-0.5 block truncate text-[9px] font-semibold text-blue-600 leading-none">
+            <span className="mt-0.5 block truncate text-sm font-semibold text-blue-600 leading-none">
               Hi, {user?.username}
             </span>
           </div>
@@ -843,7 +840,7 @@ export default function Dashboard({
                               </div>
                               <div className="min-w-0">
                                 <div className="flex items-center gap-1.5">
-                                  <h3 className="truncate text-xs font-semibold text-slate-900">
+                                  <h3 className="truncate text-sm font-semibold text-slate-900">
                                     {group.name}
                                   </h3>
                                   {isPinned && !isArchived && (
@@ -2060,7 +2057,7 @@ export default function Dashboard({
             aria-modal="true"
             aria-labelledby="logout-confirmation-title"
             aria-describedby="logout-confirmation-description"
-            className="w-full max-w-[340px] rounded-[28px] border border-white/70 bg-white/95 p-6 text-center shadow-[0_24px_80px_rgba(15,23,42,0.24)] backdrop-blur-2xl"
+            className="logout-confirmation-dialog relative z-[151] w-full max-w-[340px] rounded-[28px] border border-white/70 bg-white/95 p-6 text-center shadow-[0_24px_80px_rgba(15,23,42,0.24)] backdrop-blur-2xl"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-rose-100 bg-rose-50 text-rose-600">

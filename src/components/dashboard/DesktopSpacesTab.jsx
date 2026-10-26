@@ -39,7 +39,7 @@ export default function DesktopSpacesTab({
   return (
     <section className="w-full rounded-3xl ">
       <div className="mb-4 flex items-center justify-between gap-2.5">
-        <div className="flex min-w-0 items-center gap-2.5 rounded-full border border-white/90 bg-white/75 p-2 pr-4 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
+        <div className="page-heading flex min-w-0 items-center gap-2.5 rounded-full p-0 pr-4">
           <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-blue-600 to-blue-600 text-xs font-bold text-white shadow-sm">
             {user?.photoDataUrl ? (
               <img src={user.photoDataUrl} alt="" className="h-full w-full object-cover" />
@@ -51,7 +51,7 @@ export default function DesktopSpacesTab({
             Shared Spaces
           </h1>
         </div>
-        <div className="hidden items-center gap-1 rounded-full border border-white/90 bg-white/75 p-1.5 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-2xl md:flex">
+        <div className="page-heading-controls hidden items-center gap-1 rounded-full p-1.5 md:flex">
           {[
             { id: 'active', label: `Active (${activeCount})` },
             { id: 'pinned', label: `Pinned (${pinnedCount})` },
@@ -72,7 +72,7 @@ export default function DesktopSpacesTab({
             </button>
           ))}
         </div>
-        <label className="relative flex h-10 max-w-[58%] flex-shrink items-center gap-2 rounded-full border border-white/90 bg-white/75 px-3 text-xs font-semibold text-slate-700 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-2xl md:hidden">
+        <label className="page-heading-controls relative flex h-10 max-w-[58%] flex-shrink items-center gap-2 rounded-full px-3 text-xs font-semibold text-slate-700 md:hidden">
           <span className="truncate">
             {spaceFilter === 'pinned' ? `Pinned (${pinnedCount})` : spaceFilter === 'archived' ? `Archived (${archivedCount})` : `Active (${activeCount})`}
           </span>
@@ -148,7 +148,7 @@ export default function DesktopSpacesTab({
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <h2 className="truncate text-sm font-extrabold text-slate-900 transition-colors group-hover:text-blue-600">
+                          <h2 className="truncate text-base font-extrabold text-slate-900 transition-colors group-hover:text-blue-600 md:text-sm">
                             {group.name}
                           </h2>
                           {showUnreadIndicators && unreadCount > 0 && !isArchived && (
@@ -162,7 +162,7 @@ export default function DesktopSpacesTab({
                           {isPinned && <Pin size={12} className="flex-shrink-0 text-blue-600" />}
                           {isMuted && <BellOff size={12} className="flex-shrink-0 text-amber-500" />}
                         </div>
-                        <p className="truncate text-xs text-slate-500">
+                        <p className="truncate text-sm text-slate-500 md:text-xs">
                           {group.description || `${group.members?.length || 1} members`}
                         </p>
                       </div>
