@@ -11,11 +11,14 @@ import {
   ShoppingBag,
   Zap,
   HelpCircle,
+  Check,
+  CircleDollarSign,
   X,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+import { formatCurrency } from '../../utils/currency';
 
 const CATEGORY_META = {
   Food: {
@@ -52,7 +55,7 @@ const CATEGORY_META = {
 
 const getCategoryMeta = (name = 'Other') => CATEGORY_META[name] || CATEGORY_META.Other;
 
-export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [] }) {
+export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [], rentRecords = [] }) {
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedBreakdown, setSelectedBreakdown] = useState(null);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
@@ -84,6 +87,16 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [] }
       ),
     [monthlyExpenses]
   );
+
+  const monthlyRents = useMemo(() => {
+    const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+    return rentRecords
+      .filter((rent) => rent.month === monthKey)
+      .map((rent) => ({
+        ...rent,
+        groupName: groups.find((group) => group.id === rent.groupId)?.name || 'Space',
+      }));
+  }, [rentRecords, groups, year, month]);
 
   const stats = useMemo(() => {
     let totalGroupSpent = 0;
@@ -263,6 +276,50 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [] }
           </span>
         </div>
       </div>
+
+      <section className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">
+        <div className="mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-2">
+            <Home size={16} className="text-emerald-700" />
+            <h2 className="text-sm font-bold text-slate-900">Room rent</h2>
+          </div>
+          <span className="text-xs font-medium text-slate-500">Tracked separately</span>
+        </div>
+        {monthlyRents.length === 0 ? (
+          <p className="py-4 text-center text-xs text-slate-500">
+            No rent records for {formattedMonthLabel}.
+          </p>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {monthlyRents.map((rent) => {
+              const paid = Boolean(rent.payments?.[userId]?.paid);
+              const share = Number(rent.shares?.[userId]) || 0;
+              return (
+                <div key={rent.id} className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-900">{rent.groupName}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      Total {formatCurrency(rent.totalAmount, rent.currency)}
+                    </p>
+                  </div>
+                  <div className="flex flex-shrink-0 items-center gap-3">
+                    <div className="text-right">
+                      <p className="text-[11px] text-slate-500">Your share</p>
+                      <p className="font-mono text-sm font-bold text-slate-900">
+                        {formatCurrency(share, rent.currency)}
+                      </p>
+                    </div>
+                    <span className={`inline-flex items-center gap-1 text-xs font-semibold ${paid ? 'text-emerald-700' : 'text-amber-700'}`}>
+                      {paid ? <Check size={14} /> : <CircleDollarSign size={14} />}
+                      {paid ? 'Paid' : 'Due'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       {/* Category Breakdown */}
       <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">

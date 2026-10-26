@@ -22,12 +22,16 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { calculateSettlements, GROUP_DELETE_BALANCE_TOLERANCE } from '../../utils/settlement';
 import { compressImageFile } from '../../utils/compressImage';
 import { GROUP_CURRENCIES, formatCurrency } from '../../utils/currency';
+import GroupRentPanel from './GroupRentPanel';
 
 export default function MembersTab({
   group,
   users,
   currentUser,
   expenses,
+  monthlyRents = [],
+  onCreateRent,
+  onMarkRentPaid,
   onDeleteGroup,
   onUpdateGroup,
   onLeaveGroup,
@@ -423,6 +427,16 @@ export default function MembersTab({
           })}
         </div>
       </div>
+
+      <GroupRentPanel
+        group={group}
+        rentRecords={monthlyRents}
+        currentUser={currentUser}
+        users={users}
+        onCreateRent={onCreateRent}
+        onMarkRentPaid={onMarkRentPaid}
+        showToast={showToast}
+      />
 
       {/* Leave / Delete Space */}
       {!isAdmin ? (

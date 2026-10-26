@@ -1,13 +1,16 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import {
+  FieldPath,
   collection,
   deleteDoc,
   doc,
   getDocs,
   onSnapshot,
   query,
+  runTransaction,
   setDoc,
+  updateDoc,
   where,
 } from 'firebase/firestore';
 import { calculateSettlements, GROUP_DELETE_BALANCE_TOLERANCE } from './utils/settlement';
@@ -187,6 +190,9 @@ export default function App() {
     () => hasInitialLocalSession
       ? removeDemoExpenses(readStoredData('rs_expenses', INITIAL_EXPENSES))
       : []
+  );
+  const [monthlyRents, setMonthlyRents] = useState(
+    () => hasInitialLocalSession ? readStoredData('rs_monthly_rents', []) : []
   );
   const [notifications, setNotifications] = useState(
     () => hasInitialLocalSession ? readStoredData('rs_notifications', []) : []
@@ -444,6 +450,10 @@ export default function App() {
           setLoading(false);
         }));
 
+        unsubscribers.push(onSnapshot(collection(db, 'monthlyRents'), (snapshot) => {
+          setMonthlyRents(snapshot.docs.map((item) => ({ id: item.id, ...item.data() })));
+        }, (error) => console.error('Monthly rent listener error:', error)));
+
         unsubscribers.push(onSnapshot(collection(db, 'notifications'), (snapshot) => {
           setNotifications(snapshot.docs.map((item) => ({ id: item.id, ...item.data() })));
         }, (error) => console.error('Notifications listener error:', error)));
@@ -565,9 +575,11 @@ export default function App() {
     } else {
       const savedGroups = localStorage.getItem('rs_groups');
       const savedExpenses = localStorage.getItem('rs_expenses');
+      const savedMonthlyRents = localStorage.getItem('rs_monthly_rents');
       const savedNotifications = localStorage.getItem('rs_notifications');
       setGroups(savedGroups ? JSON.parse(savedGroups) : INITIAL_GROUPS);
       setExpenses(removeDemoExpenses(savedExpenses ? JSON.parse(savedExpenses) : INITIAL_EXPENSES));
+      setMonthlyRents(savedMonthlyRents ? JSON.parse(savedMonthlyRents) : []);
       setNotifications(savedNotifications ? JSON.parse(savedNotifications) : []);
       setLoading(false);
     }
@@ -746,6 +758,50 @@ export default function App() {
     });
   };
 
+  const saveMonthlyRent = async (newRent) => {
+    if (db) {
+      const rentRef = doc(db, 'monthlyRents', newRent.id);
+      await runTransaction(db, async (transaction) => {
+        const existingRent = await transaction.get(rentRef);
+        if (existingRent.exists()) {
+          throw new Error('Rent has already been added for this month.');
+        }
+        transaction.set(rentRef, newRent);
+      });
+      return;
+    }
+
+    if (monthlyRents.some((rent) => rent.id === newRent.id)) {
+      throw new Error('Rent has already been added for this month.');
+    }
+    setMonthlyRents((previous) => {
+      const next = [...previous, newRent];
+      localStorage.setItem('rs_monthly_rents', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const markMonthlyRentPaid = async (rentId, memberId) => {
+    const payment = { paid: true, paidAt: new Date().toISOString() };
+    if (db) {
+      await updateDoc(
+        doc(db, 'monthlyRents', rentId),
+        new FieldPath('payments', memberId),
+        payment
+      );
+      return;
+    }
+
+    setMonthlyRents((previous) => {
+      const next = previous.map((rent) => rent.id === rentId
+        ? { ...rent, payments: { ...rent.payments, [memberId]: payment }, updatedAt: payment.paidAt }
+        : rent
+      );
+      localStorage.setItem('rs_monthly_rents', JSON.stringify(next));
+      return next;
+    });
+  };
+
   const deleteExpense = async (expenseId) => {
     if (db) {
       await deleteDoc(doc(db, 'expenses', expenseId));
@@ -764,6 +820,7 @@ export default function App() {
     }
 
     const groupExpenses = expenses.filter((expense) => expense.groupId === group.id);
+    const groupRents = monthlyRents.filter((rent) => rent.groupId === group.id);
     const { balances } = calculateSettlements(groupExpenses, group.members);
     if (Object.values(balances).some((balance) => Math.abs(balance) >= GROUP_DELETE_BALANCE_TOLERANCE)) {
       throw new Error('Settle all group balances of ₹1 or more before deleting this group.');
@@ -772,7 +829,10 @@ export default function App() {
     navigateTo({ view: 'dashboard', dashboardTab: 'groups' }, { replace: true });
 
     if (db) {
-      await Promise.all(groupExpenses.map((expense) => deleteDoc(doc(db, 'expenses', expense.id))));
+      await Promise.all([
+        ...groupExpenses.map((expense) => deleteDoc(doc(db, 'expenses', expense.id))),
+        ...groupRents.map((rent) => deleteDoc(doc(db, 'monthlyRents', rent.id))),
+      ]);
       await deleteDoc(doc(db, 'groups', group.id));
     } else {
       setExpenses((previous) => {
@@ -783,6 +843,11 @@ export default function App() {
       setGroups((previous) => {
         const next = previous.filter((item) => item.id !== group.id);
         localStorage.setItem('rs_groups', JSON.stringify(next));
+        return next;
+      });
+      setMonthlyRents((previous) => {
+        const next = previous.filter((rent) => rent.groupId !== group.id);
+        localStorage.setItem('rs_monthly_rents', JSON.stringify(next));
         return next;
       });
     }
@@ -885,6 +950,8 @@ export default function App() {
           initialTab={dashboardTab}
           groups={groups}
           expenses={expenses}
+          rentRecords={monthlyRents}
+          monthlyRents={monthlyRents}
           onLogout={handleLogout}
           onOpenGroup={(id, initialTab = 'expenses', unreadChatCount = 0) => {
             const group = groups.find((item) => item.id === id);
@@ -926,7 +993,7 @@ export default function App() {
       ) : currentView === 'group' && activeGroup ? (
         <Suspense fallback={<GroupLoadingSkeleton />}>
           <GroupView
-            key={`${activeGroup.id}:${currentGroupInitialTab}`}
+            key={activeGroup.id}
             group={activeGroup}
             initialTab={currentGroupInitialTab}
             initialDrawerOpen={currentGroupDrawerOpen}
@@ -965,6 +1032,9 @@ export default function App() {
             onMarkChatNotificationsRead={markGroupChatNotificationsRead}
             groups={groups}
             expenses={expenses.filter((expense) => expense.groupId === activeGroup.id)}
+            monthlyRents={monthlyRents.filter((rent) => rent.groupId === activeGroup.id)}
+            onCreateRent={saveMonthlyRent}
+            onMarkRentPaid={markMonthlyRentPaid}
             onSaveExpense={saveExpense}
             onDeleteExpense={deleteExpense}
             onDeleteGroup={deleteGroup}

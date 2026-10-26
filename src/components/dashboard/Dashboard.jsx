@@ -46,6 +46,7 @@ export default function Dashboard({
   onCreateGroup,
   onJoinGroup,
   onSaveExpense,
+  rentRecords = [],
   onSendNotification,
   onUpdateUser,
   onMarkNotificationsRead,
@@ -65,7 +66,7 @@ export default function Dashboard({
   const [searchQuery, setSearchQuery] = useState('');
   const [ledgerFilter, setLedgerFilter] = useState('all'); // 'all' | 'mine' | 'settlements'
   const [transactionExportOpen, setTransactionExportOpen] = useState(false);
-  const [mobileSection, setMobileSection] = useState('spaces'); // 'spaces' | 'dues'
+  const [mobileSection, setMobileSection] = useState('spaces');
   const [copiedCodeId, setCopiedCodeId] = useState(null);
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -1708,7 +1709,12 @@ export default function Dashboard({
           activeTab !== 'transactions' && (
             <div className="h-full">
               {activeTab === 'monthly' && (
-                <MonthlyAnalyticsTab user={user} expenses={expenses} groups={groups} />
+                <MonthlyAnalyticsTab
+                  user={user}
+                  expenses={expenses}
+                  groups={groups}
+                  rentRecords={rentRecords}
+                />
               )}
               {activeTab === 'profile' && (
                 <ProfileTabView

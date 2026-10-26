@@ -1,4 +1,5 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ArrowLeft,
   Plus,
@@ -8,6 +9,9 @@ import {
   Users,
   CheckCircle2,
   Copy,
+  Home,
+  X,
+  Check,
 } from 'lucide-react';
 
 import PrimaryNav from '../common/PrimaryNav';
@@ -15,9 +19,15 @@ import AddExpenseTab from './AddExpenseTab';
 import BalancesTab from './BalancesTab';
 import ExpensesTab from './ExpensesTab';
 import MembersTab from './MembersTab';
+import GroupRentPanel from './GroupRentPanel';
 import ChatTab from './ChatTab';
 import { calculateSettlements } from '../../utils/settlement';
 import { formatCurrency } from '../../utils/currency';
+
+const getCurrentMonth = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+};
 
 export default function GroupView({
   group,
@@ -28,7 +38,10 @@ export default function GroupView({
   onMarkChatNotificationsRead,
   groups = [],
   expenses,
+  monthlyRents = [],
   onSaveExpense,
+  onCreateRent,
+  onMarkRentPaid,
   onDeleteExpense,
   onDeleteGroup,
   onUpdateGroup,
@@ -41,6 +54,7 @@ export default function GroupView({
   showToast,
 }) {
   const activeTab = initialTab;
+  const [rentReminderDismissed, setRentReminderDismissed] = useState(false);
 
   const getUserName = (userId) => users.find((user) => user.id === userId)?.username || 'Unknown';
   const sortedExpenses = useMemo(
@@ -56,6 +70,20 @@ export default function GroupView({
     [expenses, group.members]
   );
   const myBalance = balances[currentUser.id] || 0;
+  const unpaidRent = monthlyRents
+    .filter((rent) => (
+      rent.groupId === group.id &&
+      Number(rent.shares?.[currentUser.id]) > 0 &&
+      !rent.payments?.[currentUser.id]?.paid
+    ))
+    .sort((first, second) => second.month.localeCompare(first.month))[0];
+  const currentRent = unpaidRent || monthlyRents.find(
+    (rent) => rent.month === getCurrentMonth() && rent.groupId === group.id
+  );
+  const myRentShare = Number(currentRent?.shares?.[currentUser.id]) || 0;
+  const showRentReminder = Boolean(
+    unpaidRent && currentRent && myRentShare > 0 && !rentReminderDismissed
+  );
   const totalRoomSpend = useMemo(
     () =>
       expenses
@@ -91,6 +119,17 @@ export default function GroupView({
 
   const handleTabSelect = (tab) => {
     onGroupTabChange?.(tab);
+  };
+
+  const markMyRentPaid = async () => {
+    if (!currentRent || !onMarkRentPaid) return;
+    try {
+      await onMarkRentPaid(currentRent.id, currentUser.id);
+      setRentReminderDismissed(true);
+      showToast?.('Your rent share was marked as paid.');
+    } catch (error) {
+      showToast?.(error.message || 'Could not update rent payment.', 'error');
+    }
   };
 
   return (
@@ -340,6 +379,17 @@ export default function GroupView({
                       })}
                     </div>
                   </div>
+
+                  <GroupRentPanel
+                    group={group}
+                    rentRecords={monthlyRents}
+                    currentUser={currentUser}
+                    users={users}
+                    onCreateRent={onCreateRent}
+                    onMarkRentPaid={onMarkRentPaid}
+                    showToast={showToast}
+                    compact
+                  />
                 </aside>
               </div>
             </div>
@@ -389,12 +439,79 @@ export default function GroupView({
               users={users}
               currentUser={currentUser}
               expenses={expenses}
+              monthlyRents={monthlyRents}
+              onCreateRent={onCreateRent}
+              onMarkRentPaid={onMarkRentPaid}
               onUpdateGroup={onUpdateGroup}
               onDeleteGroup={onDeleteGroup}
               showToast={showToast}
             />
           )}
         </main>
+
+        {showRentReminder &&
+          createPortal(
+            <div
+              className="fixed inset-0 z-[155] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm sm:hidden"
+              onClick={() => setRentReminderDismissed(true)}
+            >
+              <section
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="rent-reminder-title"
+                className="w-full max-w-sm rounded-2xl border border-white/70 bg-white p-5 shadow-2xl"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <header className="mb-4 flex items-start justify-between gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                    <Home size={20} />
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setRentReminderDismissed(true)}
+                    aria-label="Dismiss rent reminder"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
+                  >
+                    <X size={17} />
+                  </button>
+                </header>
+                <h2 id="rent-reminder-title" className="text-lg font-bold text-slate-900">
+                  Rent is due
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  {group.name} · {new Date(`${currentRent.month}-01T00:00:00`).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </p>
+                <div className="my-4 rounded-xl bg-slate-50 p-4 text-center">
+                  <p className="text-xs font-medium text-slate-500">Your share</p>
+                  <p className="mt-1 font-mono text-2xl font-bold text-slate-900">
+                    {formatCurrency(myRentShare, currentRent.currency)}
+                  </p>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    Total rent {formatCurrency(currentRent.totalAmount, currentRent.currency)} · split separately from expenses
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={markMyRentPaid}
+                  className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white hover:bg-emerald-700"
+                >
+                  <Check size={17} />
+                  Mark my share as paid
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRentReminderDismissed(true)}
+                  className="mt-2 h-10 w-full rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100"
+                >
+                  Later
+                </button>
+                <p className="mt-2 text-center text-[11px] text-slate-400">
+                  You can reopen this from group Settings.
+                </p>
+              </section>
+            </div>,
+            document.body
+          )}
 
         {/* Mobile Floating Liquid Glass Add Expense Button */}
         {(activeTab === 'expenses' || !activeTab) && (
