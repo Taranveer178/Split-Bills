@@ -16,6 +16,15 @@ const formatMonth = (month) => {
   });
 };
 
+const formatMonthShort = (month) => {
+  if (!month) return '';
+  const [year, monthNumber] = month.split('-').map(Number);
+  return new Date(year, monthNumber - 1, 1).toLocaleDateString('en-US', {
+    month: 'short',
+    year: '2-digit',
+  });
+};
+
 const splitRent = (amount, memberIds) => {
   const totalCents = Math.round(amount * 100);
   const baseCents = Math.floor(totalCents / memberIds.length);
@@ -37,6 +46,7 @@ export default function GroupRentPanel({
   onDeleteRent,
   showToast,
   compact = false,
+  sidebar = false,
   initialMonth,
 }) {
   const [selectedMonth, setSelectedMonth] = useState(() => initialMonth || getCurrentMonth());
@@ -125,37 +135,64 @@ export default function GroupRentPanel({
   };
 
   return (
-    <section className={`rounded-2xl border border-slate-200/90 bg-white shadow-xs ${compact ? 'p-4' : 'p-4 sm:p-5'}`}>
-      <header className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="flex min-w-0 items-center gap-2 text-sm font-bold text-slate-900">
-          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+    <section className={`rounded-2xl border border-slate-200/90 bg-white shadow-xs ${sidebar ? 'p-3' : compact ? 'p-4' : 'p-4 sm:p-5'}`}>
+      <header className={`flex items-center justify-between gap-2 ${sidebar ? 'mb-2' : 'mb-4'}`}>
+        <h2 className={`flex min-w-0 items-center gap-2 font-bold text-slate-900 ${sidebar ? 'text-xs' : 'text-sm'}`}>
+          <span className={`flex flex-shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 ${sidebar ? 'h-7 w-7' : 'h-8 w-8'}`}>
             <Home size={16} />
           </span>
           <span>Monthly rent</span>
         </h2>
-        <label className="flex min-w-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs font-semibold text-slate-700">
-          <CalendarDays size={14} className="flex-shrink-0 text-slate-500" />
-          <span className="sr-only">Rent month</span>
+        <label className="relative flex flex-shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs font-semibold text-slate-700">
+          <span>{formatMonthShort(selectedMonth)}</span>
+          <CalendarDays size={14} className="flex-shrink-0 text-blue-600" />
           <input
             type="month"
+            aria-label="Rent month"
             value={selectedMonth}
             onChange={(event) => setSelectedMonth(event.target.value)}
-            className="w-[116px] min-w-0 bg-transparent text-xs outline-none"
+            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           />
         </label>
       </header>
 
       {rent ? (
-        <div>
-          <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
-            <div>
-              <p className="text-xs font-medium text-slate-500">Total rent · {formatMonth(rent.month)}</p>
-              <p className="mt-0.5 font-mono text-xl font-bold text-slate-900">
+        sidebar ? (
+          <div>
+            <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
+              <span className="text-[11px] font-medium text-slate-500">Total rent</span>
+              <span className="font-mono text-sm font-bold text-slate-900">
                 {formatCurrency(rent.totalAmount, rent.currency)}
-              </p>
+              </span>
             </div>
-            <p className="max-w-[12rem] text-right text-[11px] leading-relaxed text-slate-500">
-              Separate from shared expense balances
+            {myShare > 0 && (
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <span className="truncate text-[11px] font-medium text-slate-500">
+                  Your share · {formatCurrency(myShare, rent.currency)}
+                </span>
+                {myPayment?.paid ? (
+                  <span className="flex flex-shrink-0 items-center gap-1 text-[11px] font-semibold text-emerald-700">
+                    <Check size={13} /> Paid
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleMarkPaid}
+                    disabled={isMarkingPaid}
+                    className="flex-shrink-0 rounded-lg bg-emerald-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60"
+                  >
+                    {isMarkingPaid ? 'Saving…' : 'Mark paid'}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+        <div>
+          <div className="border-b border-slate-100 pb-3">
+            <p className="text-xs font-medium text-slate-500">Total rent</p>
+            <p className="mt-0.5 font-mono text-xl font-bold text-slate-900">
+              {formatCurrency(rent.totalAmount, rent.currency)}
             </p>
           </div>
 
@@ -237,13 +274,11 @@ export default function GroupRentPanel({
             )
           )}
         </div>
+        )
       ) : (
         <form onSubmit={handleCreateRent}>
-          <p className="mb-3 text-xs leading-relaxed text-slate-500">
-            Add this month’s rent. It will be split evenly and tracked separately from expenses.
-          </p>
-          <label className="mb-3 block text-xs font-semibold text-slate-700">
-            Total rent amount
+          <label className={`${sidebar ? 'block' : 'mb-3 block'} text-xs font-semibold text-slate-700`}>
+            {!sidebar && 'Total rent amount'}
             <input
               type="number"
               min="0.01"
@@ -251,14 +286,15 @@ export default function GroupRentPanel({
               inputMode="decimal"
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
-              placeholder="0.00"
-              className="mt-1.5 block h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-mono text-slate-900 outline-none focus:border-blue-500"
+              placeholder={sidebar ? 'Total rent amount' : '0.00'}
+              aria-label="Total rent amount"
+              className={`${sidebar ? 'mb-2 h-9' : 'mt-1.5 h-11'} block w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-mono text-slate-900 outline-none focus:border-blue-500`}
             />
           </label>
           <button
             type="submit"
             disabled={isSaving}
-            className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 text-xs font-bold text-white hover:bg-blue-700 disabled:cursor-wait disabled:opacity-60"
+            className={`inline-flex ${sidebar ? 'h-9' : 'h-10'} w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 text-xs font-bold text-white hover:bg-blue-700 disabled:cursor-wait disabled:opacity-60`}
           >
             {isSaving ? <LoaderCircle size={15} className="animate-spin" /> : <Home size={15} />}
             Add rent and split

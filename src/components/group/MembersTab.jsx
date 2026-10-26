@@ -16,7 +16,6 @@ import {
   QrCode,
   UserPlus,
   ImagePlus,
-  Coins,
 } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { calculateSettlements, GROUP_DELETE_BALANCE_TOLERANCE } from '../../utils/settlement';
@@ -320,19 +319,12 @@ export default function MembersTab({
         </div>
 
         {isAdmin && (
-          <div className="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600">
-                <Coins size={15} />
-              </span>
-              <div>
-                <p className="text-xs font-bold text-slate-800">Space currency</p>
-                <p className="text-[11px] text-slate-500">
-                  Changes the displayed currency; existing amounts are not converted.
-                </p>
-              </div>
-            </div>
+          <div className="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:items-center">
+            <label htmlFor="space-currency" className="text-xs font-bold text-slate-800">
+              Currency:
+            </label>
             <select
+              id="space-currency"
               value={group.currency || 'INR'}
               onChange={handleCurrencyChange}
               disabled={savingCurrency}
@@ -348,28 +340,14 @@ export default function MembersTab({
       </div>
 
       {/* Invite Bar */}
-      <div className="flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-200/90 shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
-            <UserPlus size={16} />
-          </div>
-          <div>
-            <h3 className="text-xs sm:text-sm font-bold text-slate-900">
-              Invite Roommates · Code: <span className="font-mono">{group.inviteCode}</span>
-            </h3>
-            <p className="text-[11px] text-slate-500">Share code, direct link, or QR code</p>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setIsInviteOpen(true)}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold"
-        >
-          <UserPlus size={14} />
-          <span>Invite</span>
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={() => setIsInviteOpen(true)}
+        className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white hover:bg-slate-800"
+      >
+        <UserPlus size={14} />
+        <span>Invite friends</span>
+      </button>
 
       {/* Members List */}
       <div className="rounded-2xl bg-white border border-slate-200/90 shadow-xs overflow-hidden">
