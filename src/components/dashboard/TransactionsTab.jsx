@@ -1,5 +1,37 @@
-import { ChevronDown, ChevronRight, Download, Receipt } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Calendar, ChevronDown, CreditCard, Download, Receipt, User, Users, X } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
+
+const getExpenseDate = (expense) => {
+  const value = expense.date || expense.createdAt;
+  if (value?.toDate) return value.toDate();
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const getDateGroupLabel = (date) => {
+  if (!date) return 'Date unavailable';
+  const today = new Date();
+  const isSameDay = (first, second) => (
+    first.getFullYear() === second.getFullYear() &&
+    first.getMonth() === second.getMonth() &&
+    first.getDate() === second.getDate()
+  );
+  if (isSameDay(date, today)) return 'Today';
+  const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+  if (isSameDay(date, yesterday)) return 'Yesterday';
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: date.getFullYear() === today.getFullYear() ? undefined : 'numeric',
+  }).format(date);
+};
 
 export default function TransactionsTab({
   transactions,
@@ -7,14 +39,39 @@ export default function TransactionsTab({
   user,
   users = [],
   getUserName,
-  onOpenGroup,
   preview = false,
   onSeeAll,
   ledgerFilter = 'all',
   onLedgerFilterChange,
   onOpenExport,
 }) {
+  const [detailExpense, setDetailExpense] = useState(null);
   const visibleTransactions = preview ? transactions.slice(0, 4) : transactions;
+  const transactionGroups = [];
+  const groupedByDate = new Map();
+
+  visibleTransactions.forEach((expense) => {
+    const date = getExpenseDate(expense);
+    const key = date
+      ? `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`
+      : 'unknown';
+    let dateGroup = groupedByDate.get(key);
+    if (!dateGroup) {
+      dateGroup = { key, date, label: getDateGroupLabel(date), transactions: [] };
+      groupedByDate.set(key, dateGroup);
+      transactionGroups.push(dateGroup);
+    }
+    dateGroup.transactions.push(expense);
+  });
+
+  useEffect(() => {
+    if (!detailExpense) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setDetailExpense(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [detailExpense]);
 
   return (
     <section>
@@ -98,86 +155,146 @@ export default function TransactionsTab({
           <p className="text-sm font-bold text-slate-700">No transactions yet</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {visibleTransactions.map((expense) => {
-            const group = groups.find((item) => item.id === expense.groupId);
-            const iPaid = expense.paidBy === user.id;
-            const myShare = parseFloat(expense.splits?.[user.id]) || 0;
-            const total = parseFloat(expense.totalAmount) || 0;
-            const myImpact = iPaid ? total - myShare : -myShare;
-            const currency = group?.currency;
-            const splitNames = Object.entries(expense.splits || {})
-              .filter(([, amount]) => parseFloat(amount) > 0)
-              .map(([memberId]) => (
-                users.find((member) => member.id === memberId)?.username ||
-                (memberId === user.id ? user.username : getUserName(memberId)) ||
-                'Roommate'
-              ));
+        <div className="space-y-5">
+          {transactionGroups.map((dateGroup) => (
+            <section key={dateGroup.key} aria-label={dateGroup.label}>
+              <h3 className="mb-1.5 border-b border-slate-200/70 pb-2 text-xs font-bold text-slate-500">
+                {dateGroup.label}
+              </h3>
+              <div className="divide-y divide-slate-200/60">
+                {dateGroup.transactions.map((expense) => {
+                  const group = groups.find((item) => item.id === expense.groupId);
+                  const total = parseFloat(expense.totalAmount) || 0;
+                  const payerName = expense.paidBy === user.id
+                    ? 'You'
+                    : getUserName(expense.paidBy) || 'Roommate';
 
-            return (
-              <div
-                key={expense.id}
-                onClick={() => onOpenGroup(expense.groupId, 'expenses')}
-                className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-white/80 bg-white/60 px-3.5 py-3 transition-all hover:bg-white/95"
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600">
-                    <Receipt size={16} />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="truncate text-sm font-bold text-slate-900">
-                        {expense.title}
-                      </p>
-                      <span className="rounded-lg bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-700">
-                        {group?.name || 'Room'}
+                  return (
+                    <button
+                      key={expense.id}
+                      type="button"
+                      onClick={() => setDetailExpense(expense)}
+                      className="flex w-full items-center justify-between gap-4 px-1 py-3 text-left transition-colors hover:bg-white/70"
+                    >
+                      <span className="flex min-w-0 items-center gap-3">
+                        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-blue-100 bg-blue-50 text-blue-600">
+                          <Receipt size={17} />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-semibold text-slate-900">{expense.title}</span>
+                          <span className="mt-0.5 block truncate text-xs text-slate-500">
+                            {payerName} · {group?.name || 'Room'}
+                          </span>
+                        </span>
+                      </span>
+                      <span className="flex-shrink-0 text-right font-mono text-sm font-bold text-slate-900">
+                        {formatCurrency(total, group?.currency)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+
+      {detailExpense && createPortal(
+        <div
+          className="app-modal-overlay fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm"
+          onClick={() => setDetailExpense(null)}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="transaction-detail-title"
+            onClick={(event) => event.stopPropagation()}
+            className="app-modal-surface max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-[24px] border border-white/70 bg-white/95 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.24)]"
+          >
+            {(() => {
+              const group = groups.find((item) => item.id === detailExpense.groupId);
+              const currency = group?.currency;
+              const splits = Object.entries(detailExpense.splits || {}).filter(([, amount]) => parseFloat(amount) > 0);
+              const payerName = detailExpense.paidBy === user.id
+                ? 'You'
+                : getUserName(detailExpense.paidBy) || 'Roommate';
+
+              return (
+                <>
+                  <div className="mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-blue-600"><Receipt size={18} /></span>
+                      <span className="min-w-0">
+                        <h3 id="transaction-detail-title" className="truncate text-sm font-bold text-slate-900">{detailExpense.title}</h3>
+                        <span className="block truncate text-xs text-slate-500">{detailExpense.category || 'General'} · {group?.name || 'Room'}</span>
                       </span>
                     </div>
-                    <p className="mt-0.5 text-xs text-slate-500">
-                      <span className="font-semibold text-slate-700">
-                        {iPaid ? 'You' : getUserName(expense.paidBy)}
-                      </span>{' '}
-                      paid {formatCurrency(total, currency)} via {expense.paymentMethod || 'UPI'} ·{' '}
-                      {expense.date}
-                    </p>
-                    <p className="mt-0.5 max-w-[min(65vw,28rem)] truncate text-xs text-slate-500">
-                      <span className="font-semibold text-slate-600">Split: </span>
-                      {splitNames.join(', ')}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-shrink-0 items-center gap-3 text-right">
-                  <div>
-                    <span
-                      className={`block font-mono text-xs font-extrabold ${
-                        myImpact > 0.01
-                          ? 'text-emerald-600'
-                          : myImpact < -0.01
-                            ? 'text-rose-600'
-                            : 'text-slate-500'
-                      }`}
+                    <button
+                      type="button"
+                      onClick={() => setDetailExpense(null)}
+                      aria-label="Close transaction details"
+                      className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:bg-slate-50"
                     >
-                      {myImpact > 0.01
-                        ? `+${formatCurrency(myImpact, currency)}`
-                        : myImpact < -0.01
-                          ? `-${formatCurrency(Math.abs(myImpact), currency)}`
-                          : formatCurrency(total, currency)}
-                    </span>
-                    <span className="text-xs text-slate-400">
-                      {myImpact > 0.01
-                        ? 'you lent'
-                        : myImpact < -0.01
-                          ? 'your share'
-                          : 'settled'}
-                    </span>
+                      <X size={16} />
+                    </button>
                   </div>
-                  <ChevronRight size={15} className="text-slate-300" />
-                </div>
-              </div>
-            );
-          })}
-        </div>
+
+                  <div className="mb-4 rounded-2xl border border-slate-200/80 bg-white p-4 text-center">
+                    <span className="block text-[10px] font-semibold uppercase text-slate-500">Total bill</span>
+                    <span className="mt-1 block font-mono text-2xl font-bold text-slate-900">{formatCurrency(detailExpense.totalAmount, currency)}</span>
+                  </div>
+
+                  <div className="mb-5 grid grid-cols-2 gap-2 text-xs">
+                    <div className="rounded-xl border border-slate-200/70 bg-slate-50 p-3">
+                      <span className="mb-1 flex items-center gap-1 text-[11px] text-slate-500"><User size={12} />Paid by</span>
+                      <span className="block truncate font-bold text-slate-900">{payerName}</span>
+                    </div>
+                    <div className="rounded-xl border border-slate-200/70 bg-slate-50 p-3">
+                      <span className="mb-1 flex items-center gap-1 text-[11px] text-slate-500"><CreditCard size={12} />Method</span>
+                      <span className="block truncate font-bold text-slate-900">{detailExpense.paymentMethod || 'UPI'}</span>
+                    </div>
+                    <div className="rounded-xl border border-slate-200/70 bg-slate-50 p-3">
+                      <span className="mb-1 flex items-center gap-1 text-[11px] text-slate-500"><Calendar size={12} />Date</span>
+                      <span className="block truncate font-bold text-slate-900">{detailExpense.date || getDateGroupLabel(getExpenseDate(detailExpense))}</span>
+                    </div>
+                    <div className="rounded-xl border border-slate-200/70 bg-slate-50 p-3">
+                      <span className="mb-1 flex items-center gap-1 text-[11px] text-slate-500"><Users size={12} />Split</span>
+                      <span className="block truncate font-bold text-slate-900">{splits.length} members</span>
+                    </div>
+                  </div>
+
+                  <h4 className="mb-2 text-[11px] font-bold uppercase text-slate-500">Member shares</h4>
+                  <div className="mb-5 max-h-48 space-y-1.5 overflow-y-auto">
+                    {splits.map(([memberId, amount]) => {
+                      const member = users.find((item) => item.id === memberId);
+                      const memberName = member?.username || (memberId === user.id ? user.username : getUserName(memberId)) || 'Roommate';
+                      const photo = member?.photoDataUrl || (memberId === user.id ? user.photoDataUrl : null);
+                      return (
+                        <div key={memberId} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-xs">
+                          <span className="flex min-w-0 items-center gap-2.5">
+                            <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 font-bold text-blue-700">
+                              {photo ? <img src={photo} alt="" className="h-full w-full object-cover" /> : memberName.charAt(0).toUpperCase()}
+                            </span>
+                            <span className="truncate font-semibold text-slate-800">{memberName}</span>
+                          </span>
+                          <span className="font-mono font-bold text-slate-900">{formatCurrency(amount, currency)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDetailExpense(null)}
+                    className="w-full rounded-xl bg-slate-100 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+                  >
+                    Close
+                  </button>
+                </>
+              );
+            })()}
+          </section>
+        </div>,
+        document.body
       )}
     </section>
   );

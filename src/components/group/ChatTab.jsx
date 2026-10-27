@@ -570,12 +570,12 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
     const windowHeight = window.innerHeight;
     const windowWidth = window.innerWidth;
 
-    // Use exact width of the clicked message bubble (clamped to screen)
-    const exactWidth = Math.min(rect.width, windowWidth - 32);
+    // Keep short-message previews readable while staying within the viewport.
+    const popupWidth = Math.min(windowWidth - 32, Math.max(rect.width, 220));
 
     // Align horizontally with the clicked bubble's left position
     let xPos = rect.left;
-    xPos = Math.max(16, Math.min(xPos, windowWidth - exactWidth - 16));
+    xPos = Math.max(16, Math.min(xPos, windowWidth - popupWidth - 16));
 
     // Calculate vertical position for the reaction bar, preview, and action list.
     const totalEstimatedHeight = 340;
@@ -591,13 +591,12 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
       message: msg,
       isMe,
       rect,
-      width: exactWidth,
+      width: popupWidth,
       xPos,
       yPos
     });
   };
 
-  // FIXED: Reaction popup hold time reduced to 280ms for instant feedback
   const handleTouchStart = (event, msg, isMe) => {
     if (msg.isDeletedForEveryone || isSelectMode) return;
     const touch = event.touches?.[0];
@@ -607,7 +606,7 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
     pressTimerRef.current = setTimeout(() => {
       if (navigator.vibrate) navigator.vibrate(35);
       triggerContextMenu(currentTarget, msg, isMe);
-    }, 380);
+    }, 500);
   };
 
   const handleTouchEnd = (event, message) => {

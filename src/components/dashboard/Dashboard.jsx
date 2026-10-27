@@ -1442,6 +1442,7 @@ export default function Dashboard({
                       activeTab === 'groups' || activeTab === 'transactions' ? '' : 'hidden'
                     }`}
                   >
+                    {activeTab !== 'transactions' && <>
                     <div className={`mb-4 flex flex-wrap items-center justify-between gap-2.5 ${
                       activeTab === 'transactions' ? '' : 'border-b border-slate-200/60 pb-3.5'
                     }`}>
@@ -1635,6 +1636,19 @@ export default function Dashboard({
                         })}
                       </div>
                     )}
+                    </>}
+                    <div className={activeTab === 'transactions' ? 'hidden md:block' : 'hidden'}>
+                      <TransactionsTab
+                        transactions={recentTransactions}
+                        groups={myGroups}
+                        user={user}
+                        users={users}
+                        getUserName={getUserName}
+                        ledgerFilter={ledgerFilter}
+                        onLedgerFilterChange={setLedgerFilter}
+                        onOpenExport={() => setTransactionExportOpen(true)}
+                      />
+                    </div>
                   </section>
                 </div>
 
