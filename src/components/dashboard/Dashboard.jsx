@@ -11,6 +11,7 @@ import {
   BellOff,
   Search,
   Receipt,
+  AlertTriangle,
   ArrowUpRight,
   ArrowDownLeft,
   Wallet,
@@ -32,6 +33,8 @@ import MonthlyAnalyticsTab from './MonthlyAnalyticsTab';
 import ProfileTabView from './ProfileTab';
 import DesktopSpacesTab from './DesktopSpacesTab';
 import SpaceLongPressActions from './SpaceLongPressActions';
+import ExpenseLongPressActions from '../group/ExpenseLongPressActions';
+import ActiveDisputesPanel from '../common/ActiveDisputesPanel';
 import TransactionsTab from './TransactionsTab';
 import TransactionExportModal from './TransactionExportModal';
 import { calculateSettlements } from '../../utils/settlement';
@@ -49,6 +52,9 @@ export default function Dashboard({
   onCreateGroup,
   onJoinGroup,
   onSaveExpense,
+  onDeleteExpense,
+  onRaiseExpenseDispute,
+  onCancelExpenseDispute,
   rentRecords = [],
   onMarkRentPaid,
   onSendNotification,
@@ -185,7 +191,6 @@ export default function Dashboard({
       ),
     [notifications, user?.id]
   );
-
   const unreadNotifications = useMemo(
     () => userNotifications.filter((n) => !n.read),
     [userNotifications]
@@ -200,6 +205,15 @@ export default function Dashboard({
     () => groups.filter((group) => group.members && group.members.includes(user?.id)),
     [groups, user?.id]
   );
+  const activeDisputes = useMemo(() => {
+    const groupIds = new Set(myGroups.map((group) => group.id));
+    return expenses
+      .filter((expense) => expense.activeDisputeId && groupIds.has(expense.groupId))
+      .sort((first, second) => (
+        Date.parse(second.activeDisputeCreatedAt || second.createdAt || 0)
+        - Date.parse(first.activeDisputeCreatedAt || first.createdAt || 0)
+      ));
+  }, [expenses, myGroups]);
 
   // Unread message & transaction count per space
   const unreadCountsByGroup = useMemo(() => {
@@ -248,7 +262,7 @@ export default function Dashboard({
           n.type === 'NEW_MESSAGE' ||
           n.type === 'MESSAGE' ||
           n.category === 'chat' ||
-          /message|chat/i.test(n.type || '')
+          /message|chat|dispute/i.test(n.type || '')
       ).length;
 
       const transactionNotifs = groupUnreadNotifs.filter(
@@ -258,6 +272,7 @@ export default function Dashboard({
           n.type === 'TRANSACTION' ||
           n.type === 'SETTLEMENT' ||
           n.category === 'expense' ||
+          !/dispute/i.test(n.type || '') &&
           /expense|bill|transaction|settle/i.test(n.type || '')
       ).length;
 
@@ -302,14 +317,14 @@ export default function Dashboard({
                   n.type === 'NEW_MESSAGE' ||
                   n.type === 'MESSAGE' ||
                   n.category === 'chat' ||
-                  /message|chat/i.test(n.type || '')
+                  /message|chat|dispute/i.test(n.type || '')
                 )
               : !(
                   n.type === 'CHAT_MESSAGE' ||
                   n.type === 'NEW_MESSAGE' ||
                   n.type === 'MESSAGE' ||
                   n.category === 'chat' ||
-                  /message|chat/i.test(n.type || '')
+                  /message|chat|dispute/i.test(n.type || '')
                 )
           )
       );
@@ -658,6 +673,7 @@ export default function Dashboard({
         title: quickTitle.trim(),
         totalAmount: numAmount.toFixed(2),
         paidBy: user?.id,
+        createdBy: user?.id,
         paymentMethod: quickMethod,
         category: quickCategory,
         date: today,
@@ -699,7 +715,7 @@ export default function Dashboard({
 
       {/* --- NATIVE MOBILE APP TOP BAR (< md) --- */}
       <header
-        className={`relative z-30 flex h-14 flex-shrink-0 items-center justify-between gap-2 bg-transparent px-3 md:hidden ${
+        className={`relative z-30 flex h-14 flex-shrink-0 items-center justify-between gap-2 bg-transparent px-3.5 md:hidden ${
           ['profile', 'transactions', 'monthly'].includes(activeTab) ? 'hidden' : ''
         }`}
       >
@@ -1098,6 +1114,10 @@ export default function Dashboard({
                   ledgerFilter={ledgerFilter}
                   onLedgerFilterChange={setLedgerFilter}
                   onOpenExport={() => setTransactionExportOpen(true)}
+                  onDeleteExpense={onDeleteExpense}
+                  onRaiseExpenseDispute={onRaiseExpenseDispute}
+                  onCancelExpenseDispute={onCancelExpenseDispute}
+                  showToast={showToast}
                 />
               </div>
             )}
@@ -1572,8 +1592,27 @@ export default function Dashboard({
                             ));
 
                           return (
-                            <div
+                            <ExpenseLongPressActions
                               key={exp.id}
+                              expenseTitle={exp.title}
+                              canDelete={exp.createdBy === user?.id && !exp.activeDisputeId}
+                              canDispute={Boolean(
+                                grp
+                                && grp.members?.includes(user?.id)
+                                && !exp.isSettlement
+                                && exp.category !== 'Settlement'
+                                && !exp.activeDisputeId
+                              )}
+                              canCancelDispute={Boolean(
+                                exp.activeDisputeId
+                                && (!exp.activeDisputeBy || exp.activeDisputeBy === user?.id)
+                              )}
+                              onDelete={() => onDeleteExpense?.(exp.id)}
+                              onRaiseDispute={(message) => onRaiseExpenseDispute?.(exp, message)}
+                              onCancelDispute={() => onCancelExpenseDispute?.(exp)}
+                              showToast={showToast}
+                            >
+                            <div
                               onClick={() => handleOpenGroup(exp.groupId, 'expenses')}
                               className="flex items-center justify-between gap-4 rounded-2xl border border-white/80 bg-white/60 px-3.5 py-3 hover:bg-white/95 transition-all cursor-pointer"
                             >
@@ -1589,6 +1628,17 @@ export default function Dashboard({
                                     <span className="rounded-lg bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
                                       {grp?.name || 'Room'}
                                     </span>
+                                    {exp.activeDisputeId && (
+                                      <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                                        <AlertTriangle size={11} />
+                                        Dispute open
+                                      </span>
+                                    )}
+                                    {exp.wasEdited && (
+                                      <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700">
+                                        Edited
+                                      </span>
+                                    )}
                                   </div>
                                   <p className="mt-0.5 text-xs text-slate-500">
                                     <span className="font-semibold text-slate-700">
@@ -1632,6 +1682,7 @@ export default function Dashboard({
                                 <ChevronRight size={15} className="text-slate-300" />
                               </div>
                             </div>
+                            </ExpenseLongPressActions>
                           );
                         })}
                       </div>
@@ -1647,6 +1698,10 @@ export default function Dashboard({
                         ledgerFilter={ledgerFilter}
                         onLedgerFilterChange={setLedgerFilter}
                         onOpenExport={() => setTransactionExportOpen(true)}
+                        onDeleteExpense={onDeleteExpense}
+                        onRaiseExpenseDispute={onRaiseExpenseDispute}
+                        onCancelExpenseDispute={onCancelExpenseDispute}
+                        showToast={showToast}
                       />
                     </div>
                   </section>
@@ -1764,16 +1819,24 @@ export default function Dashboard({
                         </p>
                       </div>
                       <span className="rounded-lg bg-blue-50 px-2 py-0.5 font-mono text-xs font-bold text-blue-700">
-                        {groupMetrics.myUnpaidRents.length + groupMetrics.allMySettlements.length}
+                        {groupMetrics.myUnpaidRents.length + groupMetrics.allMySettlements.length + activeDisputes.length}
                       </span>
                     </div>
 
-                    {groupMetrics.myUnpaidRents.length === 0 && groupMetrics.allMySettlements.length === 0 ? (
+                    <ActiveDisputesPanel
+                      disputes={activeDisputes}
+                      groups={myGroups}
+                      onOpenDispute={(expense) => handleOpenGroup(expense.groupId, 'chat')}
+                      inline
+                    />
+                    {groupMetrics.myUnpaidRents.length === 0
+                      && groupMetrics.allMySettlements.length === 0
+                      && activeDisputes.length === 0 ? (
                       <div className="rounded-2xl bg-emerald-50/70 border border-emerald-200/70 p-4 text-center">
                         <CheckCircle2 size={20} className="mx-auto mb-1 text-emerald-600" />
                         <p className="text-xs font-bold text-emerald-950">All Settled Up</p>
                       </div>
-                    ) : (
+                    ) : groupMetrics.myUnpaidRents.length > 0 || groupMetrics.allMySettlements.length > 0 ? (
                       <div className="space-y-2.5">
                         {groupMetrics.myUnpaidRents.slice(0, 5).map((rent) => (
                           <div
@@ -1833,7 +1896,7 @@ export default function Dashboard({
                           );
                         })}
                       </div>
-                    )}
+                    ) : null}
                   </section>
                 </div>
               </div>
@@ -1952,7 +2015,8 @@ export default function Dashboard({
               ) : (
                 userNotifications.map((n) => {
                   const grp = myGroups.find((g) => g.id === n.groupId);
-                  const isChat = /chat|message/i.test(n.type || n.category || '');
+                  const isDispute = /dispute/i.test(n.type || n.category || '');
+                  const isChat = /chat|message|dispute/i.test(n.type || n.category || '');
                   const isSelected = selectedActivityIds.has(n.id);
                   const isRent = /rent/i.test(n.type || n.category || '');
                   return (
@@ -2003,7 +2067,7 @@ export default function Dashboard({
                               ? 'bg-blue-50 text-blue-600'
                               : 'bg-emerald-50 text-emerald-600'
                         }`}>
-                          {isSelected ? <Check size={14} /> : isChat ? <MessageSquare size={13} /> : isRent ? <Home size={13} /> : <Receipt size={13} />}
+                          {isSelected ? <Check size={14} /> : isDispute ? <AlertTriangle size={13} /> : isChat ? <MessageSquare size={13} /> : isRent ? <Home size={13} /> : <Receipt size={13} />}
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-semibold text-slate-900 leading-snug">

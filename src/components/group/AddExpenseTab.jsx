@@ -102,6 +102,7 @@ export default function AddExpenseTab({
       title: title.trim(),
       totalAmount: numericAmount.toFixed(2),
       paidBy,
+      createdBy: currentUser.id,
       paymentMethod,
       category,
       date,

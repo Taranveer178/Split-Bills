@@ -1,7 +1,8 @@
 import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { 
-  ArrowLeft, 
+  AlertTriangle,
+  ArrowLeft,
   Download, 
   ImagePlus, 
   MessageCircle, 
@@ -21,6 +22,7 @@ import {
   Search,
   Loader2,
   Reply,
+  Receipt,
 } from 'lucide-react';
 import { 
   collection, 
@@ -38,6 +40,8 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { triggerPushNotification } from '../../utils/notifications';
+import { formatCurrency } from '../../utils/currency';
+import { CATEGORIES, PAYMENT_METHODS } from '../../utils/constants';
 import { uploadChatMedia } from '../../utils/cloudinaryUpload';
 
 const EMOJI_CATEGORIES = {
@@ -234,7 +238,16 @@ function LinkPreview({ url, isMe }) {
   );
 }
 
-export default function ChatTab({ group, groups = [], currentUser, users, onSendNotification, showToast }) {
+export default function ChatTab({
+  group,
+  groups = [],
+  currentUser,
+  users,
+  expenses = [],
+  onSendNotification,
+  onResolveExpenseDispute,
+  showToast,
+}) {
   const [messages, setMessages] = useState([]);
   const [typingMessages, setTypingMessages] = useState([]);
   const [typingNow, setTypingNow] = useState(0);
@@ -262,6 +275,11 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
   const [sharingGroupId, setSharingGroupId] = useState(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [resolvingDisputeIds, setResolvingDisputeIds] = useState(new Set());
+  const [disputeResolutionMessage, setDisputeResolutionMessage] = useState(null);
+  const [disputeResolutionMode, setDisputeResolutionMode] = useState('choices');
+  const [disputeEditForm, setDisputeEditForm] = useState(null);
+  const [disputeResolutionError, setDisputeResolutionError] = useState('');
 
   // Multi-Selection Mode
   const [isSelectMode, setIsSelectMode] = useState(false);
@@ -394,6 +412,9 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
   };
 
   const getReplySummary = (message) => {
+    if (message?.type === 'expense_dispute') {
+      return `Expense dispute: ${message.expenseTitle || 'Expense'}`;
+    }
     if (message?.text?.trim()) return message.text.trim();
     if (message?.attachmentType === 'image') return 'Photo';
     if (message?.attachmentType === 'gif') return 'GIF';
@@ -442,6 +463,79 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
       day: 'numeric',
       month: 'short',
       year: dateObj.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
+    });
+  };
+
+  const handleResolveExpenseDispute = async (message, action = 'solved', updates) => {
+    if (!onResolveExpenseDispute) {
+      showToast?.('Resolving disputes is unavailable right now.', 'error');
+      return;
+    }
+    setResolvingDisputeIds((previous) => new Set(previous).add(message.id));
+    try {
+      await onResolveExpenseDispute(message, { action, updates });
+      showToast?.(
+        action === 'delete'
+          ? 'Expense deleted and dispute resolved.'
+          : action === 'update'
+            ? 'Expense updated and dispute resolved.'
+            : 'Dispute marked as resolved.'
+      );
+      setDisputeResolutionMessage(null);
+      setDisputeResolutionMode('choices');
+      setDisputeEditForm(null);
+      setDisputeResolutionError('');
+    } catch (error) {
+      console.error('Could not resolve expense dispute:', error);
+      setDisputeResolutionError(error.message || 'Could not resolve this dispute.');
+    } finally {
+      setResolvingDisputeIds((previous) => {
+        const next = new Set(previous);
+        next.delete(message.id);
+        return next;
+      });
+    }
+  };
+
+  const openDisputeResolution = (message) => {
+    const expense = expenses.find((item) => item.id === message.expenseId);
+    if (!expense) {
+      showToast?.('The disputed expense could not be found.', 'error');
+      return;
+    }
+    setDisputeResolutionMessage(message);
+    setDisputeResolutionMode('choices');
+    setDisputeResolutionError('');
+    setDisputeEditForm({
+      title: expense.title || '',
+      totalAmount: String(expense.totalAmount ?? ''),
+      date: expense.date || '',
+      paidBy: expense.paidBy || group.members?.[0] || '',
+      category: expense.category || 'Other',
+      paymentMethod: expense.paymentMethod || 'Other',
+      splits: Object.fromEntries((group.members || []).map((memberId) => [
+        memberId,
+        String(expense.splits?.[memberId] ?? '0'),
+      ])),
+    });
+  };
+
+  const submitDisputeExpenseEdit = (event) => {
+    event.preventDefault();
+    const amount = Number(disputeEditForm?.totalAmount);
+    const splitTotal = Object.values(disputeEditForm?.splits || {})
+      .reduce((total, share) => total + (Number(share) || 0), 0);
+    if (!disputeEditForm?.title.trim() || !Number.isFinite(amount) || amount <= 0) {
+      setDisputeResolutionError('Enter a valid expense title and amount.');
+      return;
+    }
+    if (Math.abs(splitTotal - amount) > 0.05) {
+      setDisputeResolutionError('Member shares must add up to the expense total.');
+      return;
+    }
+    void handleResolveExpenseDispute(disputeResolutionMessage, 'update', {
+      ...disputeEditForm,
+      totalAmount: amount,
     });
   };
 
@@ -1072,12 +1166,19 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
   }, [visibleMessages, selectedMessageIds]);
 
   const deleteCandidates = deleteDialogMessages || selectedMessages;
-  const canDeleteAllForEveryone = useMemo(() => {
-    if (!deleteCandidates.length) return false;
-    return deleteCandidates.every(
-      (m) => m.senderId === currentUser.id || group.createdBy === currentUser.id
-    );
-  }, [deleteCandidates, currentUser?.id, group?.createdBy]);
+  const canDeleteAllForEveryone = deleteCandidates.length > 0 && deleteCandidates.every(
+    (message) => (
+      message.type !== 'expense_dispute'
+      && (message.senderId === currentUser.id || group.createdBy === currentUser.id)
+    )
+  );
+  const resolutionExpense = expenses.find(
+    (expense) => expense.id === disputeResolutionMessage?.expenseId
+  );
+  const canEditDisputedExpense = Boolean(
+    resolutionExpense
+    && (resolutionExpense.createdBy === currentUser.id || group.createdBy === currentUser.id)
+  );
 
   return (
     <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden bg-white font-sans select-none">
@@ -1226,9 +1327,11 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
                             ? 'bg-transparent shadow-none border-none p-1' 
                             : isDeleted
                               ? 'bg-slate-100 text-slate-400 italic border border-slate-200/80 px-3 py-1.5 rounded-2xl shadow-xs'
-                              : isMe
-                                ? 'bg-gradient-to-br from-sky-500 via-blue-500 to-blue-500 text-white rounded-2xl rounded-br-xs shadow-[0_1px_3px_rgba(14,165,233,0.25)]'
-                                : 'bg-white text-slate-800 border border-slate-200/70 rounded-2xl rounded-bl-xs shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
+                              : msg.type === 'expense_dispute'
+                                ? 'bg-amber-50 text-amber-950 border border-amber-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
+                                : isMe
+                                  ? 'bg-gradient-to-br from-sky-500 via-blue-500 to-blue-500 text-white rounded-2xl rounded-br-xs shadow-[0_1px_3px_rgba(14,165,233,0.25)]'
+                                  : 'bg-white text-slate-800 border border-slate-200/70 rounded-2xl rounded-bl-xs shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
                         }`}
                       >
                         {!isMe && isFirstOfCluster && !isDeleted && !onlyEmoji && (
@@ -1327,7 +1430,76 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
                               </div>
                             )}
 
-                            {msg.type === 'sticker' ? (
+                            {msg.type === 'expense_dispute' ? (
+                              <div className="min-w-[16rem] max-w-sm px-3 py-2.5">
+                                <div className="flex items-center gap-2 text-xs font-extrabold text-amber-800">
+                                  <AlertTriangle size={15} />
+                                  <span>Expense dispute</span>
+                                  <span className={`ml-auto rounded-full px-2 py-0.5 text-[9px] uppercase tracking-wide ${
+                                    msg.status === 'resolved'
+                                      ? 'bg-emerald-100 text-emerald-700'
+                                      : msg.status === 'cancelled'
+                                        ? 'bg-slate-200 text-slate-700'
+                                        : 'bg-amber-200 text-amber-900'
+                                  }`}>
+                                    {msg.status === 'resolved'
+                                      ? 'Resolved'
+                                      : msg.status === 'cancelled' ? 'Cancelled' : 'Open'}
+                                  </span>
+                                </div>
+                                <p className="mt-1.5 text-xs font-bold text-slate-900">
+                                  {msg.expenseTitle || 'Expense'}
+                                </p>
+                                {msg.expenseAmount != null && (
+                                  <p className="mt-0.5 text-[11px] text-slate-600">
+                                    {formatCurrency(msg.expenseAmount, group.currency)}
+                                  </p>
+                                )}
+                                <p className="mt-1 text-[11px] text-slate-600">
+                                  Raised by {msg.disputedByName || msg.senderName || 'a member'}
+                                  {msg.status === 'resolved'
+                                    ? ` · Resolved by ${msg.resolvedByName || 'a member'}`
+                                    : msg.status === 'cancelled'
+                                      ? ` · Cancelled by ${msg.cancelledByName || 'the raiser'}`
+                                      : ''}
+                                </p>
+                                {msg.disputeMessage && (
+                                  <p className="mt-2 whitespace-pre-wrap break-words rounded-lg bg-white/80 px-2.5 py-2 text-xs text-slate-700">
+                                    {msg.disputeMessage}
+                                  </p>
+                                )}
+                                {msg.status !== 'resolved' && (
+                                  msg.status === 'open' && (
+                                  <button
+                                    type="button"
+                                    disabled={resolvingDisputeIds.has(msg.id)}
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      openDisputeResolution(msg);
+                                    }}
+                                    className="mt-2 rounded-lg bg-amber-700 px-2.5 py-1.5 text-[10px] font-bold text-white transition-colors hover:bg-amber-800 disabled:cursor-wait disabled:opacity-60"
+                                  >
+                                    Resolve dispute
+                                  </button>
+                                  )
+                                )}
+                                {msg.status === 'resolved' && msg.resolutionAction && (
+                                  <p className="mt-2 text-[10px] font-semibold text-emerald-700">
+                                    {msg.resolutionAction === 'delete'
+                                      ? 'Transaction deleted'
+                                      : msg.resolutionAction === 'update'
+                                        ? 'Transaction updated'
+                                        : 'Marked as solved'}
+                                  </p>
+                                )}
+                                {msg.status === 'cancelled' && (
+                                  <p className="mt-2 text-[10px] font-semibold text-slate-500">Dispute cancelled</p>
+                                )}
+                                <div className="mt-1.5 flex justify-end text-[9.5px] font-semibold text-slate-400">
+                                  {timeString}
+                                </div>
+                              </div>
+                            ) : msg.type === 'sticker' ? (
                               <div className="px-3 py-1">
                                 <span className="text-6xl leading-none select-none">{msg.text}</span>
                                 <div className={`text-[9.5px] text-right mt-1 font-semibold flex items-center justify-end gap-1 ${
@@ -1959,6 +2131,244 @@ export default function ChatTab({ group, groups = [], currentUser, users, onSend
               </button>
             </div>
           </div>
+        </div>,
+        document.body
+      )}
+
+      {disputeResolutionMessage && createPortal(
+        <div
+          className="fixed inset-0 z-[170] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm"
+          onClick={() => {
+            setDisputeResolutionMessage(null);
+            setDisputeResolutionError('');
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="dispute-resolution-title"
+            className="max-h-[min(90dvh,44rem)] w-full max-w-lg overflow-y-auto rounded-3xl border border-white/70 bg-white p-5 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 id="dispute-resolution-title" className="text-base font-extrabold text-slate-900">
+                  Resolve expense dispute
+                </h2>
+                <p className="mt-1 truncate text-xs text-slate-500">
+                  {disputeResolutionMessage.expenseTitle || 'Disputed expense'}
+                </p>
+              </div>
+              <button
+                type="button"
+                aria-label="Close dispute resolution"
+                onClick={() => {
+                  setDisputeResolutionMessage(null);
+                  setDisputeResolutionError('');
+                }}
+                className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-rose-600 text-white hover:bg-rose-700"
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            {disputeResolutionError && (
+              <p role="alert" className="mb-3 rounded-xl bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+                {disputeResolutionError}
+              </p>
+            )}
+
+            {disputeResolutionMode === 'choices' && (
+              <div className="space-y-2">
+                {canEditDisputedExpense && (
+                  <button
+                    type="button"
+                    disabled={resolvingDisputeIds.has(disputeResolutionMessage.id)}
+                    onClick={() => {
+                      setDisputeResolutionError('');
+                      setDisputeResolutionMode('confirm-delete');
+                    }}
+                    className="flex min-h-12 w-full items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 text-left text-sm font-bold text-rose-700 hover:bg-rose-100 disabled:opacity-60"
+                  >
+                    <Trash2 size={17} />
+                    Delete transaction
+                  </button>
+                )}
+                <button
+                  type="button"
+                  disabled={resolvingDisputeIds.has(disputeResolutionMessage.id)}
+                  onClick={() => handleResolveExpenseDispute(disputeResolutionMessage, 'solved')}
+                  className="flex min-h-12 w-full items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 text-left text-sm font-bold text-emerald-700 hover:bg-emerald-100 disabled:opacity-60"
+                >
+                  <Check size={17} />
+                  {resolvingDisputeIds.has(disputeResolutionMessage.id) ? 'Saving…' : 'Mark as solved'}
+                </button>
+                {canEditDisputedExpense && (
+                  <button
+                    type="button"
+                    disabled={resolvingDisputeIds.has(disputeResolutionMessage.id)}
+                    onClick={() => {
+                      setDisputeResolutionError('');
+                      setDisputeResolutionMode('edit');
+                    }}
+                    className="flex min-h-12 w-full items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 text-left text-sm font-bold text-blue-700 hover:bg-blue-100 disabled:opacity-60"
+                  >
+                    <Receipt size={17} />
+                    Update transaction
+                  </button>
+                )}
+              </div>
+            )}
+
+            {disputeResolutionMode === 'confirm-delete' && (
+              <div>
+                <p className="text-sm font-bold text-slate-900">Delete this transaction?</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  The expense will be removed from the group and the dispute will be resolved.
+                </p>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setDisputeResolutionMode('choices')}
+                    className="min-h-10 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    disabled={resolvingDisputeIds.has(disputeResolutionMessage.id)}
+                    onClick={() => handleResolveExpenseDispute(disputeResolutionMessage, 'delete')}
+                    className="min-h-10 rounded-xl bg-rose-600 text-xs font-bold text-white disabled:opacity-60"
+                  >
+                    {resolvingDisputeIds.has(disputeResolutionMessage.id) ? 'Deleting…' : 'Delete transaction'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {disputeResolutionMode === 'edit' && disputeEditForm && (
+              <form className="space-y-3" onSubmit={submitDisputeExpenseEdit}>
+                <label className="block text-xs font-semibold text-slate-700">
+                  Transaction name
+                  <input
+                    value={disputeEditForm.title}
+                    onChange={(event) => setDisputeEditForm((previous) => ({ ...previous, title: event.target.value }))}
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal text-slate-900"
+                    required
+                  />
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="block text-xs font-semibold text-slate-700">
+                    Amount ({group.currency || 'currency'})
+                    <input
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={disputeEditForm.totalAmount}
+                      onChange={(event) => setDisputeEditForm((previous) => ({ ...previous, totalAmount: event.target.value }))}
+                      className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal text-slate-900"
+                      required
+                    />
+                  </label>
+                  <label className="block text-xs font-semibold text-slate-700">
+                    Date
+                    <input
+                      type="date"
+                      value={disputeEditForm.date}
+                      onChange={(event) => setDisputeEditForm((previous) => ({ ...previous, date: event.target.value }))}
+                      className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal text-slate-900"
+                      required
+                    />
+                  </label>
+                  <label className="block text-xs font-semibold text-slate-700">
+                    Paid by
+                    <select
+                      value={disputeEditForm.paidBy}
+                      onChange={(event) => setDisputeEditForm((previous) => ({ ...previous, paidBy: event.target.value }))}
+                      className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal text-slate-900"
+                    >
+                      {(group.members || []).map((memberId) => (
+                        <option key={memberId} value={memberId}>
+                          {memberId === currentUser.id ? 'You' : users.find((member) => member.id === memberId)?.username || 'Member'}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="block text-xs font-semibold text-slate-700">
+                    Category
+                    <select
+                      value={disputeEditForm.category}
+                      onChange={(event) => setDisputeEditForm((previous) => ({ ...previous, category: event.target.value }))}
+                      className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal text-slate-900"
+                    >
+                      {CATEGORIES.map((category) => <option key={category} value={category}>{category}</option>)}
+                      {!CATEGORIES.includes(disputeEditForm.category) && (
+                        <option value={disputeEditForm.category}>{disputeEditForm.category}</option>
+                      )}
+                    </select>
+                  </label>
+                  <label className="block text-xs font-semibold text-slate-700">
+                    Payment method
+                    <select
+                      value={disputeEditForm.paymentMethod}
+                      onChange={(event) => setDisputeEditForm((previous) => ({ ...previous, paymentMethod: event.target.value }))}
+                      className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal text-slate-900"
+                    >
+                      {PAYMENT_METHODS.map((method) => <option key={method} value={method}>{method}</option>)}
+                      {!PAYMENT_METHODS.includes(disputeEditForm.paymentMethod) && (
+                        <option value={disputeEditForm.paymentMethod}>{disputeEditForm.paymentMethod}</option>
+                      )}
+                    </select>
+                  </label>
+                </div>
+                <fieldset className="rounded-xl border border-slate-200 p-3">
+                  <legend className="px-1 text-xs font-bold text-slate-700">Member shares</legend>
+                  <div className="max-h-40 space-y-2 overflow-y-auto">
+                    {(group.members || []).map((memberId) => (
+                      <label key={memberId} className="flex items-center justify-between gap-3 text-xs text-slate-600">
+                        <span className="min-w-0 truncate">
+                          {memberId === currentUser.id ? 'You' : users.find((member) => member.id === memberId)?.username || 'Member'}
+                        </span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={disputeEditForm.splits[memberId] ?? '0'}
+                          onChange={(event) => setDisputeEditForm((previous) => ({
+                            ...previous,
+                            splits: { ...previous.splits, [memberId]: event.target.value },
+                          }))}
+                          className="w-28 rounded-lg border border-slate-200 px-2 py-1.5 text-right text-xs text-slate-900"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+                <p className="text-[11px] text-slate-500">
+                  Shares must total {formatCurrency(disputeEditForm.totalAmount, group.currency)}.
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDisputeResolutionMode('choices');
+                      setDisputeResolutionError('');
+                    }}
+                    className="min-h-10 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={resolvingDisputeIds.has(disputeResolutionMessage.id)}
+                    className="min-h-10 rounded-xl bg-blue-700 text-xs font-bold text-white disabled:opacity-60"
+                  >
+                    {resolvingDisputeIds.has(disputeResolutionMessage.id) ? 'Saving…' : 'Save update'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </section>
         </div>,
         document.body
       )}

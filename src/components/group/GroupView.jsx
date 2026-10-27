@@ -18,6 +18,7 @@ import BalancesTab from './BalancesTab';
 import ExpensesTab from './ExpensesTab';
 import MembersTab from './MembersTab';
 import GroupRentPanel from './GroupRentPanel';
+import ActiveDisputesPanel from '../common/ActiveDisputesPanel';
 import ChatTab from './ChatTab';
 import { calculateSettlements } from '../../utils/settlement';
 import { formatCurrency } from '../../utils/currency';
@@ -37,6 +38,9 @@ export default function GroupView({
   onMarkRentPaid,
   onDeleteRent,
   onDeleteExpense,
+  onRaiseExpenseDispute,
+  onCancelExpenseDispute,
+  onResolveExpenseDispute,
   onDeleteGroup,
   onUpdateGroup,
   onSendNotification,
@@ -64,6 +68,10 @@ export default function GroupView({
     [expenses, group.members]
   );
   const myBalance = balances[currentUser.id] || 0;
+  const activeDisputes = useMemo(
+    () => expenses.filter((expense) => expense.activeDisputeId),
+    [expenses]
+  );
   const unpaidRent = useMemo(
     () => monthlyRents
       .filter((rent) => (
@@ -243,6 +251,8 @@ export default function GroupView({
                     users={users}
                     getUserName={getUserName}
                     onDeleteExpense={onDeleteExpense}
+                    onRaiseExpenseDispute={onRaiseExpenseDispute}
+                    onCancelExpenseDispute={onCancelExpenseDispute}
                     showToast={showToast}
                   />
                 </div>
@@ -354,6 +364,14 @@ export default function GroupView({
                     compact
                     sidebar
                   />
+                  {activeDisputes.length > 0 && (
+                    <ActiveDisputesPanel
+                      disputes={activeDisputes}
+                      groups={[group]}
+                      onOpenDispute={() => handleTabSelect('chat')}
+                      compact
+                    />
+                  )}
                 </aside>
               </div>
             </div>
@@ -392,7 +410,9 @@ export default function GroupView({
               groups={groups}
               currentUser={currentUser}
               users={users}
+              expenses={expenses}
               onSendNotification={onSendNotification}
+              onResolveExpenseDispute={onResolveExpenseDispute}
               showToast={showToast}
             />
           )}

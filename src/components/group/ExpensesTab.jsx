@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../common/UI';
 import { formatCurrency } from '../../utils/currency';
+import ExpenseLongPressActions from './ExpenseLongPressActions';
 
 const getCategoryMeta = (category = '') => {
   const cat = category.toLowerCase();
@@ -62,6 +63,8 @@ export default function ExpensesTab({
   users = [],
   getUserName,
   onDeleteExpense,
+  onRaiseExpenseDispute,
+  onCancelExpenseDispute,
   showToast,
 }) {
   const [payerFilter, setPayerFilter] = useState('ALL');
@@ -78,7 +81,7 @@ export default function ExpensesTab({
   });
 
   const canDeleteExpense = (exp) => {
-    return exp.paidBy === currentUser.id || exp.createdBy === currentUser.id;
+    return exp.createdBy === currentUser.id && !exp.activeDisputeId;
   };
 
   const toggleSelectMode = () => {
@@ -93,7 +96,7 @@ export default function ExpensesTab({
   const handleCardClick = (exp) => {
     if (isSelectMode) {
       if (!canDeleteExpense(exp)) {
-        showToast('Only the payer or creator can delete this bill.', 'error');
+        showToast('Only the member who recorded this expense can delete it.', 'error');
         return;
       }
       setSelectedIds((prev) =>
@@ -266,8 +269,28 @@ export default function ExpensesTab({
             }
 
             return (
-              <div
+              <ExpenseLongPressActions
                 key={exp.id}
+                expenseTitle={exp.title}
+                canDelete={hasAccess}
+                canDispute={
+                  !isSelectMode
+                  && !exp.isSettlement
+                  && exp.category !== 'Settlement'
+                  && !exp.activeDisputeId
+                }
+                canCancelDispute={
+                  !isSelectMode
+                  && Boolean(exp.activeDisputeId)
+                  && (!exp.activeDisputeBy || exp.activeDisputeBy === currentUser.id)
+                }
+                enabled={!isSelectMode}
+                onDelete={() => onDeleteExpense(exp.id)}
+                onRaiseDispute={(message) => onRaiseExpenseDispute?.(exp, message)}
+                onCancelDispute={() => onCancelExpenseDispute?.(exp)}
+                showToast={showToast}
+              >
+              <div
                 onClick={() => handleCardClick(exp)}
                 className={`group flex items-center justify-between gap-3 p-3.5 sm:p-4 transition-colors cursor-pointer ${
                   isSelected ? 'bg-slate-100' : 'hover:bg-slate-50'
@@ -285,6 +308,17 @@ export default function ExpensesTab({
                       <h3 className="font-bold text-slate-900 text-xs sm:text-sm truncate">
                         {getExpenseTitle(exp)}
                       </h3>
+                      {exp.activeDisputeId && (
+                        <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                          <AlertCircle size={11} />
+                          Dispute open
+                        </span>
+                      )}
+                      {exp.wasEdited && (
+                        <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700">
+                          Edited
+                        </span>
+                      )}
                       <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
                         {exp.paymentMethod || 'UPI'}
                       </span>
@@ -353,6 +387,7 @@ export default function ExpensesTab({
                   )}
                 </div>
               </div>
+              </ExpenseLongPressActions>
             );
           })}
         </div>
@@ -394,7 +429,7 @@ export default function ExpensesTab({
                   type="button"
                   onClick={() => setDetailExpense(null)}
                   aria-label="Close expense details"
-                  className="popup-close-button flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 transition-colors hover:border-rose-300 hover:bg-rose-100 hover:text-rose-700"
+                  className="popup-close-button flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-rose-600 bg-rose-600 text-white transition-colors hover:border-rose-700 hover:bg-rose-700"
                 >
                   <X size={16} />
                 </button>
@@ -495,13 +530,6 @@ export default function ExpensesTab({
                 </div>
               </div>
 
-              <Button
-                variant="secondary"
-                onClick={() => setDetailExpense(null)}
-                className="w-full rounded-2xl border-slate-200 bg-slate-100/80 py-2.5 text-xs hover:bg-slate-100"
-              >
-                Close
-              </Button>
             </section>
           </div>,
           document.body

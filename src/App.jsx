@@ -245,6 +245,7 @@ export default function App() {
   const historyInitializedRef = useRef(false);
   const currentRouteRef = useRef(initialRoute);
   const navigateToRef = useRef(null);
+  const lastExitedGroupIdRef = useRef(null);
   const activeUser = users.find((user) => user.id === activeUserId);
 
   useEffect(() => {
@@ -358,9 +359,24 @@ export default function App() {
   };
 
   const navigateTo = (route, { replace = false } = {}) => {
+    const previousRoute = currentRouteRef.current;
+    if (previousRoute.view === 'group' && route.view === 'dashboard') {
+      lastExitedGroupIdRef.current = previousRoute.groupId;
+    }
+
+    const returningToExitedGroup = route.view === 'group'
+      && previousRoute.view !== 'group'
+      && lastExitedGroupIdRef.current === route.groupId
+      && route.initialTab !== 'chat';
     const normalizedRoute = route.view === 'group'
-      ? { initialTab: 'expenses', drawerOpen: false, ...route }
+      ? {
+          initialTab: 'expenses',
+          drawerOpen: false,
+          ...route,
+          ...(returningToExitedGroup ? { initialTab: 'expenses' } : {}),
+        }
       : route;
+    if (returningToExitedGroup) lastExitedGroupIdRef.current = null;
     const state = { roomSplitRoute: normalizedRoute };
     const url = getRouteUrl(normalizedRoute);
     if (replace) window.history.replaceState(state, '', url);
@@ -388,6 +404,9 @@ export default function App() {
     const handlePopState = (event) => {
       const previousRoute = currentRouteRef.current;
       const destinationRoute = event.state?.roomSplitRoute;
+      if (previousRoute.view === 'group' && (!destinationRoute || destinationRoute.view === 'dashboard')) {
+        lastExitedGroupIdRef.current = previousRoute.groupId;
+      }
       if (
         (!destinationRoute || destinationRoute.view === 'dashboard')
         && previousRoute.view === 'group'
@@ -701,7 +720,7 @@ export default function App() {
           notification.type === 'NEW_MESSAGE' ||
           notification.type === 'MESSAGE' ||
           notification.category === 'chat' ||
-          /message|chat/i.test(notification.type || '')
+          /message|chat|dispute/i.test(notification.type || '')
         )
       ))
       .map((notification) => notification.id);
@@ -760,14 +779,362 @@ export default function App() {
   };
 
   const saveExpense = async (newExpense) => {
+    const expense = { ...newExpense, createdBy: newExpense.createdBy || activeUserId };
     if (db) {
-      await setDoc(doc(db, 'expenses', newExpense.id), newExpense);
+      await setDoc(doc(db, 'expenses', expense.id), expense);
       return;
     }
     setExpenses((previous) => {
-      const next = [...previous.filter((expense) => expense.id !== newExpense.id), newExpense];
+      const next = [...previous.filter((item) => item.id !== expense.id), expense];
       localStorage.setItem('rs_expenses', JSON.stringify(next));
       return next;
+    });
+  };
+
+  const raiseExpenseDispute = async (expense, disputeMessage = '') => {
+    if (!db) throw new Error('Expense disputes require an active connection.');
+    if (!activeUserId || !activeUser) throw new Error('Sign in before raising a dispute.');
+    if (!expense?.id || !expense.groupId) throw new Error('This expense is missing its group details.');
+
+    const expenseRef = doc(db, 'expenses', expense.id);
+    const groupRef = doc(db, 'groups', expense.groupId);
+    const disputeRef = doc(collection(db, 'messages'));
+    const createdAt = new Date().toISOString();
+    const senderName = activeUser.username || 'A member';
+    const notificationDocs = [];
+
+    await runTransaction(db, async (transaction) => {
+      notificationDocs.length = 0;
+      const [expenseSnapshot, groupSnapshot] = await Promise.all([
+        transaction.get(expenseRef),
+        transaction.get(groupRef),
+      ]);
+      if (!expenseSnapshot.exists() || !groupSnapshot.exists()) {
+        throw new Error('This expense or group no longer exists.');
+      }
+
+      const currentExpense = expenseSnapshot.data();
+      const group = groupSnapshot.data();
+      if (!group.members?.includes(activeUserId)) {
+        throw new Error('You must be a group member to raise a dispute.');
+      }
+      if (currentExpense.groupId !== expense.groupId) {
+        throw new Error('This expense no longer belongs to the selected group.');
+      }
+      if (currentExpense.activeDisputeId) {
+        throw new Error('This expense already has an open dispute.');
+      }
+
+      const message = {
+        groupId: expense.groupId,
+        senderId: activeUserId,
+        senderName,
+        type: 'expense_dispute',
+        text: disputeMessage
+          ? `${senderName} raised a dispute about "${currentExpense.title || 'an expense'}": ${disputeMessage}`
+          : `${senderName} raised a dispute about "${currentExpense.title || 'an expense'}".`,
+        disputeMessage,
+        expenseId: expense.id,
+        expenseTitle: currentExpense.title || 'Expense',
+        expenseAmount: currentExpense.totalAmount,
+        status: 'open',
+        disputedBy: activeUserId,
+        disputedByName: senderName,
+        timestamp: Date.now(),
+        createdAt,
+      };
+      transaction.set(disputeRef, message);
+      transaction.update(expenseRef, {
+        activeDisputeId: disputeRef.id,
+        activeDisputeBy: activeUserId,
+        activeDisputeByName: senderName,
+        activeDisputeCreatedAt: createdAt,
+      });
+
+      const recipients = (group.members || []).filter((recipientId) => (
+        recipientId !== activeUserId
+        && !users.find((member) => member.id === recipientId)?.mutedGroupIds?.includes(expense.groupId)
+      ));
+      recipients.forEach((recipientId) => {
+        const notification = {
+          id: `expense_dispute_${disputeRef.id}_${recipientId}`,
+          recipientId,
+          senderId: activeUserId,
+          createdBy: activeUserId,
+          createdByName: senderName,
+          groupId: expense.groupId,
+          type: 'EXPENSE_DISPUTE',
+          message: `${senderName} raised a dispute about "${message.expenseTitle}" in ${group.name || 'your group'}.`,
+          createdAt,
+          read: false,
+        };
+        notificationDocs.push(notification);
+        transaction.set(doc(db, 'notifications', notification.id), notification);
+      });
+    });
+
+    notificationDocs.forEach((notification) => {
+      triggerPushNotification({
+        senderId: activeUserId,
+        recipientId: notification.recipientId,
+        title: 'Expense dispute raised',
+        message: notification.message,
+        groupId: expense.groupId,
+      }).catch((error) => console.warn('Expense dispute push notification failed:', error));
+    });
+
+    const expenseGroup = groups.find((group) => group.id === expense.groupId);
+    setCurrentGroupUnreadChatCount(0);
+    navigateTo({
+      view: 'group',
+      groupId: expense.groupId,
+      groupName: expenseGroup?.name || currentRouteRef.current.groupName,
+      initialTab: 'chat',
+      returnDashboardTab: currentRouteRef.current.returnDashboardTab || returnDashboardTab,
+    });
+  };
+
+  const resolveExpenseDispute = async (message, { action = 'solved', updates } = {}) => {
+    if (!db) throw new Error('Resolving expense disputes requires an active connection.');
+    if (!activeUserId || !message?.id || !message.expenseId || !message.groupId) {
+      throw new Error('This dispute is missing required details.');
+    }
+    if (!['solved', 'delete', 'update'].includes(action)) {
+      throw new Error('Choose a valid dispute resolution.');
+    }
+
+    const disputeRef = doc(db, 'messages', message.id);
+    const expenseRef = doc(db, 'expenses', message.expenseId);
+    const groupRef = doc(db, 'groups', message.groupId);
+    const resolvedAt = new Date().toISOString();
+    const notificationDocs = [];
+    const resolverName = activeUser?.username || 'A member';
+
+    await runTransaction(db, async (transaction) => {
+      notificationDocs.length = 0;
+      const [disputeSnapshot, expenseSnapshot, groupSnapshot] = await Promise.all([
+        transaction.get(disputeRef),
+        transaction.get(expenseRef),
+        transaction.get(groupRef),
+      ]);
+      if (!disputeSnapshot.exists() || !expenseSnapshot.exists() || !groupSnapshot.exists()) {
+        throw new Error('This dispute or its expense no longer exists.');
+      }
+
+      const dispute = disputeSnapshot.data();
+      const group = groupSnapshot.data();
+      const currentExpense = expenseSnapshot.data();
+      if (!group.members?.includes(activeUserId)) {
+        throw new Error('You must be a group member to resolve a dispute.');
+      }
+      if (dispute.type !== 'expense_dispute' || dispute.status !== 'open') {
+        throw new Error('This dispute has already been resolved.');
+      }
+      if (currentExpense.activeDisputeId !== message.id) {
+        throw new Error('This expense is no longer linked to this dispute.');
+      }
+
+      const canModifyExpense = (
+        currentExpense.createdBy === activeUserId || group.createdBy === activeUserId
+      );
+      if (action !== 'solved' && !canModifyExpense) {
+        throw new Error('Only the expense creator or group admin can update or delete it.');
+      }
+
+      let updatedExpense = null;
+      if (action === 'update') {
+        const title = updates?.title?.trim();
+        const totalAmount = Number(updates?.totalAmount);
+        const validDate = typeof updates?.date === 'string'
+          && /^\d{4}-\d{2}-\d{2}$/.test(updates.date)
+          && !Number.isNaN(new Date(`${updates.date}T00:00:00`).getTime());
+        const payerIsMember = group.members.includes(updates?.paidBy);
+        const splitEntries = Object.entries(updates?.splits || {});
+        const splits = {};
+        let splitTotal = 0;
+        splitEntries.forEach(([memberId, rawAmount]) => {
+          const share = Number(rawAmount);
+          if (!group.members.includes(memberId) || !Number.isFinite(share) || share < 0) {
+            throw new Error('Enter valid non-negative shares for group members.');
+          }
+          if (share > 0) {
+            splits[memberId] = share.toFixed(2);
+            splitTotal += share;
+          }
+        });
+        if (!title || !Number.isFinite(totalAmount) || totalAmount <= 0) {
+          throw new Error('Enter a valid expense title and amount.');
+        }
+        if (!validDate || !payerIsMember) {
+          throw new Error('Choose a valid date and payer from this group.');
+        }
+        if (!Object.keys(splits).length || Math.abs(splitTotal - totalAmount) > 0.05) {
+          throw new Error('Member shares must add up to the expense total.');
+        }
+
+        updatedExpense = {
+          ...currentExpense,
+          title,
+          totalAmount: totalAmount.toFixed(2),
+          date: updates.date,
+          paidBy: updates.paidBy,
+          category: updates.category || currentExpense.category || 'Other',
+          paymentMethod: updates.paymentMethod || currentExpense.paymentMethod || 'Other',
+          splits,
+          activeDisputeId: null,
+          activeDisputeBy: null,
+          activeDisputeByName: null,
+          activeDisputeCreatedAt: null,
+          wasEdited: true,
+          editedAt: resolvedAt,
+          editedBy: activeUserId,
+          editedByName: resolverName,
+        };
+        transaction.set(expenseRef, updatedExpense);
+      } else if (action === 'delete') {
+        transaction.delete(expenseRef);
+      } else {
+        transaction.update(expenseRef, {
+          activeDisputeId: null,
+          activeDisputeBy: null,
+          activeDisputeByName: null,
+          activeDisputeCreatedAt: null,
+        });
+      }
+
+      transaction.update(disputeRef, {
+        status: 'resolved',
+        resolvedBy: activeUserId,
+        resolvedByName: resolverName,
+        resolvedAt,
+        resolutionAction: action,
+        ...(updatedExpense ? {
+          expenseTitle: updatedExpense.title,
+          expenseAmount: updatedExpense.totalAmount,
+        } : {}),
+      });
+
+      const recipients = (group.members || []).filter((recipientId) => (
+        recipientId !== activeUserId
+        && !users.find((member) => member.id === recipientId)?.mutedGroupIds?.includes(message.groupId)
+      ));
+      recipients.forEach((recipientId) => {
+        const notification = {
+          id: `expense_dispute_resolved_${message.id}_${recipientId}`,
+          recipientId,
+          senderId: activeUserId,
+          createdBy: activeUserId,
+          createdByName: resolverName,
+          groupId: message.groupId,
+          type: action === 'delete' ? 'EXPENSE_DISPUTE_DELETED' : 'EXPENSE_DISPUTE_RESOLVED',
+          message: action === 'delete'
+            ? `${resolverName} deleted "${dispute.expenseTitle || 'the disputed expense'}" and resolved the dispute.`
+            : action === 'update'
+              ? `${resolverName} updated "${updatedExpense.title}" and resolved the dispute.`
+              : `${resolverName} marked the dispute about "${dispute.expenseTitle || 'an expense'}" as resolved.`,
+          createdAt: resolvedAt,
+          read: false,
+        };
+        notificationDocs.push(notification);
+        transaction.set(doc(db, 'notifications', notification.id), notification);
+      });
+    });
+
+    notificationDocs.forEach((notification) => {
+      triggerPushNotification({
+        senderId: activeUserId,
+        recipientId: notification.recipientId,
+        title: action === 'delete'
+          ? 'Disputed expense deleted'
+          : action === 'update'
+            ? 'Disputed expense updated'
+            : 'Expense dispute resolved',
+        message: notification.message,
+        groupId: message.groupId,
+      }).catch((error) => console.warn('Expense dispute resolution push failed:', error));
+    });
+  };
+
+  const cancelExpenseDispute = async (expense) => {
+    if (!db) throw new Error('Cancelling expense disputes requires an active connection.');
+    if (!activeUserId || !expense?.id || !expense.activeDisputeId || !expense.groupId) {
+      throw new Error('This expense does not have an active dispute.');
+    }
+
+    const expenseRef = doc(db, 'expenses', expense.id);
+    const disputeRef = doc(db, 'messages', expense.activeDisputeId);
+    const groupRef = doc(db, 'groups', expense.groupId);
+    const cancelledAt = new Date().toISOString();
+    const cancellerName = activeUser?.username || 'A member';
+    const notificationDocs = [];
+
+    await runTransaction(db, async (transaction) => {
+      notificationDocs.length = 0;
+      const [expenseSnapshot, disputeSnapshot, groupSnapshot] = await Promise.all([
+        transaction.get(expenseRef),
+        transaction.get(disputeRef),
+        transaction.get(groupRef),
+      ]);
+      if (!expenseSnapshot.exists() || !disputeSnapshot.exists() || !groupSnapshot.exists()) {
+        throw new Error('This dispute or expense no longer exists.');
+      }
+      const dispute = disputeSnapshot.data();
+      const group = groupSnapshot.data();
+      if (!group.members?.includes(activeUserId)) {
+        throw new Error('You must be a group member to cancel a dispute.');
+      }
+      if (dispute.type !== 'expense_dispute' || dispute.status !== 'open') {
+        throw new Error('This dispute is no longer open.');
+      }
+      if (dispute.disputedBy !== activeUserId) {
+        throw new Error('Only the member who raised this dispute can cancel it.');
+      }
+      if (expenseSnapshot.data().activeDisputeId !== disputeRef.id) {
+        throw new Error('This expense is no longer linked to this dispute.');
+      }
+
+      transaction.update(disputeRef, {
+        status: 'cancelled',
+        cancelledBy: activeUserId,
+        cancelledByName: cancellerName,
+        cancelledAt,
+      });
+      transaction.update(expenseRef, {
+        activeDisputeId: null,
+        activeDisputeBy: null,
+        activeDisputeByName: null,
+        activeDisputeCreatedAt: null,
+      });
+
+      (group.members || []).filter((recipientId) => (
+        recipientId !== activeUserId
+        && !users.find((member) => member.id === recipientId)?.mutedGroupIds?.includes(expense.groupId)
+      )).forEach((recipientId) => {
+        const notification = {
+          id: `expense_dispute_cancelled_${disputeRef.id}_${recipientId}`,
+          recipientId,
+          senderId: activeUserId,
+          createdBy: activeUserId,
+          createdByName: cancellerName,
+          groupId: expense.groupId,
+          type: 'EXPENSE_DISPUTE_CANCELLED',
+          message: `${cancellerName} cancelled the dispute about "${dispute.expenseTitle || 'an expense'}".`,
+          createdAt: cancelledAt,
+          read: false,
+        };
+        notificationDocs.push(notification);
+        transaction.set(doc(db, 'notifications', notification.id), notification);
+      });
+    });
+
+    notificationDocs.forEach((notification) => {
+      triggerPushNotification({
+        senderId: activeUserId,
+        recipientId: notification.recipientId,
+        title: 'Expense dispute cancelled',
+        message: notification.message,
+        groupId: expense.groupId,
+      }).catch((error) => console.warn('Expense dispute cancellation push failed:', error));
     });
   };
 
@@ -877,8 +1244,27 @@ export default function App() {
 
   const deleteExpense = async (expenseId) => {
     if (db) {
-      await deleteDoc(doc(db, 'expenses', expenseId));
+      const expenseRef = doc(db, 'expenses', expenseId);
+      await runTransaction(db, async (transaction) => {
+        const expenseSnapshot = await transaction.get(expenseRef);
+        if (!expenseSnapshot.exists()) throw new Error('This expense no longer exists.');
+        if (!activeUserId || expenseSnapshot.data().createdBy !== activeUserId) {
+          throw new Error('Only the member who recorded this expense can delete it.');
+        }
+        if (expenseSnapshot.data().activeDisputeId) {
+          throw new Error('Resolve the open dispute before deleting this expense.');
+        }
+        transaction.delete(expenseRef);
+      });
       return;
+    }
+    const expense = expenses.find((item) => item.id === expenseId);
+    if (!expense) throw new Error('This expense no longer exists.');
+    if (!activeUserId || expense.createdBy !== activeUserId) {
+      throw new Error('Only the member who recorded this expense can delete it.');
+    }
+    if (expense.activeDisputeId) {
+      throw new Error('Resolve the open dispute before deleting this expense.');
     }
     setExpenses((previous) => {
       const next = previous.filter((expense) => expense.id !== expenseId);
@@ -1045,6 +1431,9 @@ export default function App() {
           onCreateGroup={() => navigateTo({ view: 'create_group' })}
           onJoinGroup={() => navigateTo({ view: 'join_group' })}
           onSaveExpense={saveExpense}
+          onDeleteExpense={deleteExpense}
+          onRaiseExpenseDispute={raiseExpenseDispute}
+          onCancelExpenseDispute={cancelExpenseDispute}
           onSendNotification={saveNotifications}
           onUpdateUser={updateUser}
           notifications={visibleNotifications}
@@ -1112,6 +1501,9 @@ export default function App() {
             onDeleteRent={deleteMonthlyRent}
             onSaveExpense={saveExpense}
             onDeleteExpense={deleteExpense}
+            onRaiseExpenseDispute={raiseExpenseDispute}
+            onCancelExpenseDispute={cancelExpenseDispute}
+            onResolveExpenseDispute={resolveExpenseDispute}
             onDeleteGroup={deleteGroup}
             onUpdateGroup={updateGroup}
             onSendNotification={saveNotifications}

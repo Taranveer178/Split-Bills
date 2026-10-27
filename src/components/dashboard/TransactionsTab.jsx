@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Calendar, ChevronDown, CreditCard, Download, Receipt, User, Users, X } from 'lucide-react';
+import { AlertTriangle, Calendar, ChevronDown, CreditCard, Download, Receipt, User, Users, X } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
+import ExpenseLongPressActions from '../group/ExpenseLongPressActions';
 
 const getExpenseDate = (expense) => {
   const value = expense.date || expense.createdAt;
@@ -44,6 +45,10 @@ export default function TransactionsTab({
   ledgerFilter = 'all',
   onLedgerFilterChange,
   onOpenExport,
+  onDeleteExpense,
+  onRaiseExpenseDispute,
+  onCancelExpenseDispute,
+  showToast,
 }) {
   const [detailExpense, setDetailExpense] = useState(null);
   const visibleTransactions = preview ? transactions.slice(0, 4) : transactions;
@@ -170,11 +175,31 @@ export default function TransactionsTab({
                     : getUserName(expense.paidBy) || 'Roommate';
 
                   return (
+                    <ExpenseLongPressActions
+                      key={expense.id}
+                      expenseTitle={expense.title}
+                      canDelete={expense.createdBy === user.id && !expense.activeDisputeId}
+                      canDispute={Boolean(
+                        group
+                        && group.members?.includes(user.id)
+                        && !expense.isSettlement
+                        && expense.category !== 'Settlement'
+                        && !expense.activeDisputeId
+                      )}
+                      canCancelDispute={Boolean(
+                        expense.activeDisputeId
+                        && (!expense.activeDisputeBy || expense.activeDisputeBy === user.id)
+                      )}
+                      onDelete={() => onDeleteExpense?.(expense.id)}
+                      onRaiseDispute={(message) => onRaiseExpenseDispute?.(expense, message)}
+                      onCancelDispute={() => onCancelExpenseDispute?.(expense)}
+                      showToast={showToast}
+                    >
                     <button
                       key={expense.id}
                       type="button"
                       onClick={() => setDetailExpense(expense)}
-                      className="flex w-full items-center justify-between gap-4 px-1 py-3 text-left transition-colors hover:bg-white/70"
+                      className="transaction-item flex w-full items-center justify-between gap-4 px-1 py-3 text-left transition-colors hover:bg-white/70"
                     >
                       <span className="flex min-w-0 items-center gap-3">
                         <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-blue-100 bg-blue-50 text-blue-600">
@@ -182,6 +207,17 @@ export default function TransactionsTab({
                         </span>
                         <span className="min-w-0">
                           <span className="block truncate text-sm font-semibold text-slate-900">{expense.title}</span>
+                          {expense.activeDisputeId && (
+                            <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700">
+                              <AlertTriangle size={11} />
+                              Dispute open
+                            </span>
+                          )}
+                          {expense.wasEdited && (
+                            <span className="mt-1 inline-flex rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700">
+                              Edited
+                            </span>
+                          )}
                           <span className="mt-0.5 block truncate text-xs text-slate-500">
                             {payerName} · {group?.name || 'Room'}
                           </span>
@@ -191,6 +227,7 @@ export default function TransactionsTab({
                         {formatCurrency(total, group?.currency)}
                       </span>
                     </button>
+                    </ExpenseLongPressActions>
                   );
                 })}
               </div>
@@ -233,7 +270,7 @@ export default function TransactionsTab({
                       type="button"
                       onClick={() => setDetailExpense(null)}
                       aria-label="Close transaction details"
-                      className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:bg-slate-50"
+                      className="popup-close-button flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-rose-200 bg-rose-600 text-white transition-colors hover:border-rose-700 hover:bg-rose-700"
                     >
                       <X size={16} />
                     </button>
@@ -282,13 +319,6 @@ export default function TransactionsTab({
                       );
                     })}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setDetailExpense(null)}
-                    className="w-full rounded-xl bg-slate-100 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-200"
-                  >
-                    Close
-                  </button>
                 </>
               );
             })()}
