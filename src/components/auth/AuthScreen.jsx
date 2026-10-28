@@ -22,11 +22,13 @@ export default function AuthScreen({
   onLoadUsers,
   onSaveUser,
   onLogin,
+  initialMode = null,
+  onBackToLanding,
   theme = 'light',
   onThemeChange,
 }) {
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [isLogin, setIsLogin] = useState(true);
+  const [isSheetOpen, setIsSheetOpen] = useState(Boolean(initialMode));
+  const [isLogin, setIsLogin] = useState(initialMode !== 'signup');
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [identifier, setIdentifier] = useState('');
   const [username, setUsername] = useState('');
@@ -69,6 +71,10 @@ export default function AuthScreen({
   };
 
   const closeSheet = () => {
+    if (onBackToLanding) {
+      onBackToLanding();
+      return;
+    }
     setIsSheetOpen(false);
     if (mobilePasswordRef.current) mobilePasswordRef.current.value = '';
     if (desktopPasswordRef.current) desktopPasswordRef.current.value = '';
@@ -664,6 +670,15 @@ export default function AuthScreen({
 
         <div className="w-[55%] bg-white p-10 flex flex-col justify-center items-center">
           <div className="w-full max-w-sm">
+            {onBackToLanding && (
+              <button
+                type="button"
+                onClick={onBackToLanding}
+                className="mb-4 text-xs font-semibold text-slate-500 hover:text-slate-900"
+              >
+                ← Back to SplitBills
+              </button>
+            )}
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
                 {isForgotPassword ? 'Reset password' : isLogin ? 'Sign in' : 'Create account'}

@@ -1330,7 +1330,7 @@ export default function ChatTab({
                               : msg.type === 'expense_dispute'
                                 ? 'bg-amber-50 text-amber-950 border border-amber-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
                                 : isMe
-                                  ? 'bg-gradient-to-br from-sky-500 via-blue-500 to-blue-500 text-white rounded-2xl rounded-br-xs shadow-[0_1px_3px_rgba(14,165,233,0.25)]'
+                                  ? 'bg-gradient-to-br from-sky-500 via-blue-500 to-blue-500 text-white rounded-2xl rounded-br-xs shadow-[0_1px_3px_rgba(89,131,98,0.25)]'
                                   : 'bg-white text-slate-800 border border-slate-200/70 rounded-2xl rounded-bl-xs shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
                         }`}
                       >

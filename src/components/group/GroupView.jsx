@@ -253,6 +253,7 @@ export default function GroupView({
                     onDeleteExpense={onDeleteExpense}
                     onRaiseExpenseDispute={onRaiseExpenseDispute}
                     onCancelExpenseDispute={onCancelExpenseDispute}
+                    onViewExpenseDispute={() => handleTabSelect('chat')}
                     showToast={showToast}
                   />
                 </div>

@@ -65,6 +65,7 @@ export default function ExpensesTab({
   onDeleteExpense,
   onRaiseExpenseDispute,
   onCancelExpenseDispute,
+  onViewExpenseDispute,
   showToast,
 }) {
   const [payerFilter, setPayerFilter] = useState('ALL');
@@ -279,6 +280,7 @@ export default function ExpensesTab({
                   && exp.category !== 'Settlement'
                   && !exp.activeDisputeId
                 }
+                hasActiveDispute={!isSelectMode && Boolean(exp.activeDisputeId)}
                 canCancelDispute={
                   !isSelectMode
                   && Boolean(exp.activeDisputeId)
@@ -288,6 +290,7 @@ export default function ExpensesTab({
                 onDelete={() => onDeleteExpense(exp.id)}
                 onRaiseDispute={(message) => onRaiseExpenseDispute?.(exp, message)}
                 onCancelDispute={() => onCancelExpenseDispute?.(exp)}
+                onViewDispute={() => onViewExpenseDispute?.(exp)}
                 showToast={showToast}
               >
               <div

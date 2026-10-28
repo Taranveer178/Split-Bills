@@ -1,17 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AlertTriangle, Send, Trash2, X } from 'lucide-react';
+import { AlertTriangle, Eye, Send, Trash2, X } from 'lucide-react';
 
 export default function ExpenseLongPressActions({
   children,
   expenseTitle,
   canDelete,
   canDispute,
+  hasActiveDispute = false,
   canCancelDispute = false,
   enabled = true,
   onDelete,
   onRaiseDispute,
   onCancelDispute,
+  onViewDispute,
   showToast,
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -188,6 +190,19 @@ export default function ExpenseLongPressActions({
                   Raise dispute
                 </button>
               )}
+              {hasActiveDispute && !confirmDelete && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    close();
+                    onViewDispute?.();
+                  }}
+                  className="flex min-h-14 w-full items-center gap-3 border-b border-slate-200/80 px-5 text-left text-sm font-semibold text-blue-700 active:bg-blue-50"
+                >
+                  <Eye size={18} />
+                  View dispute
+                </button>
+              )}
               {canCancelDispute && !confirmDelete && (
                 <button
                   type="button"
@@ -196,7 +211,7 @@ export default function ExpenseLongPressActions({
                   className="flex min-h-14 w-full items-center gap-3 border-b border-slate-200/80 px-5 text-left text-sm font-semibold text-rose-600 active:bg-rose-50 disabled:opacity-60"
                 >
                   <X size={18} />
-                  {isCancellingDispute ? 'Cancelling dispute…' : 'Cancel dispute'}
+                  {isCancellingDispute ? 'Removing dispute…' : 'Remove dispute'}
                 </button>
               )}
               {composeDispute && canDispute && !confirmDelete && (
@@ -228,7 +243,7 @@ export default function ExpenseLongPressActions({
                     placeholder="What should the group know?"
                     rows={3}
                     maxLength={500}
-                    className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100"
+                    className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-base text-slate-900 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100"
                     autoFocus
                   />
                   <div className="flex items-center justify-between gap-3">

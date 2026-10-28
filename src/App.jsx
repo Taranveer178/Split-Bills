@@ -18,6 +18,7 @@ import { formatCurrency } from './utils/currency';
 import { auth, db, hasFirebase, signInAnonymously } from './firebase';
 import { INITIAL_EXPENSES } from './utils/constants';
 import AuthScreen from './components/auth/AuthScreen';
+import LandingPage from './components/LandingPage';
 import Dashboard from './components/dashboard/Dashboard';
 import CreateGroupModal from './components/dashboard/CreateGroupModal';
 import JoinGroupModal from './components/dashboard/JoinGroupModal';
@@ -226,6 +227,7 @@ export default function App() {
     () => Boolean(localStorage.getItem('rs_active_user_id'))
   );
   const [currentView, setCurrentView] = useState(initialRoute.view);
+  const [authMode, setAuthMode] = useState(null);
   const [dashboardTab, setDashboardTab] = useState(initialRoute.dashboardTab || 'groups');
   const [returnDashboardTab, setReturnDashboardTab] = useState(
     initialRoute.dashboardTab || 'groups'
@@ -252,7 +254,7 @@ export default function App() {
     document.documentElement.classList.toggle('dark', theme === 'dark');
     localStorage.setItem('rs_theme', theme);
     document.querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', theme === 'dark' ? '#000000' : '#f8fafc');
+      ?.setAttribute('content', theme === 'dark' ? '#000000' : '#3E7754');
   }, [theme]);
 
   const mutedGroupIds = useMemo(
@@ -597,6 +599,7 @@ export default function App() {
   };
 
   const handleLogin = (userId) => {
+    setAuthMode(null);
     setIncomingChat(null);
     setActiveChatGroupId(null);
     if (hasFirebase && db && auth) {
@@ -635,6 +638,7 @@ export default function App() {
     setDataLoadStarted(false);
     setLoading(false);
     setActiveUserId(null);
+    setAuthMode(null);
     localStorage.removeItem('rs_active_user_id');
     navigateTo({ view: 'dashboard', dashboardTab: 'groups' }, { replace: true });
   };
@@ -1387,14 +1391,25 @@ export default function App() {
           }}
         />
       )}
-      {!activeUser ? (
+      {!activeUser && authMode ? (
         <AuthScreen
+          key={authMode}
           users={users}
           onLoadUsers={loadUsersForAuth}
           onSaveUser={saveUser}
           onLogin={handleLogin}
+          initialMode={authMode}
+          onBackToLanding={() => setAuthMode(null)}
           theme={theme}
           onThemeChange={setTheme}
+        />
+      ) : !activeUser ? (
+        <LandingPage
+          onLogin={() => setAuthMode('login')}
+          onCreateAccount={() => setAuthMode('signup')}
+          deferredPromptAvailable={Boolean(deferredInstallPrompt)}
+          onInstallApp={handleInstallApp}
+          isAppInstalled={isAppInstalled}
         />
       ) : currentView === 'dashboard' ? (
         <Dashboard
