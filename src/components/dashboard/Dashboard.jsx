@@ -272,8 +272,8 @@ export default function Dashboard({
           n.type === 'TRANSACTION' ||
           n.type === 'SETTLEMENT' ||
           n.category === 'expense' ||
-          !/dispute/i.test(n.type || '') &&
-          /expense|bill|transaction|settle/i.test(n.type || '')
+          (!/dispute/i.test(n.type || '') &&
+            /expense|bill|transaction|settle/i.test(n.type || ''))
       ).length;
 
       const effectiveChatCount = Math.max(chatCount, chatNotifs);
@@ -805,7 +805,7 @@ export default function Dashboard({
             {/* NATIVE MOBILE APP DASHBOARD (< md)                                    */}
             {/* ===================================================================== */}
             <div
-              className={`space-y-3.5 md:hidden ${
+              className={`space-y-4 md:hidden ${
                 activeTab !== 'groups' ? 'hidden' : ''
               }`}
             >
@@ -924,7 +924,7 @@ export default function Dashboard({
 
               {/* 3A. Mobile Section: Spaces */}
               {mobileSection === 'spaces' && (
-                <div className="space-y-2">
+                <div className="flex flex-col gap-3.5">
                   {visibleGroups.length === 0 ? (
                     <div className="liquid-glass rounded-2xl px-4 py-7 text-center">
                       <p className="text-sm font-bold text-slate-800">
@@ -937,7 +937,7 @@ export default function Dashboard({
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="flex flex-col gap-3.5">
                       {visibleGroups.map((group) => {
                         const metrics = groupMetrics.byGroup[group.id] || {
                           myNet: 0,
@@ -950,98 +950,98 @@ export default function Dashboard({
                         const isArchived = archivedGroupIds.includes(group.id);
 
                         return (
-                          <SpaceLongPressActions
-                            key={group.id}
-                            groupName={group.name}
-                            isPinned={isPinned}
-                            isArchived={isArchived}
-                            onTogglePin={() => updateGroupPreference(group.id, 'pinnedGroupIds', !isPinned)}
-                            onToggleArchive={() => {
-                              updateGroupPreference(group.id, 'archivedGroupIds', !isArchived);
-                              showToast?.(isArchived ? `Restored "${group.name}"` : `Archived "${group.name}"`);
-                            }}
-                          >
-                          <div
-                            onClick={() => handleOpenGroup(group.id)}
-                            className="liquid-glass-interactive flex items-center justify-between gap-2.5 rounded-2xl px-3.5 py-2.5 cursor-pointer shadow-sm"
-                          >
-                            <div className="flex min-w-0 items-center gap-3">
-                              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-blue-600 to-blue-600 text-xs font-bold text-white shadow-sm">
-                                {group.imageDataUrl ? (
-                                  <img
-                                    src={group.imageDataUrl}
-                                    alt=""
-                                    className="h-full w-full object-cover"
-                                  />
-                                ) : (
-                                  group.name.charAt(0).toUpperCase()
-                                )}
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                  <h3 className="truncate text-sm font-semibold text-slate-900">
-                                    {group.name}
-                                  </h3>
-                                  {isPinned && (
-                                    <Pin size={11} aria-label="Pinned" title="Pinned" className="flex-shrink-0 text-blue-600" />
-                                  )}
-                                  {groupMetrics.myUnpaidRents.some((rent) => rent.groupId === group.id) && (
-                                    <button
-                                      type="button"
-                                      title="Rent is due · Open rent details"
-                                      aria-label={`Rent is due in ${group.name}. Open rent details.`}
-                                      onClick={(event) => {
-                                        event.stopPropagation();
-                                        handleOpenGroup(group.id, 'members');
-                                      }}
-                                      className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 transition-colors hover:bg-amber-200"
-                                    >
-                                      <CircleDollarSign size={15} />
-                                    </button>
-                                  )}
-                                  {isMuted && (
-                                    <BellOff size={10} className="flex-shrink-0 text-amber-500" />
-                                  )}
-                                  {isArchived && (
-                                    <span className="rounded bg-slate-200 px-1 py-0.2 text-[9px] font-bold text-slate-600">
-                                      Archived
+                          <div key={group.id} className="block">
+                            <SpaceLongPressActions
+                              groupName={group.name}
+                              isPinned={isPinned}
+                              isArchived={isArchived}
+                              onTogglePin={() => updateGroupPreference(group.id, 'pinnedGroupIds', !isPinned)}
+                              onToggleArchive={() => {
+                                updateGroupPreference(group.id, 'archivedGroupIds', !isArchived);
+                                showToast?.(isArchived ? `Restored "${group.name}"` : `Archived "${group.name}"`);
+                              }}
+                            >
+                              <div
+                                onClick={() => handleOpenGroup(group.id)}
+                                className="liquid-glass-interactive flex items-center justify-between gap-2.5 rounded-2xl px-3.5 py-3 cursor-pointer shadow-sm"
+                              >
+                                <div className="flex min-w-0 items-center gap-3">
+                                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-blue-600 to-blue-600 text-xs font-bold text-white shadow-sm">
+                                    {group.imageDataUrl ? (
+                                      <img
+                                        src={group.imageDataUrl}
+                                        alt=""
+                                        className="h-full w-full object-cover"
+                                      />
+                                    ) : (
+                                      group.name.charAt(0).toUpperCase()
+                                    )}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-1.5">
+                                      <h3 className="truncate text-sm font-semibold text-slate-900">
+                                        {group.name}
+                                      </h3>
+                                      {isPinned && (
+                                        <Pin size={11} aria-label="Pinned" title="Pinned" className="flex-shrink-0 text-blue-600" />
+                                      )}
+                                      {groupMetrics.myUnpaidRents.some((rent) => rent.groupId === group.id) && (
+                                        <button
+                                          type="button"
+                                          title="Rent is due · Open rent details"
+                                          aria-label={`Rent is due in ${group.name}. Open rent details.`}
+                                          onClick={(event) => {
+                                            event.stopPropagation();
+                                            handleOpenGroup(group.id, 'members');
+                                          }}
+                                          className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 transition-colors hover:bg-amber-200"
+                                        >
+                                          <CircleDollarSign size={15} />
+                                        </button>
+                                      )}
+                                      {isMuted && (
+                                        <BellOff size={10} className="flex-shrink-0 text-amber-500" />
+                                      )}
+                                      {isArchived && (
+                                        <span className="rounded bg-slate-200 px-1 py-0.2 text-[9px] font-bold text-slate-600">
+                                          Archived
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                                      <span>{group.members.length} members</span>
+                                      <span>·</span>
+                                      <span>{formatCurrency(metrics.roomSpend, group.currency, 0)}</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex flex-shrink-0 items-center gap-1.5">
+                                  {unreadCount > 0 && !isArchived && (
+                                    <span className="flex h-5 min-w-[18px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-extrabold text-white leading-none">
+                                      {unreadCount > 99 ? '99+' : unreadCount}
                                     </span>
                                   )}
-                                </div>
-                                <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                                  <span>{group.members.length} members</span>
-                                  <span>·</span>
-                                  <span>{formatCurrency(metrics.roomSpend, group.currency, 0)}</span>
+
+                                  <span
+                                    className={`rounded-xl px-2 py-0.5 font-mono text-[11px] font-semibold border ${
+                                      metrics.myNet > 0.01
+                                        ? 'bg-emerald-50/90 text-emerald-700 border-emerald-200/80'
+                                        : metrics.myNet < -0.01
+                                          ? 'bg-rose-50/90 text-rose-600 border-rose-200/80'
+                                          : 'bg-slate-100/80 text-slate-600 border-slate-200/60'
+                                    }`}
+                                  >
+                                    {metrics.myNet > 0.01
+                                      ? `+${formatCurrency(metrics.myNet, group.currency, 0)}`
+                                      : metrics.myNet < -0.01
+                                        ? `-${formatCurrency(Math.abs(metrics.myNet), group.currency, 0)}`
+                                        : 'Settled'}
+                                  </span>
                                 </div>
                               </div>
-                            </div>
-
-                            <div className="flex flex-shrink-0 items-center gap-1.5">
-                              {unreadCount > 0 && !isArchived && (
-                                <span className="flex h-5 min-w-[18px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-extrabold text-white leading-none">
-                                  {unreadCount > 99 ? '99+' : unreadCount}
-                                </span>
-                              )}
-
-                              <span
-                                className={`rounded-xl px-2 py-0.5 font-mono text-[11px] font-semibold border ${
-                                  metrics.myNet > 0.01
-                                    ? 'bg-emerald-50/90 text-emerald-700 border-emerald-200/80'
-                                    : metrics.myNet < -0.01
-                                      ? 'bg-rose-50/90 text-rose-600 border-rose-200/80'
-                                      : 'bg-slate-100/80 text-slate-600 border-slate-200/60'
-                                }`}
-                              >
-                                {metrics.myNet > 0.01
-                                  ? `+${formatCurrency(metrics.myNet, group.currency, 0)}`
-                                  : metrics.myNet < -0.01
-                                    ? `-${formatCurrency(Math.abs(metrics.myNet), group.currency, 0)}`
-                                    : 'Settled'}
-                              </span>
-
-                            </div>
+                            </SpaceLongPressActions>
                           </div>
-                          </SpaceLongPressActions>
                         );
                       })}
                     </div>
@@ -1051,7 +1051,7 @@ export default function Dashboard({
 
               {/* 3B. Mobile Section: Dues */}
               {mobileSection === 'dues' && (
-                <div className="space-y-2">
+                <div className="flex flex-col gap-3">
                   {groupMetrics.allMySettlements.length === 0 ? (
                     <div className="liquid-glass rounded-2xl px-4 py-8 text-center">
                       <CheckCircle2 size={24} className="mx-auto mb-1.5 text-emerald-600" />
@@ -1088,7 +1088,7 @@ export default function Dashboard({
                                 0
                               )}
                             </span>
-                              <span className="rounded-xl bg-gradient-to-b from-blue-600 to-blue-600 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+                            <span className="rounded-xl bg-gradient-to-b from-blue-600 to-blue-600 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
                               Settle
                             </span>
                           </div>
@@ -1707,7 +1707,7 @@ export default function Dashboard({
                   </section>
                 </div>
 
-                {/* RIGHT 4 COLUMNS: Pinned Spaces + Live Settlements (OCT BREAKDOWN REMOVED) */}
+                {/* RIGHT 4 COLUMNS: Pinned Spaces + Live Settlements */}
                 <div
                   className={`col-span-12 xl:col-span-4 space-y-6 ${
                     activeTab === 'groups' ? '' : 'hidden'
