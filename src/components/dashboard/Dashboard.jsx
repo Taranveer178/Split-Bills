@@ -1832,7 +1832,7 @@ export default function Dashboard({
                           <div
                             key={`rent-${rent.id}`}
                             onClick={() => handleOpenGroup(rent.groupId, 'members')}
-                            className="flex items-center justify-between gap-3 rounded-2xl border border-amber-200/80 bg-amber-50/70 p-3 transition-all hover:bg-amber-50 cursor-pointer shadow-sm"
+                            className="desktop-rent-row flex items-center justify-between gap-3 rounded-2xl border border-amber-200/80 bg-amber-50/70 p-3 transition-all hover:bg-amber-50 cursor-pointer shadow-sm"
                           >
                             <div className="min-w-0">
                               <p className="truncate text-xs font-bold text-slate-900">
@@ -1857,7 +1857,7 @@ export default function Dashboard({
                             <div
                               key={`${s.groupId}-${idx}`}
                               onClick={() => handleOpenGroup(s.groupId, 'balances')}
-                              className="flex items-center justify-between gap-3 rounded-2xl border border-white/90 bg-white/70 p-3 hover:bg-white transition-all cursor-pointer shadow-sm"
+                              className="desktop-settlement-row flex items-center justify-between gap-3 rounded-2xl border border-white/90 bg-white/70 p-3 hover:bg-white transition-all cursor-pointer shadow-sm"
                             >
                               <div className="min-w-0">
                                 <p className="truncate text-xs font-bold text-slate-900">

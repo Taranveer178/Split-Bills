@@ -355,6 +355,48 @@ html.dark .desktop-install-card__description {
   color: #cbd5e1 !important;
 }
 
+html.dark .desktop-rent-row {
+  background-color: #211d14 !important;
+  border-color: #66532b !important;
+}
+
+html.dark .desktop-rent-row:hover {
+  background-color: #302817 !important;
+  border-color: #8a6e36 !important;
+}
+
+html.dark .desktop-rent-row > div:first-child > p:first-child,
+html.dark .desktop-settlement-row > div:first-child > p:first-child {
+  color: #f8fafc !important;
+}
+
+html.dark .desktop-rent-row > div:first-child > p:last-child,
+html.dark .desktop-settlement-row > div:first-child > p:last-child {
+  color: #cbd5e1 !important;
+}
+
+html.dark .desktop-rent-row > div:last-child > span:first-child {
+  color: #fcd34d !important;
+}
+
+html.dark .desktop-settlement-row {
+  background-color: #171d19 !important;
+  border-color: #3d5945 !important;
+}
+
+html.dark .desktop-settlement-row:hover {
+  background-color: #222e25 !important;
+  border-color: #507158 !important;
+}
+
+html.dark .desktop-settlement-row > div:last-child > span:first-child.text-rose-600 {
+  color: #fda4af !important;
+}
+
+html.dark .desktop-settlement-row > div:last-child > span:first-child.text-emerald-600 {
+  color: #86efac !important;
+}
+
 html.dark .group-view-header {
   background: #101010 !important;
   border-color: #303030 !important;
