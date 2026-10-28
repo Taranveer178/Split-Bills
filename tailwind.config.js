@@ -20,6 +20,9 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter Variable', 'Inter', 'system-ui', 'sans-serif'],
+      },
       colors: {
         blue: greenAccent,
         sky: greenAccent,

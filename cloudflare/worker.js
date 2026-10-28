@@ -5,6 +5,8 @@ const MAX_LIST_SIZE = 500;
 const ROOM_SPLIT_FIREBASE_PROJECT_ID = 'roomsplit-test';
 const PUSH_ALLOWED_ORIGINS = new Set([
   'https://split-bills.taranveer.in',
+  'https://sharebills.in',
+  'https://www.sharebills.in',
   'capacitor://localhost',
   'http://localhost:5173',
   'http://127.0.0.1:5173',

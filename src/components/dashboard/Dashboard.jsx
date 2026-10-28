@@ -1149,8 +1149,6 @@ export default function Dashboard({
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-blue-600">
-                    <span>Command Center</span>
-                    <span>·</span>
                     <span>
                       {new Date().toLocaleDateString('en-US', {
                         weekday: 'short',
@@ -1160,7 +1158,12 @@ export default function Dashboard({
                     </span>
                   </div>
                   <h1 className="mt-0.5 truncate text-xl font-extrabold tracking-tight text-slate-900 xl:text-2xl">
-                    Welcome back, {user?.username}
+                    {new Date().getHours() < 12
+                      ? 'Good Morning'
+                      : new Date().getHours() < 18
+                        ? 'Good Afternoon'
+                        : 'Good Evening'}
+                    {user?.username ? `, ${user.username}` : ''}
                   </h1>
                 </div>
 

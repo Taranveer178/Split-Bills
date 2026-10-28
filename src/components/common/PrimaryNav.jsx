@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import {
+  ArrowLeftRight,
   LayoutGrid,
-  IndianRupee,
   LogOut,
   Download,
   PieChart,
   Plus,
+  ReceiptIndianRupee,
   UserPlus,
   User,
   Users,
@@ -15,7 +16,7 @@ import roomsplitIcon from '../../assets/roomsplit-icon.webp';
 const ITEMS = [
   { id: 'groups', label: 'Overview', mobileLabel: 'Overview', icon: LayoutGrid },
   { id: 'spaces', label: 'Spaces', mobileLabel: 'Spaces', icon: Users },
-  { id: 'transactions', label: 'Transactions', mobileLabel: 'Transactions', icon: IndianRupee },
+  { id: 'transactions', label: 'Transactions', mobileLabel: 'Transactions', icon: ArrowLeftRight },
   { id: 'monthly', label: 'Analytics', mobileLabel: 'Monthly', icon: PieChart },
   { id: 'profile', label: 'Profile', mobileLabel: 'Profile', icon: User },
 ];
@@ -44,7 +45,7 @@ export default function PrimaryNav({
       {/* ===================================================================== */}
       {!desktopOnly && (
         <>
-          {(onCreateGroup || onJoinGroup) && (
+          {activeItem === 'groups' && (onCreateGroup || onJoinGroup) && (
             <div className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-4 z-[51] md:hidden">
               {isSpaceActionsOpen && (
                 <div
@@ -85,9 +86,9 @@ export default function PrimaryNav({
                 aria-label={isSpaceActionsOpen ? 'Close space actions' : 'Join or create a space'}
                 aria-expanded={isSpaceActionsOpen}
                 aria-controls="mobile-space-actions"
-                className="ml-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-700/30 transition-transform active:scale-95"
+                className="ml-auto flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-700/30 transition-transform active:scale-95"
               >
-                <Plus size={25} strokeWidth={2.75} className={isSpaceActionsOpen ? 'rotate-45 transition-transform' : 'transition-transform'} />
+                <Plus size={22} strokeWidth={2.75} className={isSpaceActionsOpen ? 'rotate-45 transition-transform' : 'transition-transform'} />
               </button>
             </div>
           )}
@@ -104,7 +105,10 @@ export default function PrimaryNav({
                 <button
                   key={id}
                   type="button"
-                  onClick={() => onNavigate(id)}
+                  onClick={() => {
+                    setIsSpaceActionsOpen(false);
+                    onNavigate(id);
+                  }}
                   aria-label={mobileLabel}
                   aria-current={isActive ? 'page' : undefined}
                   className="relative flex h-full min-w-0 items-center justify-center rounded-[22px] text-slate-700 transition-all duration-200 active:scale-95"
@@ -128,10 +132,10 @@ export default function PrimaryNav({
               <button
                 type="button"
                 onClick={onQuickAction}
-                aria-label="Quick add bill"
+                aria-label="Add expense"
                 className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[20px] bg-gradient-to-tr from-slate-950 via-slate-900 to-blue-900 text-white shadow-lg shadow-slate-900/30 border border-white/30 transition-transform active:scale-90"
               >
-                <Plus size={24} strokeWidth={3} />
+                <ReceiptIndianRupee size={23} strokeWidth={2.5} />
               </button>
             )}
 
@@ -142,7 +146,10 @@ export default function PrimaryNav({
                 <button
                   key={id}
                   type="button"
-                  onClick={() => onNavigate(id)}
+                  onClick={() => {
+                    setIsSpaceActionsOpen(false);
+                    onNavigate(id);
+                  }}
                   aria-label={mobileLabel}
                   aria-current={isActive ? 'page' : undefined}
                   className="relative flex h-full min-w-0 items-center justify-center rounded-[22px] text-slate-700 transition-all duration-200 active:scale-95"
