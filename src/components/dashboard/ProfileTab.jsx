@@ -21,6 +21,7 @@ import {
   linkWithCredential,
   reauthenticateWithCredential,
   sendEmailVerification,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   updateEmail,
   updatePassword,
@@ -47,11 +48,41 @@ export default function ProfileTab({
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState('');
+  const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
+  const [resetPasswordFeedback, setResetPasswordFeedback] = useState('');
   const [fallbackToast, setFallbackToast] = useState(false);
   const [testPushStatus, setTestPushStatus] = useState('');
   const [testingPush, setTestingPush] = useState(false);
   const canViewPushDiagnostics =
     user?.email?.trim().toLowerCase() === 'staranveer178@gmail.com';
+
+  const handleSendPasswordReset = async () => {
+    const resetEmail = auth.currentUser?.email || user?.email;
+    if (!auth.currentUser || auth.currentUser.isAnonymous || !resetEmail) {
+      setResetPasswordFeedback('Link this profile to an email account before resetting its password.');
+      return;
+    }
+
+    setResetPasswordLoading(true);
+    setResetPasswordFeedback('');
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      setResetPasswordFeedback(`If a password login exists for ${resetEmail}, a reset link has been sent.`);
+    } catch (error) {
+      console.error('Could not send password reset email:', error);
+      if (error.code === 'auth/network-request-failed') {
+        setResetPasswordFeedback('Network error. Check your connection and try again.');
+      } else if (error.code === 'auth/too-many-requests') {
+        setResetPasswordFeedback('Too many requests. Wait a little before trying again.');
+      } else if (error.code === 'auth/operation-not-allowed') {
+        setResetPasswordFeedback('Password reset is unavailable because email/password sign-in is disabled.');
+      } else {
+        setResetPasswordFeedback('Could not send a password reset link. Please try again.');
+      }
+    } finally {
+      setResetPasswordLoading(false);
+    }
+  };
 
   const handleTestPush = async () => {
     setTestingPush(true);
@@ -378,8 +409,29 @@ export default function ProfileTab({
                     ••••••••
                   </p>
                 </div>
+                <button
+                  type="button"
+                  onClick={handleSendPasswordReset}
+                  disabled={resetPasswordLoading}
+                  className="flex-shrink-0 text-xs font-semibold text-blue-600 hover:text-blue-700 disabled:cursor-not-allowed disabled:text-slate-400"
+                >
+                  {resetPasswordLoading ? 'Sending…' : 'Forgot password?'}
+                </button>
               </div>
             </div>
+
+            {resetPasswordFeedback && (
+              <p
+                role="status"
+                className={`mt-3 rounded-xl border p-3 text-xs ${
+                  resetPasswordFeedback.startsWith('If a password')
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    : 'border-amber-200 bg-amber-50 text-amber-800'
+                }`}
+              >
+                {resetPasswordFeedback}
+              </p>
+            )}
 
             <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-slate-200/80 bg-slate-50/70 p-4">
               <div className="flex items-center gap-3">
