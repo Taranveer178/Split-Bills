@@ -1310,7 +1310,7 @@ export default function ChatTab({
                       </div>
                     )}
 
-                    <div className="relative">
+                    <div className="relative min-w-0 max-w-[70%] sm:max-w-none">
                       <div 
                         onClick={() => handleBubbleClick(msg)}
                         onTouchStart={(e) => handleTouchStart(e, msg, isMe)}
@@ -1320,7 +1320,7 @@ export default function ChatTab({
                         onMouseUp={handleTouchEnd}
                         onMouseLeave={handleTouchEnd}
                         onContextMenu={(e) => handleContextMenu(e, msg, isMe)}
-                        className={`relative max-w-[85vw] sm:max-w-[70vw] transition-all cursor-pointer select-none active:scale-[0.99] ${
+                        className={`relative w-fit max-w-full break-words sm:max-w-[70vw] transition-all cursor-pointer select-none active:scale-[0.99] ${
                           isSelected ? 'ring-2 ring-sky-500/80 rounded-2xl' : ''
                         } ${
                           onlyEmoji 
@@ -1511,7 +1511,7 @@ export default function ChatTab({
                               </div>
                             ) : msg.text ? (
                               <div className="px-3 py-1.5 text-[13.5px] leading-relaxed">
-                                <span className="whitespace-pre-wrap font-normal break-words select-text mr-1.5">
+                                <span className="whitespace-pre-wrap font-normal break-words [overflow-wrap:anywhere] select-text mr-1.5">
                                   {renderLinkedText(msg.text)}
                                 </span>
                                 {messageLinks.slice(0, 2).map(({ url }) => (

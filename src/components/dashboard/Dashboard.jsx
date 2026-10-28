@@ -721,8 +721,8 @@ export default function Dashboard({
       >
         <button
           type="button"
-          onClick={() => handleTabSwitch('groups')}
-          aria-label="Go to SplitBills home"
+          onClick={() => handleTabSwitch('profile')}
+          aria-label="Open profile"
           className="flex min-w-0 items-center gap-2 border-0 bg-transparent py-1 text-left shadow-none focus-visible:outline-none"
         >
           <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/90 bg-white shadow-sm">
@@ -733,33 +733,20 @@ export default function Dashboard({
             />
           </span>
           <div className="min-w-0">
-            <span className="mt-0.5 block truncate text-sm font-semibold text-blue-600 leading-none">
-              Hi, {user?.username}
+            <span className="block truncate text-sm font-bold leading-tight text-slate-900">
+              Hi, <span className="font-extrabold text-slate-900">{user?.username || 'there'}</span>
+            </span>
+            <span className="block truncate text-sm font-semibold leading-tight text-blue-600">
+              {new Date().getHours() < 12
+                ? 'Good Morning'
+                : new Date().getHours() < 18
+                  ? 'Good Afternoon'
+                  : 'Good Evening'}
             </span>
           </div>
         </button>
 
         <div className="flex flex-shrink-0 items-center gap-1.5">
-          <button
-            type="button"
-            onClick={onJoinGroup}
-            title="Join space with code"
-            aria-label="Join space with code"
-            className="liquid-glass-interactive flex h-9 items-center gap-1 rounded-full border border-blue-200/70 bg-white/90 px-3 text-[11px] font-bold text-slate-700 shadow-sm transition-transform active:scale-95"
-          >
-            <UserPlus size={13} className="text-blue-600" />
-            <span>Join</span>
-          </button>
-          <button
-            type="button"
-            onClick={onCreateGroup}
-            title="Create new space"
-            aria-label="Create space"
-            className="flex h-9 items-center gap-1 rounded-full bg-gradient-to-b from-blue-600 to-blue-600 px-3 text-[11px] font-bold text-white shadow-sm shadow-blue-600/20 transition-transform active:scale-95"
-          >
-            <Plus size={13} strokeWidth={2.5} />
-            <span>Create</span>
-          </button>
           <button
             type="button"
             onClick={() => setIsActivityOpen((previous) => !previous)}
@@ -2331,6 +2318,8 @@ export default function Dashboard({
         activeItem={activeTab}
         onNavigate={handleTabSwitch}
         onQuickAction={() => openQuickExpenseModal()}
+        onCreateGroup={onCreateGroup}
+        onJoinGroup={onJoinGroup}
         unreadSpacesCount={totalUnreadSpacesCount}
         onLogout={() => setShowLogoutConfirmation(true)}
         onInstallApp={handleInstallClick}

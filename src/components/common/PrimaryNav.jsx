@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   LayoutGrid,
   IndianRupee,
@@ -5,6 +6,7 @@ import {
   Download,
   PieChart,
   Plus,
+  UserPlus,
   User,
   Users,
 } from 'lucide-react';
@@ -24,6 +26,8 @@ export default function PrimaryNav({
   activeItem,
   onNavigate,
   onQuickAction,
+  onCreateGroup,
+  onJoinGroup,
   onLogout,
   user,
   unreadSpacesCount = 0,
@@ -31,17 +35,68 @@ export default function PrimaryNav({
   isAppInstalled = false,
   desktopOnly = false,
 }) {
+  const [isSpaceActionsOpen, setIsSpaceActionsOpen] = useState(false);
+
   return (
     <>
       {/* ===================================================================== */}
       {/* MOBILE NATIVE LIQUID GLASS DOCK (< md)                                */}
       {/* ===================================================================== */}
       {!desktopOnly && (
-        <nav
-          aria-label="Mobile navigation"
-          className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 pointer-events-none md:hidden"
-        >
-          <div className="liquid-nav-dock pointer-events-auto mx-auto grid h-16 w-full max-w-[25rem] grid-cols-5 items-center gap-0 rounded-[28px] p-1.5 shadow-xl bg-white/80 backdrop-blur-xl border border-white/40">
+        <>
+          {(onCreateGroup || onJoinGroup) && (
+            <div className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-4 z-[51] md:hidden">
+              {isSpaceActionsOpen && (
+                <div
+                  id="mobile-space-actions"
+                  className="mb-3 flex min-w-[11rem] flex-col gap-2 rounded-2xl border border-slate-200/80 bg-white/95 p-2 shadow-xl backdrop-blur-xl"
+                >
+                  {onJoinGroup && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSpaceActionsOpen(false);
+                        onJoinGroup();
+                      }}
+                      className="flex h-11 items-center gap-2.5 rounded-xl px-3 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-100"
+                    >
+                      <UserPlus size={17} className="text-blue-600" />
+                      Join a space
+                    </button>
+                  )}
+                  {onCreateGroup && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSpaceActionsOpen(false);
+                        onCreateGroup();
+                      }}
+                      className="flex h-11 items-center gap-2.5 rounded-xl px-3 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-100"
+                    >
+                      <Plus size={18} className="text-blue-600" />
+                      Create a space
+                    </button>
+                  )}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsSpaceActionsOpen((open) => !open)}
+                aria-label={isSpaceActionsOpen ? 'Close space actions' : 'Join or create a space'}
+                aria-expanded={isSpaceActionsOpen}
+                aria-controls="mobile-space-actions"
+                className="ml-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-700/30 transition-transform active:scale-95"
+              >
+                <Plus size={25} strokeWidth={2.75} className={isSpaceActionsOpen ? 'rotate-45 transition-transform' : 'transition-transform'} />
+              </button>
+            </div>
+          )}
+
+          <nav
+            aria-label="Mobile navigation"
+            className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 pointer-events-none md:hidden"
+          >
+            <div className="liquid-nav-dock pointer-events-auto mx-auto grid h-16 w-full max-w-[25rem] grid-cols-5 items-center gap-0 rounded-[28px] p-1.5 shadow-xl bg-white/80 backdrop-blur-xl border border-white/40">
             {/* Left 2 items: Overview & Transactions */}
             {MOBILE_ITEMS.slice(0, 2).map(({ id, mobileLabel, icon: Icon }) => {
               const isActive = activeItem === id;
@@ -119,8 +174,9 @@ export default function PrimaryNav({
                 </button>
               );
             })}
-          </div>
-        </nav>
+            </div>
+          </nav>
+        </>
       )}
 
       {/* ===================================================================== */}
