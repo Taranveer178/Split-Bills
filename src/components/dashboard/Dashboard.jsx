@@ -303,7 +303,7 @@ export default function Dashboard({
     [unreadMessagesByGroup]
   );
 
-  const handleOpenGroup = (groupId, subTab) => {
+  const handleOpenGroup = (groupId, subTab, expenseDraft = null) => {
     if (onMarkNotificationsRead) {
       const groupUnread = notifications.filter(
         (n) =>
@@ -332,7 +332,7 @@ export default function Dashboard({
         onMarkNotificationsRead(groupUnread.map((n) => n.id));
       }
     }
-    onOpenGroup?.(groupId, subTab, unreadChatByGroup[groupId] || 0);
+    onOpenGroup?.(groupId, subTab, unreadChatByGroup[groupId] || 0, expenseDraft);
   };
 
   const handleClearAllActivity = async () => {
@@ -2288,7 +2288,14 @@ export default function Dashboard({
                   onClick={() => {
                     const gId = quickGroupId;
                     setQuickExpenseOpen(false);
-                    if (gId) handleOpenGroup(gId, 'add');
+                    if (gId) {
+                      handleOpenGroup(gId, 'add', {
+                        title: quickTitle,
+                        amount: quickAmount,
+                        category: quickCategory,
+                        paymentMethod: quickMethod,
+                      });
+                    }
                   }}
                   className="text-xs font-bold text-blue-600 hover:underline"
                 >

@@ -236,6 +236,7 @@ export default function App() {
     initialRoute.groupId || initialRoute.groupSlug || null
   );
   const [currentGroupInitialTab, setCurrentGroupInitialTab] = useState('expenses');
+  const [currentGroupExpenseDraft, setCurrentGroupExpenseDraft] = useState(null);
   const [currentGroupUnreadChatCount, setCurrentGroupUnreadChatCount] = useState(0);
   const [currentGroupDrawerOpen, setCurrentGroupDrawerOpen] = useState(false);
   const [toast, setToast] = useState(null);
@@ -350,8 +351,10 @@ export default function App() {
     setCurrentGroupRoute(route.groupId || route.groupSlug || null);
     if (route.view === 'group') {
       setCurrentGroupInitialTab(route.initialTab || 'expenses');
+      setCurrentGroupExpenseDraft(route.expenseDraft || null);
       setCurrentGroupDrawerOpen(Boolean(route.drawerOpen));
     } else {
+      setCurrentGroupExpenseDraft(null);
       setCurrentGroupDrawerOpen(false);
     }
     if (route.view === 'dashboard') {
@@ -369,7 +372,8 @@ export default function App() {
     const returningToExitedGroup = route.view === 'group'
       && previousRoute.view !== 'group'
       && lastExitedGroupIdRef.current === route.groupId
-      && route.initialTab !== 'chat';
+      && route.initialTab !== 'chat'
+      && route.initialTab !== 'add';
     const normalizedRoute = route.view === 'group'
       ? {
           initialTab: 'expenses',
@@ -1428,7 +1432,7 @@ export default function App() {
           monthlyRents={monthlyRents}
           onMarkRentPaid={markMonthlyRentPaid}
           onLogout={handleLogout}
-          onOpenGroup={(id, initialTab = 'expenses', unreadChatCount = 0) => {
+          onOpenGroup={(id, initialTab = 'expenses', unreadChatCount = 0, expenseDraft = null) => {
             const group = groups.find((item) => item.id === id);
             if (group) {
               setCurrentGroupUnreadChatCount(initialTab === 'chat' ? 0 : unreadChatCount);
@@ -1439,6 +1443,7 @@ export default function App() {
                 groupId: group.id,
                 groupName: group.name,
                 initialTab,
+                ...(expenseDraft ? { expenseDraft } : {}),
                 returnDashboardTab: tabToReturnTo,
               });
             }
@@ -1474,6 +1479,7 @@ export default function App() {
             key={activeGroup.id}
             group={activeGroup}
             initialTab={currentGroupInitialTab}
+            expenseDraft={currentGroupExpenseDraft}
             initialDrawerOpen={currentGroupDrawerOpen}
             onGroupTabChange={(tab, { replace = false } = {}) => {
               navigateTo({

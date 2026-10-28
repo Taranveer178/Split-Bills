@@ -26,6 +26,7 @@ import { formatCurrency } from '../../utils/currency';
 export default function GroupView({
   group,
   initialTab = 'expenses',
+  expenseDraft = null,
   onGroupTabChange,
   onActiveChatChange,
   unreadChatCount = 0,
@@ -382,6 +383,7 @@ export default function GroupView({
             <AddExpenseTab
               key={group.members.join(':')}
               group={group}
+              initialExpenseDraft={expenseDraft}
               currentUser={currentUser}
               users={users}
               getUserName={getUserName}

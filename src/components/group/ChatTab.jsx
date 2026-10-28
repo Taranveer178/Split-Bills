@@ -1296,7 +1296,13 @@ export default function ChatTab({
                     </div>
                   )}
 
-                  <div className={`flex items-end gap-2.5 ${hasReactions ? 'mb-3.5' : 'my-1'} ${isMe ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`flex items-end gap-2.5 ${
+                    hasReactions
+                      ? 'mb-3.5'
+                      : msg.type === 'expense_dispute'
+                        ? 'my-1.5'
+                        : 'my-1'
+                  } ${isMe ? 'justify-end' : 'justify-start'}`}>
                     {isSelectMode && (
                       <div 
                         onClick={() => handleBubbleClick(msg)}

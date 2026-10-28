@@ -16,6 +16,7 @@ import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
 
 export default function AddExpenseTab({
   group,
+  initialExpenseDraft = null,
   currentUser,
   users = [],
   getUserName,
@@ -24,8 +25,8 @@ export default function AddExpenseTab({
   onSaved,
   showToast,
 }) {
-  const [title, setTitle] = useState('');
-  const [amount, setAmount] = useState('');
+  const [title, setTitle] = useState(initialExpenseDraft?.title || '');
+  const [amount, setAmount] = useState(initialExpenseDraft?.amount || '');
   const [paidBy, setPaidBy] = useState(currentUser.id);
   const [date, setDate] = useState(() => {
     const now = new Date();
@@ -33,8 +34,8 @@ export default function AddExpenseTab({
       .toISOString()
       .split('T')[0];
   });
-  const [category, setCategory] = useState('Food');
-  const [paymentMethod, setPaymentMethod] = useState('UPI');
+  const [category, setCategory] = useState(initialExpenseDraft?.category || 'Food');
+  const [paymentMethod, setPaymentMethod] = useState(initialExpenseDraft?.paymentMethod || 'UPI');
   const [splitMode, setSplitMode] = useState('equal');
   const [error, setError] = useState('');
   const [selectedParticipants, setSelectedParticipants] = useState(() =>

@@ -56,6 +56,21 @@ const getCategoryMeta = (category = '') => {
   };
 };
 
+const parseExpenseDate = (value) => {
+  if (!value) return null;
+
+  const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  const parsedDate = dateOnlyMatch
+    ? new Date(Number(dateOnlyMatch[1]), Number(dateOnlyMatch[2]) - 1, Number(dateOnlyMatch[3]))
+    : new Date(value);
+
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+};
+
+const getDateKey = (date) => (
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+);
+
 export default function ExpensesTab({
   expenses,
   currency = 'INR',
@@ -80,6 +95,40 @@ export default function ExpensesTab({
     if (payerFilter === 'ALL') return true;
     return exp.paidBy === payerFilter;
   });
+  const expenseDateGroups = Array.from(
+    filtered.reduce((groups, expense) => {
+      const date = parseExpenseDate(expense.date) || parseExpenseDate(expense.createdAt);
+      const dateKey = date ? getDateKey(date) : 'undated';
+      if (!groups.has(dateKey)) groups.set(dateKey, { date, expenses: [] });
+      groups.get(dateKey).expenses.push(expense);
+      return groups;
+    }, new Map())
+  )
+    .sort(([firstKey], [secondKey]) => {
+      if (firstKey === 'undated') return 1;
+      if (secondKey === 'undated') return -1;
+      return secondKey.localeCompare(firstKey);
+    })
+    .map(([dateKey, group]) => {
+      const today = new Date();
+      const todayKey = getDateKey(today);
+      const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+      const yesterdayKey = getDateKey(yesterday);
+      const label = dateKey === 'undated'
+        ? 'Date not set'
+        : dateKey === todayKey
+          ? 'Today'
+          : dateKey === yesterdayKey
+            ? 'Yesterday'
+            : group.date.toLocaleDateString('en-US', {
+              weekday: 'long',
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
+            });
+
+      return { dateKey, label, expenses: group.expenses };
+    });
 
   const canDeleteExpense = (exp) => {
     return exp.createdBy === currentUser.id && !exp.activeDisputeId;
@@ -240,8 +289,14 @@ export default function ExpensesTab({
           </p>
         </div>
       ) : (
-        <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs">
-          {filtered.map((exp) => {
+        <div className="space-y-4">
+          {expenseDateGroups.map((dateGroup) => (
+            <section key={dateGroup.dateKey} aria-label={`Expenses for ${dateGroup.label}`}>
+              <h2 className="mb-2 px-1 text-xs font-bold tracking-wide text-slate-500">
+                {dateGroup.label}
+              </h2>
+              <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs">
+                {dateGroup.expenses.map((exp) => {
             const iPaid = exp.paidBy === currentUser.id;
             const hasAccess = canDeleteExpense(exp);
             const isSelected = selectedIds.includes(exp.id);
@@ -366,7 +421,6 @@ export default function ExpensesTab({
                     ) : (
                       <span className="text-xs font-medium text-slate-400">Not involved</span>
                     )}
-                    <div className="text-xs text-slate-400 mt-0.5">{exp.date}</div>
                   </div>
 
                   {isSelectMode ? (
@@ -392,7 +446,10 @@ export default function ExpensesTab({
               </div>
               </ExpenseLongPressActions>
             );
-          })}
+                })}
+              </div>
+            </section>
+          ))}
         </div>
       )}
 
