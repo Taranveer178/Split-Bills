@@ -21,6 +21,7 @@ export default function ExpenseLongPressActions({
   const [isRaisingDispute, setIsRaisingDispute] = useState(false);
   const [isCancellingDispute, setIsCancellingDispute] = useState(false);
   const timerRef = useRef(null);
+  const disputeMessageRef = useRef(null);
   const startPointRef = useRef(null);
   const suppressClickRef = useRef(false);
 
@@ -95,6 +96,7 @@ export default function ExpenseLongPressActions({
     try {
       if (!onRaiseDispute) throw new Error('Raising disputes is unavailable right now.');
       setIsRaisingDispute(true);
+      disputeMessageRef.current?.blur();
       await onRaiseDispute(disputeMessage.trim());
       showToast?.('Dispute raised in group chat.');
       close();
@@ -210,6 +212,7 @@ export default function ExpenseLongPressActions({
                   </label>
                   <textarea
                     id="expense-dispute-message"
+                    ref={disputeMessageRef}
                     value={disputeMessage}
                     onChange={(event) => setDisputeMessage(event.target.value.slice(0, 500))}
                     onKeyDown={(event) => {

@@ -31,7 +31,6 @@ export default function AuthScreen({
   const [identifier, setIdentifier] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -39,6 +38,8 @@ export default function AuthScreen({
 
   const mobileIdentifierRef = useRef(null);
   const desktopIdentifierRef = useRef(null);
+  const mobilePasswordRef = useRef(null);
+  const desktopPasswordRef = useRef(null);
 
   useEffect(() => {
     if (isSheetOpen) {
@@ -60,6 +61,8 @@ export default function AuthScreen({
   const handleOpenSheet = (mode) => {
     setIsLogin(mode === 'login');
     setIsForgotPassword(false);
+    if (mobilePasswordRef.current) mobilePasswordRef.current.value = '';
+    if (desktopPasswordRef.current) desktopPasswordRef.current.value = '';
     setError('');
     setNotice('');
     setIsSheetOpen(true);
@@ -67,6 +70,8 @@ export default function AuthScreen({
 
   const closeSheet = () => {
     setIsSheetOpen(false);
+    if (mobilePasswordRef.current) mobilePasswordRef.current.value = '';
+    if (desktopPasswordRef.current) desktopPasswordRef.current.value = '';
     setError('');
     setNotice('');
   };
@@ -173,9 +178,12 @@ export default function AuthScreen({
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    const form = event.currentTarget;
+    const passwordInput = form.querySelector('[data-auth-password]');
     setError('');
     setNotice('');
     setIsSubmitting(true);
+    const password = passwordInput?.value || '';
     const cleanIdentifier = identifier.trim();
     const cleanUsername = username.trim();
     const cleanEmail = email.trim().toLowerCase();
@@ -316,16 +324,16 @@ export default function AuthScreen({
       setNotice(`Account created. Check ${cleanEmail} for a verification link, then sign in.`);
       setIsLogin(true);
       setIdentifier(cleanEmail);
-      setPassword('');
     } catch (authError) {
       console.error('Authentication request failed:', authError);
       setError(authError.code ? getAuthErrorMessage(authError) : authError.message);
     } finally {
+      if (passwordInput) passwordInput.value = '';
       setIsSubmitting(false);
     }
   };
 
-  const renderAuthForm = (inputRef, idPrefix) => (
+  const renderAuthForm = (inputRef, passwordRef, idPrefix) => (
     <div className="flex flex-col gap-4 w-full max-w-sm mx-auto">
       {error && (
         <div className="bg-rose-50 text-rose-600 p-3 rounded-xl text-xs font-medium flex items-start gap-2 border border-rose-200">
@@ -427,10 +435,10 @@ export default function AuthScreen({
           <div className="relative">
             <input
               id={`${idPrefix}-password`}
+              ref={passwordRef}
+              data-auth-password
               type={showPassword ? 'text' : 'password'}
               placeholder={isLogin ? 'Your password' : 'At least 6 characters'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               autoCapitalize="none"
               autoCorrect="off"
               autoComplete={isLogin ? 'current-password' : 'new-password'}
@@ -511,6 +519,8 @@ export default function AuthScreen({
             } else {
               setIsLogin(!isLogin);
             }
+            if (mobilePasswordRef.current) mobilePasswordRef.current.value = '';
+            if (desktopPasswordRef.current) desktopPasswordRef.current.value = '';
             setError('');
             setNotice('');
           }}
@@ -610,7 +620,7 @@ export default function AuthScreen({
           </div>
           <div className="flex-1 overflow-y-auto px-6 pt-6 pb-10">
             <form onSubmit={handleSubmit} className="w-full">
-              {renderAuthForm(mobileIdentifierRef, 'mobile')}
+              {renderAuthForm(mobileIdentifierRef, mobilePasswordRef, 'mobile')}
             </form>
           </div>
         </div>
@@ -668,7 +678,7 @@ export default function AuthScreen({
             </div>
 
             <form onSubmit={handleSubmit} className="w-full">
-              {renderAuthForm(desktopIdentifierRef, 'desktop')}
+              {renderAuthForm(desktopIdentifierRef, desktopPasswordRef, 'desktop')}
             </form>
           </div>
         </div>
