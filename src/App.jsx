@@ -1288,19 +1288,82 @@ export default function App() {
   const deleteExpense = async (expenseId) => {
     if (db) {
       const expenseRef = doc(db, 'expenses', expenseId);
+      const notificationDocs = [];
+      const deletedAt = new Date().toISOString();
+      const deleterName = activeUser?.username || 'A member';
       await runTransaction(db, async (transaction) => {
+        notificationDocs.length = 0;
         const expenseSnapshot = await transaction.get(expenseRef);
         if (!expenseSnapshot.exists()) throw new Error('This expense no longer exists.');
-        if (
-          !activeUserId ||
-          (expenseSnapshot.data().createdBy !== activeUserId && expenseSnapshot.data().paidBy !== activeUserId)
-        ) {
+        const expense = expenseSnapshot.data();
+        if (!activeUserId || (expense.createdBy !== activeUserId && expense.paidBy !== activeUserId)) {
           throw new Error('Only the expense creator or payer can delete it.');
         }
-        if (expenseSnapshot.data().activeDisputeId) {
-          throw new Error('Resolve the open dispute before deleting this expense.');
+
+        if (expense.activeDisputeId) {
+          const disputeRef = doc(db, 'messages', expense.activeDisputeId);
+          const groupRef = doc(db, 'groups', expense.groupId);
+          const [disputeSnapshot, groupSnapshot] = await Promise.all([
+            transaction.get(disputeRef),
+            transaction.get(groupRef),
+          ]);
+          if (!disputeSnapshot.exists() || !groupSnapshot.exists()) {
+            throw new Error('This dispute or its group no longer exists.');
+          }
+
+          const dispute = disputeSnapshot.data();
+          const group = groupSnapshot.data();
+          if (
+            dispute.type !== 'expense_dispute' ||
+            dispute.status !== 'open' ||
+            dispute.expenseId !== expenseId
+          ) {
+            throw new Error('This expense is no longer linked to an open dispute.');
+          }
+          if (!group.members?.includes(activeUserId)) {
+            throw new Error('You must be a group member to delete this expense.');
+          }
+
+          transaction.update(disputeRef, {
+            status: 'resolved',
+            resolvedBy: activeUserId,
+            resolvedByName: deleterName,
+            resolvedAt: deletedAt,
+            resolutionAction: 'delete',
+          });
+
+          (group.members || []).filter((recipientId) => (
+            recipientId !== activeUserId
+            && !users.find((member) => member.id === recipientId)?.mutedGroupIds?.includes(expense.groupId)
+          )).forEach((recipientId) => {
+            const notification = {
+              id: `expense_dispute_deleted_${dispute.id}_${recipientId}`,
+              recipientId,
+              senderId: activeUserId,
+              createdBy: activeUserId,
+              createdByName: deleterName,
+              groupId: expense.groupId,
+              type: 'EXPENSE_DISPUTE_DELETED',
+              message: `${deleterName} deleted "${dispute.expenseTitle || expense.title || 'the disputed expense'}" and resolved the dispute.`,
+              createdAt: deletedAt,
+              read: false,
+            };
+            notificationDocs.push(notification);
+            transaction.set(doc(db, 'notifications', notification.id), notification);
+          });
         }
+
         transaction.delete(expenseRef);
+      });
+
+      notificationDocs.forEach((notification) => {
+        triggerPushNotification({
+          senderId: activeUserId,
+          recipientId: notification.recipientId,
+          title: 'Disputed expense deleted',
+          message: notification.message,
+          groupId: notification.groupId,
+        }).catch((error) => console.warn('Expense dispute deletion push failed:', error));
       });
       return;
     }
@@ -1308,9 +1371,6 @@ export default function App() {
     if (!expense) throw new Error('This expense no longer exists.');
     if (!activeUserId || (expense.createdBy !== activeUserId && expense.paidBy !== activeUserId)) {
       throw new Error('Only the expense creator or payer can delete it.');
-    }
-    if (expense.activeDisputeId) {
-      throw new Error('Resolve the open dispute before deleting this expense.');
     }
     setExpenses((previous) => {
       const next = previous.filter((expense) => expense.id !== expenseId);

@@ -397,6 +397,65 @@ html.dark .desktop-settlement-row > div:last-child > span:first-child.text-emera
   color: #86efac !important;
 }
 
+html.dark .overview-dispute-row {
+  background-color: transparent !important;
+  border-color: rgba(148, 112, 45, 0.65) !important;
+  color: #f8fafc !important;
+}
+
+html.dark .overview-dispute-row:hover {
+  background-color: #171717 !important;
+  border-color: rgba(180, 138, 58, 0.8) !important;
+}
+
+html.dark .overview-dispute-row > span:first-child > span:first-child {
+  color: #fcd34d !important;
+}
+
+html.dark .overview-dispute-row > span:first-child > span:last-child > span:first-child {
+  color: #f8fafc !important;
+}
+
+html.dark .overview-dispute-row > span:first-child > span:last-child > span:last-child {
+  color: #cbd5e1 !important;
+}
+
+html.dark .overview-dispute-row > span:last-child > span:first-child {
+  color: #f8fafc !important;
+}
+
+html.dark .dues-list-row {
+  color: #f8fafc !important;
+}
+
+html.dark .dues-list-row:hover {
+  background-color: #202020 !important;
+}
+
+html.dark .dues-list-row > span:first-child > span:first-child {
+  background-color: #252525 !important;
+  color: #e5e7eb !important;
+}
+
+html.dark .dues-list-row > span:first-child > span:first-child.text-amber-700 {
+  background-color: #382d17 !important;
+  color: #fcd34d !important;
+}
+
+html.dark .dues-list-row > span:first-child > span:last-child > span:first-child,
+html.dark .dues-list-row > span:first-child > span:last-child > span:last-child,
+html.dark .dues-list-row > span:last-child {
+  color: #f8fafc !important;
+}
+
+html.dark .overview-dues-more {
+  color: #93c5fd !important;
+}
+
+html.dark .overview-dues-more:hover {
+  background-color: #172033 !important;
+}
+
 html.dark .group-view-header {
   background: #101010 !important;
   border-color: #303030 !important;

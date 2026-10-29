@@ -133,10 +133,7 @@ export default function ExpensesTab({
     });
 
   const canDeleteExpense = (exp) => {
-    return (
-      (exp.createdBy === currentUser.id || exp.paidBy === currentUser.id) &&
-      !exp.activeDisputeId
-    );
+    return exp.createdBy === currentUser.id || exp.paidBy === currentUser.id;
   };
 
   const toggleSelectMode = () => {
@@ -173,7 +170,7 @@ export default function ExpensesTab({
       setShowConfirmModal(false);
     } catch (err) {
       console.error(err);
-      showToast('Failed to delete selected expenses', 'error');
+      showToast(err.message || 'Failed to delete selected expenses', 'error');
     }
   };
 

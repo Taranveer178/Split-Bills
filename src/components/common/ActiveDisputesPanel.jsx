@@ -33,7 +33,7 @@ export default function ActiveDisputesPanel({
               onClick={() => onOpenDispute?.(expense)}
               className={`flex w-full items-center justify-between gap-3 rounded-2xl text-left transition-all cursor-pointer shadow-sm ${
                 inline
-                  ? 'border border-amber-200/80 bg-amber-50/70 p-3 hover:bg-amber-50'
+                  ? 'overview-dispute-row border border-amber-200/80 bg-transparent p-3 hover:bg-slate-50'
                   : 'gap-2 rounded-xl border border-amber-200/70 bg-white/80 px-3 py-2 hover:bg-white'
               }`}
             >

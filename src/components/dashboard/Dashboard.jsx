@@ -36,6 +36,7 @@ import SpaceLongPressActions from './SpaceLongPressActions';
 import ExpenseLongPressActions from '../group/ExpenseLongPressActions';
 import ActiveDisputesPanel from '../common/ActiveDisputesPanel';
 import TransactionsTab from './TransactionsTab';
+import RentSettlementsTab from './RentSettlementsTab';
 import TransactionExportModal from './TransactionExportModal';
 import { calculateSettlements } from '../../utils/settlement';
 import { CATEGORIES, PAYMENT_METHODS } from '../../utils/constants';
@@ -235,7 +236,6 @@ export default function Dashboard({
         - Date.parse(first.activeDisputeCreatedAt || first.createdAt || 0)
       ));
   }, [expenses, myGroups]);
-
   // Unread message & transaction count per space
   const unreadCountsByGroup = useMemo(() => {
     const map = {};
@@ -510,6 +510,16 @@ export default function Dashboard({
       myUnpaidRents,
     };
   }, [myGroups, expenses, rentRecords, user?.id, archivedGroupIds, unreadMessagesByGroup]);
+
+  const overviewDisputes = activeDisputes.slice(0, 2);
+  const overviewRentPreview = groupMetrics.myUnpaidRents.slice(
+    0,
+    Math.max(0, 2 - overviewDisputes.length)
+  );
+  const overviewSettlementPreview = groupMetrics.allMySettlements.slice(
+    0,
+    Math.max(0, 2 - overviewDisputes.length - overviewRentPreview.length)
+  );
 
   const monthlySummary = useMemo(() => {
     const now = new Date();
@@ -955,7 +965,7 @@ export default function Dashboard({
                   }`}
                 >
                   <span className="truncate">Dues</span>
-                  <span>({groupMetrics.allMySettlements.length})</span>
+                  <span>({groupMetrics.allMySettlements.length + groupMetrics.myUnpaidRents.length})</span>
                 </button>
               </div>
 
@@ -1089,16 +1099,34 @@ export default function Dashboard({
               {/* 3B. Mobile Section: Dues */}
               {mobileSection === 'dues' && (
                 <div className="flex flex-col gap-3">
-                  {groupMetrics.allMySettlements.length === 0 ? (
+                  {groupMetrics.allMySettlements.length === 0 && groupMetrics.myUnpaidRents.length === 0 ? (
                     <div className="liquid-glass rounded-2xl px-4 py-8 text-center">
                       <CheckCircle2 size={24} className="mx-auto mb-1.5 text-emerald-600" />
                       <p className="text-xs font-bold text-slate-900">All balances settled</p>
                       <p className="mt-0.5 text-[11px] text-slate-500">
-                        No pending dues across any of your spaces.
+                        No pending rent or dues across any of your spaces.
                       </p>
                     </div>
                   ) : (
-                    groupMetrics.allMySettlements.slice(0, 5).map((item, idx) => {
+                    <>
+                    {groupMetrics.myUnpaidRents.slice(0, 5).map((rent) => (
+                      <div
+                        key={`mobile-rent-${rent.id}`}
+                        onClick={() => handleOpenGroup(rent.groupId, 'members')}
+                        className="liquid-glass-interactive flex cursor-pointer items-center justify-between gap-3 rounded-2xl p-3"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-bold text-slate-900">
+                            {rent.groupName} · {new Date(`${rent.month}-01T00:00:00`).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} rent
+                          </p>
+                          <p className="truncate text-[11px] text-slate-500">Unpaid rent share</p>
+                        </div>
+                        <span className="flex-shrink-0 font-mono text-xs font-extrabold text-amber-700">
+                          {formatCurrency(rent.shares?.[user?.id], rent.currency)}
+                        </span>
+                      </div>
+                    ))}
+                    {groupMetrics.allMySettlements.slice(0, 5).map((item, idx) => {
                       const iOwe = item.from === user?.id;
                       const otherName = getUserName(iOwe ? item.to : item.from);
                       return (
@@ -1131,7 +1159,8 @@ export default function Dashboard({
                           </div>
                         </div>
                       );
-                    })
+                    })}
+                    </>
                   )}
                 </div>
               )}
@@ -1349,7 +1378,7 @@ export default function Dashboard({
                     />
                     <span>Activity</span>
                     {unreadNotifications.length > 0 && (
-                      <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[9px] font-extrabold text-white leading-none shadow-sm animate-pulse">
+                      <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[9px] font-extrabold text-white leading-none shadow-sm">
                         {unreadNotifications.length > 99 ? '99+' : unreadNotifications.length}
                       </span>
                     )}
@@ -1486,15 +1515,7 @@ export default function Dashboard({
 
                 <button
                   type="button"
-                  onClick={() => {
-                    const firstRent = groupMetrics.myUnpaidRents[0];
-                    if (firstRent) {
-                      handleOpenGroup(firstRent.groupId, 'members');
-                    } else {
-                      setLedgerFilter('settlements');
-                      handleTabSwitch('transactions');
-                    }
-                  }}
+                  onClick={() => handleTabSwitch('dues')}
                   className="liquid-glass-interactive w-full cursor-pointer rounded-3xl p-5 text-left"
                 >
                   <div className="flex items-center justify-between">
@@ -1689,7 +1710,7 @@ export default function Dashboard({
                             <ExpenseLongPressActions
                               key={exp.id}
                               expenseTitle={exp.title}
-                              canDelete={(exp.createdBy === user?.id || exp.paidBy === user?.id) && !exp.activeDisputeId}
+                              canDelete={exp.createdBy === user?.id || exp.paidBy === user?.id}
                               canDispute={Boolean(
                                 grp
                                 && grp.members?.includes(user?.id)
@@ -1918,7 +1939,7 @@ export default function Dashboard({
                     </div>
 
                     <ActiveDisputesPanel
-                      disputes={activeDisputes}
+                      disputes={overviewDisputes}
                       groups={myGroups}
                       onOpenDispute={(expense) => handleOpenGroup(expense.groupId, 'chat')}
                       inline
@@ -1930,9 +1951,9 @@ export default function Dashboard({
                         <CheckCircle2 size={20} className="mx-auto mb-1 text-emerald-600" />
                         <p className="text-xs font-bold text-emerald-950">All Settled Up</p>
                       </div>
-                    ) : groupMetrics.myUnpaidRents.length > 0 || groupMetrics.allMySettlements.length > 0 ? (
+                    ) : overviewRentPreview.length > 0 || overviewSettlementPreview.length > 0 ? (
                       <div className="space-y-2.5">
-                        {groupMetrics.myUnpaidRents.slice(0, 5).map((rent) => (
+                        {overviewRentPreview.map((rent) => (
                           <div
                             key={`rent-${rent.id}`}
                             onClick={() => handleOpenGroup(rent.groupId, 'members')}
@@ -1954,7 +1975,7 @@ export default function Dashboard({
                             </div>
                           </div>
                         ))}
-                        {groupMetrics.allMySettlements.slice(0, 5).map((s, idx) => {
+                        {overviewSettlementPreview.map((s, idx) => {
                           const iOwe = s.from === user?.id;
                           const counterparty = getUserName(iOwe ? s.to : s.from);
                           return (
@@ -1991,6 +2012,18 @@ export default function Dashboard({
                         })}
                       </div>
                     ) : null}
+                    {activeDisputes.length + groupMetrics.myUnpaidRents.length + groupMetrics.allMySettlements.length > 2 && (
+                      <div className="mt-3 border-t border-slate-200/60 pt-2">
+                        <button
+                          type="button"
+                          onClick={() => handleTabSwitch('dues')}
+                          className="overview-dues-more flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-xs font-bold text-blue-600 transition-colors hover:bg-blue-50"
+                        >
+                          <span>View more rent, dues &amp; disputes</span>
+                          <ChevronRight size={14} aria-hidden="true" />
+                        </button>
+                      </div>
+                    )}
                   </section>
                 </div>
               </div>
@@ -2005,6 +2038,20 @@ export default function Dashboard({
           activeTab !== 'spaces' &&
           activeTab !== 'transactions' && (
             <div className="h-full">
+              {activeTab === 'dues' && (
+                <div className="hidden md:block">
+                  <RentSettlementsTab
+                    rents={groupMetrics.myUnpaidRents}
+                    settlements={groupMetrics.allMySettlements}
+                    disputes={activeDisputes}
+                    groups={myGroups}
+                    user={user}
+                    getUserName={getUserName}
+                    onOpenGroup={handleOpenGroup}
+                    onOpenDispute={(expense) => handleOpenGroup(expense.groupId, 'chat')}
+                  />
+                </div>
+              )}
               {activeTab === 'monthly' && (
                 <MonthlyAnalyticsTab
                   user={user}

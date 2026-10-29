@@ -178,7 +178,7 @@ export default function TransactionsTab({
                     <ExpenseLongPressActions
                       key={expense.id}
                       expenseTitle={expense.title}
-                      canDelete={(expense.createdBy === user.id || expense.paidBy === user.id) && !expense.activeDisputeId}
+                      canDelete={expense.createdBy === user.id || expense.paidBy === user.id}
                       canDispute={Boolean(
                         group
                         && group.members?.includes(user.id)
