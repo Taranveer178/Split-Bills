@@ -40,6 +40,7 @@ export default function LandingPage({
   onLogin,
   onGetStarted,
   onDownloadApp,
+  isStandaloneWebApp = false,
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -102,6 +103,34 @@ export default function LandingPage({
       a: 'Yes. Use "Quick Expense" for instant equal splits, or switch to "Custom Split" to assign exact rupee amounts or custom shares when someone was away.',
     },
   ];
+
+  if (isStandaloneWebApp) {
+    return (
+      <main className="flex min-h-[100dvh] flex-col bg-[#3E7754] text-white">
+        <section className="flex flex-1 flex-col items-center justify-center px-8 text-center">
+          <img
+            src={roomsplitIcon}
+            alt=""
+            className="mb-6 h-24 w-24 rounded-[2rem] shadow-xl shadow-black/15"
+          />
+          <h1 className="text-4xl font-extrabold tracking-tight">SplitBills</h1>
+          <p className="mt-3 max-w-xs text-base font-medium text-white/85">
+            Shared expenses, simplified.
+          </p>
+        </section>
+        <footer className="rounded-t-[2rem] bg-white px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-6 text-slate-900">
+          <button
+            type="button"
+            onClick={onLogin}
+            className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#3E7754] px-6 text-base font-bold text-white transition-colors hover:bg-[#356447] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3E7754]"
+          >
+            Get started
+            <ArrowRight size={18} aria-hidden="true" />
+          </button>
+        </footer>
+      </main>
+    );
+  }
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#F3F7F3] font-sans text-slate-900 selection:bg-[#3E7754] selection:text-white">

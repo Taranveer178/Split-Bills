@@ -247,6 +247,7 @@ export default function App() {
   );
   const historyInitializedRef = useRef(false);
   const currentRouteRef = useRef(initialRoute);
+  const authModeRef = useRef(null);
   const navigateToRef = useRef(null);
   const lastExitedGroupIdRef = useRef(null);
   const activeUser = users.find((user) => user.id === activeUserId);
@@ -389,6 +390,17 @@ export default function App() {
     else window.history.pushState(state, '', url);
     applyRoute(normalizedRoute);
   };
+
+  const openAuth = (mode) => {
+    window.history.pushState(
+      { ...window.history.state, roomSplitAuth: mode },
+      '',
+      window.location.href
+    );
+    authModeRef.current = mode;
+    setAuthMode(mode);
+  };
+
   useEffect(() => {
     navigateToRef.current = navigateTo;
   });
@@ -408,6 +420,17 @@ export default function App() {
     }
 
     const handlePopState = (event) => {
+      if (event.state?.roomSplitAuth) {
+        authModeRef.current = event.state.roomSplitAuth;
+        setAuthMode(event.state.roomSplitAuth);
+        return;
+      }
+
+      if (authModeRef.current) {
+        authModeRef.current = null;
+        setAuthMode(null);
+      }
+
       const previousRoute = currentRouteRef.current;
       const destinationRoute = event.state?.roomSplitRoute;
       if (previousRoute.view === 'group' && (!destinationRoute || destinationRoute.view === 'dashboard')) {
@@ -603,6 +626,7 @@ export default function App() {
   };
 
   const handleLogin = (userId) => {
+    authModeRef.current = null;
     setAuthMode(null);
     setIncomingChat(null);
     setActiveChatGroupId(null);
@@ -642,6 +666,7 @@ export default function App() {
     setDataLoadStarted(false);
     setLoading(false);
     setActiveUserId(null);
+    authModeRef.current = null;
     setAuthMode(null);
     localStorage.removeItem('rs_active_user_id');
     navigateTo({ view: 'dashboard', dashboardTab: 'groups' }, { replace: true });
@@ -1403,17 +1428,18 @@ export default function App() {
           onSaveUser={saveUser}
           onLogin={handleLogin}
           initialMode={authMode}
-          onBackToLanding={() => setAuthMode(null)}
+          onBackToLanding={() => window.history.back()}
           theme={theme}
           onThemeChange={setTheme}
         />
       ) : !activeUser ? (
         <LandingPage
-          onLogin={() => setAuthMode('login')}
-          onCreateAccount={() => setAuthMode('signup')}
+          onLogin={() => openAuth('login')}
+          onCreateAccount={() => openAuth('signup')}
           deferredPromptAvailable={Boolean(deferredInstallPrompt)}
           onInstallApp={handleInstallApp}
           isAppInstalled={isAppInstalled}
+          isStandaloneWebApp={!Capacitor.isNativePlatform() && isAppInstalled}
         />
       ) : currentView === 'dashboard' ? (
         <Dashboard
