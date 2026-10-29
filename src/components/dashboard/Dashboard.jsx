@@ -972,6 +972,14 @@ export default function Dashboard({
               {/* 3A. Mobile Section: Spaces */}
               {mobileSection === 'spaces' && (
                 <div className="flex flex-col gap-3.5">
+                  {spaceFilter === 'active' && activeDisputes.length > 0 && (
+                    <ActiveDisputesPanel
+                      disputes={activeDisputes}
+                      groups={myGroups}
+                      onOpenDispute={(expense) => handleOpenGroup(expense.groupId, 'chat')}
+                      carousel
+                    />
+                  )}
                   {visibleGroups.length === 0 ? (
                     <div className="liquid-glass rounded-2xl px-4 py-7 text-center">
                       <p className="text-sm font-bold text-slate-800">

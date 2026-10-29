@@ -139,6 +139,12 @@ function ShowcaseMarquee({ children, duration }) {
  );
 }
 
+const heroPreviewDisputes = [
+ { title: 'WiFi + OTT Bill', raisedBy: 'Sushant', space: 'Flat 402 · Tap to resolve in chat' },
+ { title: 'Groceries · ₹2,450', raisedBy: 'Aarav', space: 'Flat 402 · Your share was updated' },
+ { title: 'Weekend cab · ₹980', raisedBy: 'Tanmay', space: 'Kasol Trip · Review split in chat' },
+];
+
 export default function LandingPage({
  onLogin,
  onGetStarted,
@@ -155,6 +161,7 @@ export default function LandingPage({
  // Interactive preview states for redesigned mockups & screenshots
  const [heroPhoneTab, setHeroPhoneTab] = useState('overview'); // 'overview' | 'chat' | 'dues'
  const [heroDarkPreview, setHeroDarkPreview] = useState(false);
+ const [activeHeroDisputeIndex, setActiveHeroDisputeIndex] = useState(0);
  const [activePreviewTab, setActivePreviewTab] = useState('command'); // 'command' | 'analytics' | 'rent' | 'transactions' | 'spaces'
  const [desktopDarkPreview, setDesktopDarkPreview] = useState(false);
  const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
@@ -168,6 +175,14 @@ export default function LandingPage({
  const [copiedCode, setCopiedCode] = useState(false);
  const [openFaq, setOpenFaq] = useState(0);
  const [previewModal, setPreviewModal] = useState(null); // null | 'login' | 'signup' | 'install'
+
+ useEffect(() => {
+  if (heroPhoneTab !== 'overview' || heroPreviewDisputes.length < 2) return undefined;
+  const intervalId = window.setInterval(() => {
+   setActiveHeroDisputeIndex((index) => (index + 1) % heroPreviewDisputes.length);
+  }, 4000);
+  return () => window.clearInterval(intervalId);
+ }, [heroPhoneTab]);
 
  useEffect(() => {
   if (!isStandaloneWebApp) return undefined;
@@ -740,31 +755,47 @@ export default function LandingPage({
             </button>
            </div>
 
-           {/* Active Dispute Inline Alert Banner */}
-           <button
-            type="button"
-            onClick={() => setHeroPhoneTab('chat')}
-            className={`flex w-full items-center justify-between rounded-2xl border px-3 py-2 text-left ${
+           {/* Active disputes carousel */}
+           <div
+            className={`overflow-hidden rounded-2xl border ${
              heroDarkPreview
-              ? 'border-amber-500/40 bg-amber-950/30 text-amber-200'
-              : 'border-amber-200 bg-amber-50/90 text-slate-900'
+              ? 'border-amber-500/40 bg-amber-950/30'
+              : 'border-amber-200 bg-amber-50/90'
             }`}
+            aria-live="polite"
            >
-            <div className="flex min-w-0 items-center gap-2">
-             <AlertTriangle size={13} className="flex-shrink-0 text-amber-600" />
-             <div className="min-w-0">
-              <p className="truncate text-[10px] font-extrabold">
-               WiFi + OTT Bill · Raised by Sushant
-              </p>
-              <p className="truncate text-[9px] text-slate-500">
-               Flat 402 · Tap to resolve in chat
-              </p>
-             </div>
+            <div
+             className="flex transition-transform duration-500 ease-in-out"
+             style={{ transform: `translateX(-${activeHeroDisputeIndex * 100}%)` }}
+            >
+             {heroPreviewDisputes.map((dispute, index) => (
+              <button
+               key={dispute.title}
+               type="button"
+               onClick={() => setHeroPhoneTab('chat')}
+               aria-label={`Open dispute: ${dispute.title}, raised by ${dispute.raisedBy}`}
+               aria-hidden={activeHeroDisputeIndex !== index}
+               inert={activeHeroDisputeIndex !== index}
+               className={`flex w-full flex-none items-center justify-between gap-2 px-3 py-2 text-left ${
+                heroDarkPreview ? 'text-amber-200' : 'text-slate-900'
+               }`}
+              >
+               <div className="flex min-w-0 items-center gap-2">
+                <AlertTriangle size={13} className="flex-shrink-0 text-amber-600" />
+                <div className="min-w-0">
+                 <p className="truncate text-[10px] font-extrabold">
+                  {dispute.title} · Raised by {dispute.raisedBy}
+                 </p>
+                 <p className="truncate text-[9px] text-slate-500">{dispute.space}</p>
+                </div>
+               </div>
+               <span className="flex-none rounded-lg bg-amber-600 px-2 py-0.5 text-[9px] font-bold text-white">
+                Dispute
+               </span>
+              </button>
+             ))}
             </div>
-            <span className="rounded-lg bg-amber-600 px-2 py-0.5 text-[9px] font-bold text-white">
-             Dispute
-            </span>
-           </button>
+           </div>
 
            {/* Updated Space Rows with Pin, Rent Due ($), Mute & Net Chip */}
            <div className="space-y-2">

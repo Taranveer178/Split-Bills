@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { AlertTriangle, ChevronRight } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
 
@@ -7,8 +8,78 @@ export default function ActiveDisputesPanel({
   onOpenDispute,
   compact = false,
   inline = false,
+  carousel = false,
 }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    if (!carousel || disputes.length < 2) return undefined;
+    const intervalId = window.setInterval(() => {
+      setActiveIndex((index) => (index + 1) % disputes.length);
+    }, 4000);
+    return () => window.clearInterval(intervalId);
+  }, [carousel, disputes.length]);
+
   if (!disputes.length) return null;
+
+  if (carousel) {
+    const currentIndex = activeIndex % disputes.length;
+
+    return (
+      <section
+        className="mobile-disputes-carousel overflow-hidden rounded-2xl border border-amber-200 bg-amber-50/90"
+        aria-label={`${disputes.length} active dispute${disputes.length === 1 ? '' : 's'}`}
+        aria-live="polite"
+      >
+        <div
+          className="flex transition-transform duration-500 ease-in-out"
+          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        >
+          {disputes.map((expense, index) => {
+            const group = groups.find((item) => item.id === expense.groupId);
+            return (
+              <button
+                key={expense.id}
+                type="button"
+                onClick={() => onOpenDispute?.(expense)}
+                aria-label={`Open dispute: ${expense.title || 'Expense'}${expense.activeDisputeByName ? `, raised by ${expense.activeDisputeByName}` : ''}`}
+                aria-hidden={currentIndex !== index}
+                inert={currentIndex !== index}
+                className="flex w-full flex-none items-center justify-between gap-2 px-3 py-2.5 text-left"
+              >
+                <span className="flex min-w-0 flex-1 items-center gap-2">
+                  <AlertTriangle size={14} className="flex-none text-amber-700" />
+                  <span className="min-w-0">
+                    <span className="block truncate text-xs font-extrabold text-slate-900">
+                      {expense.title || 'Expense'}{expense.activeDisputeByName ? ` · Raised by ${expense.activeDisputeByName}` : ''}
+                    </span>
+                    <span className="mt-0.5 block truncate text-[10px] font-medium text-slate-500">
+                      {group?.name || 'Group'} · Tap to resolve in chat
+                    </span>
+                  </span>
+                </span>
+                <span className="flex-none rounded-lg bg-amber-600 px-2.5 py-1 text-[10px] font-bold text-white">
+                  Dispute
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        {disputes.length > 1 && (
+          <div className="flex justify-center gap-1 pb-2" aria-label="Dispute carousel position">
+            {disputes.map((expense, index) => (
+              <span
+                key={expense.id}
+                className={`h-1 rounded-full transition-all ${
+                  currentIndex === index ? 'w-4 bg-amber-700' : 'w-1 bg-amber-300'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+    );
+  }
 
   return (
     <section className={inline ? 'mb-3.5' : `rounded-2xl border border-amber-200/80 bg-amber-50/80 ${compact ? 'p-3.5' : 'p-4'}`}>

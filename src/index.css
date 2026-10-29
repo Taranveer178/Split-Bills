@@ -577,6 +577,19 @@ html.dark .overview-dispute-row > span:last-child > span:first-child {
   color: #f8fafc !important;
 }
 
+html.dark .mobile-disputes-carousel {
+  border-color: rgba(180, 138, 58, 0.65) !important;
+  background-color: rgba(69, 39, 10, 0.35) !important;
+}
+
+html.dark .mobile-disputes-carousel button {
+  color: #f8fafc !important;
+}
+
+html.dark .mobile-disputes-carousel button > span:first-child > span > span:last-child {
+  color: #cbd5e1 !important;
+}
+
 html.dark .dues-list-row {
   color: #f8fafc !important;
 }
