@@ -31,6 +31,9 @@ import {
   ArrowRight,
   Globe,
   Send,
+  Link,
+  CodeXml,
+  Mail,
 } from 'lucide-react';
 
 export default function LandingPage({
@@ -1425,7 +1428,7 @@ export default function LandingPage({
       {/* =================================================================== */}
       {/* SECTION 9: FINAL CTA & FOOTER                                       */}
       {/* =================================================================== */}
-      <footer className="relative z-10 border-t border-white/80 bg-white/60 backdrop-blur-2xl">
+      <footer className="relative z-10 border-t border-[#2F6746] bg-[#173F2D] text-white">
         <div className="mx-auto max-w-[1320px] px-4 py-12 sm:px-6">
           <div className="flex flex-col items-center justify-between gap-6 rounded-3xl border border-white/90 bg-gradient-to-r from-[#3E7754] to-[#3E7754] p-8 text-center text-white shadow-xl sm:flex-row sm:text-left">
             <div>
@@ -1461,29 +1464,113 @@ export default function LandingPage({
             </div>
           </div>
 
-          <div className="mt-10 flex flex-col items-center justify-between gap-4 text-xs text-slate-500 sm:flex-row">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#3E7754] font-bold text-white">
-                ₹
-              </span>
-              <span className="font-extrabold text-slate-900">SplitBills</span>
-              <span>· Shared Expense & Flat Ledger</span>
+          <div className="mt-10 border-t border-white/20 pt-7">
+            <div className="grid gap-8 sm:grid-cols-[1fr_auto] sm:items-start">
+              <div className="space-y-5">
+                <div className="flex items-center gap-2 text-xs text-white/65">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-white/15 font-bold text-white">
+                    ₹
+                  </span>
+                  <span className="font-extrabold text-white">SplitBills</span>
+                  <span>· Shared Expense &amp; Flat Ledger</span>
+                </div>
+                <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-white/70">
+                  <button type="button" onClick={onLogin} className="transition-colors hover:text-white">
+                    Login
+                  </button>
+                  <button type="button" onClick={onGetStarted} className="transition-colors hover:text-white">
+                    Sign Up
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleInstallClick}
+                    className="transition-colors hover:text-white"
+                  >
+                    Download App
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid gap-6 border-t border-white/20 pt-5 sm:grid-cols-2 sm:border-t-0 sm:pt-0">
+                <div>
+                  <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/55">
+                    Developed by
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-white">Taranveer Singh</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <a
+                      href="https://taranveer.in"
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label="Taranveer Singh portfolio"
+                      className="inline-flex h-8 items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-2.5 text-xs font-semibold text-white/85 transition-colors hover:bg-white/20 hover:text-white"
+                    >
+                      <Globe size={14} />
+                      Portfolio
+                    </a>
+                    <a
+                      href="https://www.linkedin.com/in/taranveer-singh-2445871b6/"
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label="Taranveer Singh on LinkedIn"
+                      title="LinkedIn"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-white/85 transition-colors hover:bg-white/20 hover:text-white"
+                    >
+                      <Link size={16} />
+                    </a>
+                    <a
+                      href="https://github.com/Taranveer178"
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label="Taranveer Singh on GitHub"
+                      title="GitHub"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-white/85 transition-colors hover:bg-white/20 hover:text-white"
+                    >
+                      <CodeXml size={16} />
+                    </a>
+                    <a
+                      href="mailto:staranveer178@gmail.com"
+                      aria-label="Email Taranveer Singh"
+                      className="inline-flex h-8 items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-2.5 text-xs font-semibold text-white/85 transition-colors hover:bg-white/20 hover:text-white"
+                    >
+                      <Mail size={14} />
+                      Email
+                    </a>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/55">
+                    Team member
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-white">Sushant Monga</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <a
+                      href="https://sushantmonga.in"
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label="Sushant Monga portfolio"
+                      className="inline-flex h-8 items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-2.5 text-xs font-semibold text-white/85 transition-colors hover:bg-white/20 hover:text-white"
+                    >
+                      <Globe size={14} />
+                      Portfolio
+                    </a>
+                    <button
+                      type="button"
+                      disabled
+                      aria-label="Sushant Monga LinkedIn link coming soon"
+                      title="LinkedIn profile coming soon"
+                      className="flex h-8 w-8 cursor-not-allowed items-center justify-center rounded-lg border border-white/20 bg-white/5 text-white/40"
+                    >
+                      <Link size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-5 font-semibold">
-              <button type="button" onClick={onLogin} className="hover:text-[#3E7754]">
-                Login
-              </button>
-              <button type="button" onClick={onGetStarted} className="hover:text-[#3E7754]">
-                Sign Up
-              </button>
-              <button
-                type="button"
-                onClick={handleInstallClick}
-                className="hover:text-[#3E7754]"
-              >
-                Download App
-              </button>
-            </div>
+            <p className="mt-7 border-t border-white/15 pt-4 text-center text-[11px] text-white/50 sm:text-left">
+              © {new Date().getFullYear()} SplitBills. All rights reserved.
+            </p>
           </div>
         </div>
       </footer>
