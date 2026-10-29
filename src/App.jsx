@@ -753,7 +753,10 @@ export default function App() {
           notification.type === 'NEW_MESSAGE' ||
           notification.type === 'MESSAGE' ||
           notification.category === 'chat' ||
-          /message|chat|dispute/i.test(notification.type || '')
+          (
+            !notification.type?.startsWith('EXPENSE_DISPUTE') &&
+            /message|chat|dispute/i.test(notification.type || '')
+          )
         )
       ))
       .map((notification) => notification.id);

@@ -338,7 +338,10 @@ export default function Dashboard({
                   n.type === 'NEW_MESSAGE' ||
                   n.type === 'MESSAGE' ||
                   n.category === 'chat' ||
-                  /message|chat|dispute/i.test(n.type || '')
+                  (
+                    !n.type?.startsWith('EXPENSE_DISPUTE') &&
+                    /message|chat|dispute/i.test(n.type || '')
+                  )
                 )
               : !(
                   n.type === 'CHAT_MESSAGE' ||
