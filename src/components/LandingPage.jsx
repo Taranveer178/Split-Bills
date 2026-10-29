@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import roomsplitIcon from '../assets/roomsplit-icon.webp';
+import sharebillsIcon from '../assets/sharebills-icon.webp';
 import {
   Plus,
   UserPlus,
@@ -96,16 +96,16 @@ export default function LandingPage({
 
   const faqs = [
     {
-      q: 'Is SplitBills completely free for roommates and flatmates?',
+      q: 'Is Sharebills completely free for roommates and flatmates?',
       a: 'Yes! Creating unlimited spaces, logging bills, smart debt simplification, group chat, and monthly analytics are 100% free with zero hidden subscription walls.',
     },
     {
       q: 'How does the Smart Settlement algorithm work?',
-      a: 'Instead of everyone paying everyone back for each individual grocery run or Swiggy order, SplitBills calculates the net position of each roommate and minimizes the total number of UPI transfers needed to settle the entire flat.',
+      a: 'Instead of everyone paying everyone back for each individual grocery run or Swiggy order, Sharebills calculates the net position of each roommate and minimizes the total number of UPI transfers needed to settle the entire flat.',
     },
     {
-      q: 'Can I install SplitBills as a native app on Android and iOS?',
-      a: 'Absolutely. SplitBills is built as a Progressive Web App (PWA). Tap "Install App" in the header or footer to add it directly to your home screen with full-screen native gestures and instant loading.',
+      q: 'Can I install Sharebills as a native app on Android and iOS?',
+      a: 'Absolutely. Sharebills is built as a Progressive Web App (PWA). Tap "Install App" in the header or footer to add it directly to your home screen with full-screen native gestures and instant loading.',
     },
     {
       q: 'How do my roommates join a flat space?',
@@ -122,11 +122,11 @@ export default function LandingPage({
       <main className="flex min-h-[100dvh] flex-col bg-[#3E7754] pt-[env(safe-area-inset-top)] text-white">
         <section className="flex flex-1 flex-col items-center justify-center px-8 text-center">
           <img
-            src={roomsplitIcon}
+            src={sharebillsIcon}
             alt=""
             className="mb-6 h-24 w-24 rounded-[2rem] shadow-xl shadow-black/15"
           />
-          <h1 className="text-4xl font-extrabold tracking-tight">SplitBills</h1>
+          <h1 className="text-4xl font-extrabold tracking-tight">Sharebills</h1>
           <p className="mt-3 max-w-xs text-base font-medium text-white/85">
             Shared expenses, simplified.
           </p>
@@ -168,13 +168,13 @@ export default function LandingPage({
             className="flex items-center gap-2.5 text-left focus:outline-none"
           >
             <img
-              src={roomsplitIcon}
+              src={sharebillsIcon}
               alt=""
               className="h-10 w-10 rounded-2xl object-cover shadow-md shadow-[#3E7754]/25"
             />
             <div>
               <span className="block text-base font-extrabold tracking-tight text-slate-900 leading-none">
-                SplitBills
+                Sharebills
               </span>
               <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-widest text-[#3E7754]">
                 Liquid Ledger
@@ -330,7 +330,7 @@ export default function LandingPage({
             </h1>
 
             <p className="mx-auto mt-4 max-w-2xl text-sm font-medium text-slate-600 sm:text-base lg:mx-0 leading-relaxed">
-              SplitBills is your shared expense command center. Track rent, electricity,
+              Sharebills is your shared expense command center. Track rent, electricity,
               Swiggy orders, and weekend trips in real time—complete with in-room chat,
               instant UPI settlements, and monthly category analytics.
             </p>
@@ -382,7 +382,7 @@ export default function LandingPage({
             </div>
           </div>
 
-          {/* Right 5 Columns: Realistic Mobile Phone Frame Showing SplitBills Dashboard */}
+          {/* Right 5 Columns: Realistic Mobile Phone Frame Showing Sharebills Dashboard */}
           <div className="lg:col-span-5 flex justify-center">
             <div className="relative w-full max-w-[350px]">
               {/* Floating Notification Badge Left */}
@@ -426,13 +426,13 @@ export default function LandingPage({
                   <div className="flex items-center justify-between gap-1.5">
                     <div className="flex items-center gap-2 rounded-full border border-white/90 bg-white/85 py-1 pl-1.5 pr-3 shadow-sm">
                       <img
-                        src={roomsplitIcon}
+                        src={sharebillsIcon}
                         alt=""
                         className="h-6 w-6 rounded-full object-cover"
                       />
                       <div>
                         <span className="block text-[10px] font-extrabold text-slate-900 leading-none">
-                          SplitBills
+                          Sharebills
                         </span>
                         <span className="block text-[8px] font-semibold text-[#3E7754]">
                           Hi, Taran
@@ -1212,7 +1212,7 @@ export default function LandingPage({
                 Try the instant bill splitter right here
               </h2>
               <p className="text-sm text-[#DDE9DF]/90 leading-relaxed">
-                Adjust the bill total or number of roommates below to see how SplitBills
+                Adjust the bill total or number of roommates below to see how Sharebills
                 calculates your exact net impact and sends instant notifications to the
                 rest of the room.
               </p>
@@ -1390,7 +1390,7 @@ export default function LandingPage({
                   Progressive Web App (PWA)
                 </div>
                 <h2 className="mt-1 text-2xl font-extrabold text-slate-900 sm:text-3xl">
-                  Install SplitBills on your Home Screen
+                  Install Sharebills on your Home Screen
                 </h2>
                 <p className="mt-1 max-w-xl text-xs sm:text-sm text-slate-600">
                   No 100MB app store download required. Install directly from your browser
@@ -1406,7 +1406,7 @@ export default function LandingPage({
                 className="inline-flex h-12 items-center gap-2 rounded-2xl bg-gradient-to-b from-[#3E7754] to-[#3E7754] px-6 text-xs sm:text-sm font-extrabold text-white shadow-lg shadow-[#3E7754]/25 transition-all hover:from-[#588362] hover:to-[#3E7754] active:scale-95"
               >
                 <Download size={16} />
-                <span>Install SplitBills App</span>
+                <span>Install Sharebills App</span>
               </button>
 
               <button
@@ -1481,11 +1481,11 @@ export default function LandingPage({
               <div className="space-y-5">
                 <div className="flex items-center gap-2 text-xs text-white/65">
                   <img
-                    src={roomsplitIcon}
+                    src={sharebillsIcon}
                     alt=""
                     className="h-7 w-7 rounded-xl object-cover"
                   />
-                  <span className="font-extrabold text-white">SplitBills</span>
+                  <span className="font-extrabold text-white">Sharebills</span>
                   <span>· Shared Expense &amp; Flat Ledger</span>
                 </div>
                 <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-white/70">
@@ -1583,7 +1583,7 @@ export default function LandingPage({
               </div>
             </div>
             <p className="pt-5 text-center text-[11px] text-white/50 sm:text-left">
-              © {new Date().getFullYear()} SplitBills. All rights reserved.
+              © {new Date().getFullYear()} Sharebills. All rights reserved.
             </p>
           </div>
         </div>

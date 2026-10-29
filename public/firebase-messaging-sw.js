@@ -14,7 +14,7 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-const NAVIGATION_CACHE = 'roomsplit-navigation-v1';
+const NAVIGATION_CACHE = 'sharebills-navigation-v1';
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
@@ -43,11 +43,11 @@ self.addEventListener('fetch', (event) => {
 messaging.onBackgroundMessage((payload) => {
   if (payload.notification) return;
 
-  const title = payload.notification?.title || payload.data?.title || 'RoomSplit Alert';
+  const title = payload.notification?.title || payload.data?.title || 'Sharebills Alert';
   const options = {
     body: payload.notification?.body || payload.data?.message || 'New activity in your group.',
-    icon: '/roomsplit-icon.webp',
-    badge: '/roomsplit-icon.webp',
+    icon: '/sharebills-icon.webp',
+    badge: '/sharebills-icon.webp',
     data: {
       url: payload.data?.url || '/',
       recipientId: payload.data?.recipientId || '',

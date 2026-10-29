@@ -22,7 +22,7 @@ export default function Toast({ toast }) {
         <span className="min-w-0 flex-1 truncate">{toast.message}</span>
         {toast.brandIcon && (
           <img
-            src="/roomsplit-icon-192.png"
+            src="/sharebills-icon-192.webp"
             alt=""
             className="h-8 w-8 flex-shrink-0 rounded-lg object-cover"
           />

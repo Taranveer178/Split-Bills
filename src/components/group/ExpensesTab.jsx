@@ -29,30 +29,30 @@ const getCategoryMeta = (category = '') => {
   if (cat.includes('food') || cat.includes('dinner') || cat.includes('snack') || cat.includes('grocer')) {
     return {
       bg: 'bg-amber-50 text-amber-700 border-amber-200/80',
-      icon: <Utensils size={16} />,
+      icon: <Utensils size={14} />,
     };
   }
   if (cat.includes('travel') || cat.includes('petrol') || cat.includes('fuel') || cat.includes('cab')) {
     return {
       bg: 'bg-sky-50 text-sky-700 border-sky-200/80',
-      icon: <Car size={16} />,
+      icon: <Car size={14} />,
     };
   }
   if (cat.includes('rent') || cat.includes('wifi') || cat.includes('bill') || cat.includes('electricity')) {
     return {
       bg: 'bg-slate-100 text-slate-700 border-slate-200',
-      icon: <Home size={16} />,
+      icon: <Home size={14} />,
     };
   }
   if (cat.includes('shop') || cat.includes('cloth') || cat.includes('mart')) {
     return {
       bg: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
-      icon: <ShoppingBag size={16} />,
+      icon: <ShoppingBag size={14} />,
     };
   }
   return {
     bg: 'bg-slate-100 text-slate-700 border-slate-200',
-    icon: <Zap size={16} />,
+    icon: <Zap size={14} />,
   };
 };
 
@@ -90,11 +90,13 @@ export default function ExpensesTab({
   const [detailExpense, setDetailExpense] = useState(null);
 
   const uniquePayers = Array.from(new Set(expenses.map((e) => e.paidBy).filter(Boolean)));
+  const totalGroupMembers = new Set([...users.map(u => u.id), currentUser.id]).size;
 
   const filtered = expenses.filter((exp) => {
     if (payerFilter === 'ALL') return true;
     return exp.paidBy === payerFilter;
   });
+
   const expenseDateGroups = Array.from(
     filtered.reduce((groups, expense) => {
       const date = parseExpenseDate(expense.date) || parseExpenseDate(expense.createdAt);
@@ -292,160 +294,190 @@ export default function ExpensesTab({
         <div className="space-y-4">
           {expenseDateGroups.map((dateGroup) => (
             <section key={dateGroup.dateKey} aria-label={`Expenses for ${dateGroup.label}`}>
-              <h2 className="mb-2 px-1 text-xs font-bold tracking-wide text-slate-500">
+              <h2 className="mb-2 px-1 text-[11px] font-bold tracking-wide text-slate-400 uppercase">
                 {dateGroup.label}
               </h2>
               <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs">
                 {dateGroup.expenses.map((exp) => {
-            const iPaid = exp.paidBy === currentUser.id;
-            const hasAccess = canDeleteExpense(exp);
-            const isSelected = selectedIds.includes(exp.id);
-            const myShare = exp.splits ? exp.splits[currentUser.id] : 0;
-            const participants = getParticipantsList(exp);
-            const catMeta = getCategoryMeta(exp.category);
+                  const iPaid = exp.paidBy === currentUser.id;
+                  const hasAccess = canDeleteExpense(exp);
+                  const isSelected = selectedIds.includes(exp.id);
+                  const myShare = exp.splits ? exp.splits[currentUser.id] : 0;
+                  const participants = getParticipantsList(exp);
+                  const catMeta = getCategoryMeta(exp.category);
 
-            let statusAmount = null;
-            let isPositive = false;
-            let isInvolved = false;
+                  let statusAmount = null;
+                  let isPositive = false;
+                  let isInvolved = false;
 
-            if (iPaid) {
-              const totalOthersOwe =
-                parseFloat(exp.totalAmount) - (myShare ? parseFloat(myShare) : 0);
-              if (totalOthersOwe > 0) {
-                statusAmount = `+${formatCurrency(totalOthersOwe, currency)}`;
-                isPositive = true;
-                isInvolved = true;
-              } else {
-                statusAmount = formatCurrency(exp.totalAmount, currency);
-              }
-            } else if (myShare && parseFloat(myShare) > 0) {
-              statusAmount = `-${formatCurrency(myShare, currency)}`;
-              isPositive = false;
-              isInvolved = true;
-            }
+                  if (iPaid) {
+                    const totalOthersOwe =
+                      parseFloat(exp.totalAmount) - (myShare ? parseFloat(myShare) : 0);
+                    if (totalOthersOwe > 0) {
+                      statusAmount = `+${formatCurrency(totalOthersOwe, currency)}`;
+                      isPositive = true;
+                      isInvolved = true;
+                    } else {
+                      statusAmount = formatCurrency(exp.totalAmount, currency);
+                    }
+                  } else if (myShare && parseFloat(myShare) > 0) {
+                    statusAmount = `-${formatCurrency(myShare, currency)}`;
+                    isPositive = false;
+                    isInvolved = true;
+                  }
 
-            return (
-              <ExpenseLongPressActions
-                key={exp.id}
-                expenseTitle={exp.title}
-                canDelete={hasAccess}
-                canDispute={
-                  !isSelectMode
-                  && !exp.isSettlement
-                  && exp.category !== 'Settlement'
-                  && !exp.activeDisputeId
-                }
-                hasActiveDispute={!isSelectMode && Boolean(exp.activeDisputeId)}
-                canCancelDispute={
-                  !isSelectMode
-                  && Boolean(exp.activeDisputeId)
-                  && (!exp.activeDisputeBy || exp.activeDisputeBy === currentUser.id)
-                }
-                enabled={!isSelectMode}
-                onDelete={() => onDeleteExpense(exp.id)}
-                onRaiseDispute={(message) => onRaiseExpenseDispute?.(exp, message)}
-                onCancelDispute={() => onCancelExpenseDispute?.(exp)}
-                onViewDispute={() => onViewExpenseDispute?.(exp)}
-                showToast={showToast}
-              >
-              <div
-                onClick={() => handleCardClick(exp)}
-                className={`group flex items-center justify-between gap-3 p-3.5 sm:p-4 transition-colors cursor-pointer ${
-                  isSelected ? 'bg-slate-100' : 'hover:bg-slate-50'
-                }`}
-              >
-                <div className="flex items-start gap-3 min-w-0">
-                  <div
-                    className={`w-10 h-10 rounded-xl border flex items-center justify-center flex-shrink-0 mt-0.5 ${catMeta.bg}`}
-                  >
-                    {catMeta.icon}
-                  </div>
-
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <h3 className="font-bold text-slate-900 text-xs sm:text-sm truncate">
-                        {getExpenseTitle(exp)}
-                      </h3>
-                      {exp.activeDisputeId && (
-                        <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
-                          <AlertCircle size={11} />
-                          Dispute open
-                        </span>
-                      )}
-                      {exp.wasEdited && (
-                        <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700">
-                          Edited
-                        </span>
-                      )}
-                      <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
-                        {exp.paymentMethod || 'UPI'}
+                  // Split Pill Logic
+                  let splitPills = [];
+                  if (participants.length === totalGroupMembers && totalGroupMembers > 1) {
+                    splitPills.push(
+                      <span key="all" className="inline-block px-1.5 py-[2px] rounded md text-[9px] font-semibold bg-slate-100 text-slate-600 border border-slate-200/60">
+                        All
                       </span>
-                    </div>
+                    );
+                  } else {
+                    const showCount = participants.length > 3 ? 2 : participants.length;
+                    const visibleParticipants = participants.slice(0, showCount);
+                    const remainingCount = participants.length - showCount;
 
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      <span className="font-semibold text-slate-700">
-                        {iPaid ? 'You' : getUserName(exp.paidBy)}
-                      </span>{' '}
-                      paid{' '}
-                      <span className="font-bold text-slate-900 font-mono">
-                        {formatCurrency(exp.totalAmount, currency)}
-                      </span>{' '}
-                    </p>
-                    <p className="mt-0.5 max-w-[min(65vw,28rem)] truncate text-xs text-slate-500">
-                      <span className="font-semibold text-slate-600">Split: </span>
-                      {participants.map(getMemberName).join(', ')}
-                    </p>
-                  </div>
-                </div>
+                    splitPills = visibleParticipants.map((memberId) => {
+                      const isMe = memberId === currentUser.id;
+                      const name = isMe ? 'You' : getMemberName(memberId);
+                      return (
+                        <span
+                          key={memberId}
+                          className={`inline-block px-1.5 py-[2px] rounded-md text-[9px] font-semibold border ${
+                            isMe
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
+                              : 'bg-slate-100 text-slate-600 border-slate-200/60'
+                          }`}
+                        >
+                          {name}
+                        </span>
+                      );
+                    });
 
-                <div className="flex items-center gap-2.5 flex-shrink-0">
-                  <div className="text-right">
-                    {statusAmount ? (
+                    if (remainingCount > 0) {
+                      splitPills.push(
+                        <span key="more" className="inline-block px-1.5 py-[2px] rounded-md text-[9px] font-semibold bg-slate-100 text-slate-500 border border-slate-200/60">
+                          +{remainingCount}
+                        </span>
+                      );
+                    }
+                  }
+
+                  return (
+                    <ExpenseLongPressActions
+                      key={exp.id}
+                      expenseTitle={exp.title}
+                      canDelete={hasAccess}
+                      canDispute={
+                        !isSelectMode &&
+                        !exp.isSettlement &&
+                        exp.category !== 'Settlement' &&
+                        !exp.activeDisputeId
+                      }
+                      hasActiveDispute={!isSelectMode && Boolean(exp.activeDisputeId)}
+                      canCancelDispute={
+                        !isSelectMode &&
+                        Boolean(exp.activeDisputeId) &&
+                        (!exp.activeDisputeBy || exp.activeDisputeBy === currentUser.id)
+                      }
+                      enabled={!isSelectMode}
+                      onDelete={() => onDeleteExpense(exp.id)}
+                      onRaiseDispute={(message) => onRaiseExpenseDispute?.(exp, message)}
+                      onCancelDispute={() => onCancelExpenseDispute?.(exp)}
+                      onViewDispute={() => onViewExpenseDispute?.(exp)}
+                      showToast={showToast}
+                    >
                       <div
-                        className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-xs font-bold font-mono ${
-                          isInvolved
-                            ? isPositive
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
-                              : 'bg-rose-50 text-rose-600 border border-rose-200/80'
-                            : 'text-slate-500 bg-slate-100'
+                        onClick={() => handleCardClick(exp)}
+                        className={`group flex items-center justify-between gap-3 p-3 transition-colors cursor-pointer ${
+                          isSelected ? 'bg-slate-100' : 'hover:bg-slate-50'
                         }`}
                       >
-                        {isInvolved &&
-                          (isPositive ? (
-                            <ArrowUpRight size={12} className="text-emerald-600" />
+                        <div className="flex items-start gap-3 min-w-0">
+                          <div
+                            className={`w-9 h-9 rounded-xl border flex items-center justify-center flex-shrink-0 mt-1 ${catMeta.bg}`}
+                          >
+                            {catMeta.icon}
+                          </div>
+
+                          <div className="min-w-0 flex flex-col justify-center py-0.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <h3 className="font-bold text-slate-900 text-[13px] truncate">
+                                {getExpenseTitle(exp)}
+                              </h3>
+                              {exp.activeDisputeId && (
+                                <span className="inline-flex items-center rounded bg-amber-50 px-1 py-0.5 text-[9px] font-bold text-amber-700 uppercase tracking-wide">
+                                  Disputed
+                                </span>
+                              )}
+                            </div>
+
+                            <p className="text-[11px] text-slate-500 mt-0.5">
+                              <span className="font-semibold text-slate-700">
+                                {iPaid ? 'You' : getUserName(exp.paidBy)}
+                              </span>{' '}
+                              paid <span className="font-semibold text-slate-800">{formatCurrency(exp.totalAmount, currency)}</span>
+                            </p>
+                            
+                            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                              <span className="text-[10px] text-slate-400 font-medium">Split:</span>
+                              <div className="flex items-center gap-1">
+                                {splitPills}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="text-right">
+                            {statusAmount ? (
+                              <div
+                                className={`inline-flex items-center gap-0.5 px-2 py-1 rounded-md text-[11px] font-bold font-mono ${
+                                  isInvolved
+                                    ? isPositive
+                                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
+                                      : 'bg-rose-50 text-rose-600 border border-rose-200/80'
+                                    : 'text-slate-500 bg-slate-100 border border-transparent'
+                                }`}
+                              >
+                                {isInvolved &&
+                                  (isPositive ? (
+                                    <ArrowUpRight size={11} className="text-emerald-600" />
+                                  ) : (
+                                    <ArrowDownLeft size={11} className="text-rose-600" />
+                                  ))}
+                                <span>{statusAmount}</span>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] font-medium text-slate-400">Not involved</span>
+                            )}
+                          </div>
+
+                          {isSelectMode ? (
+                            hasAccess ? (
+                              <div
+                                className={`w-5 h-5 rounded-md border flex items-center justify-center ${
+                                  isSelected
+                                    ? 'bg-slate-900 border-slate-900 text-white'
+                                    : 'border-slate-300 bg-white'
+                                }`}
+                              >
+                                {isSelected && <Check size={12} strokeWidth={3} />}
+                              </div>
+                            ) : (
+                              <div className="w-5 h-5 rounded-md border border-slate-200 bg-slate-100 flex items-center justify-center opacity-40">
+                                <span className="text-[10px] text-slate-400">✕</span>
+                              </div>
+                            )
                           ) : (
-                            <ArrowDownLeft size={12} className="text-rose-600" />
-                          ))}
-                        <span>{statusAmount}</span>
+                            <ChevronRight size={14} className="text-slate-300 group-hover:text-slate-600" />
+                          )}
+                        </div>
                       </div>
-                    ) : (
-                      <span className="text-xs font-medium text-slate-400">Not involved</span>
-                    )}
-                  </div>
-
-                  {isSelectMode ? (
-                    hasAccess ? (
-                      <div
-                        className={`w-5 h-5 rounded-md border flex items-center justify-center ${
-                          isSelected
-                            ? 'bg-slate-900 border-slate-900 text-white'
-                            : 'border-slate-300 bg-white'
-                        }`}
-                      >
-                        {isSelected && <Check size={12} strokeWidth={3} />}
-                      </div>
-                    ) : (
-                      <div className="w-5 h-5 rounded-md border border-slate-200 bg-slate-100 flex items-center justify-center opacity-40">
-                        <span className="text-[10px] text-slate-400">✕</span>
-                      </div>
-                    )
-                  ) : (
-                    <ChevronRight size={15} className="text-slate-300 group-hover:text-slate-600" />
-                  )}
-                </div>
-              </div>
-              </ExpenseLongPressActions>
-            );
+                    </ExpenseLongPressActions>
+                  );
                 })}
               </div>
             </section>

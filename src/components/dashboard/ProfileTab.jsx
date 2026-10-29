@@ -98,7 +98,7 @@ export default function ProfileTab({
         senderId: user.id,
         recipientId: user.id,
         title: 'Test Push Notification',
-        message: 'Push notifications are working correctly on SplitBills!',
+        message: 'Push notifications are working correctly on Sharebills!',
         groupId: '',
       });
       setTestPushStatus('Success! Test push notification sent to your device.');
@@ -276,7 +276,7 @@ export default function ProfileTab({
     } catch (error) {
       console.error('Profile update error:', error);
       if (error.code === 'auth/email-already-in-use' || error.code === 'auth/credential-already-in-use') {
-        setLocalError('This email is already linked to Firebase. Enter its current Firebase password to link this SplitBills profile.');
+        setLocalError('This email is already linked to Firebase. Enter its current Firebase password to link this Sharebills profile.');
       } else if (
         error.code === 'auth/invalid-credential'
         || error.code === 'auth/wrong-password'

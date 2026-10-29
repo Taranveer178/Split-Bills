@@ -112,6 +112,7 @@ export default function BalancesTab({
         createdByName: senderName,
         groupId: group.id,
         type,
+        category: 'settlement',
         message,
         createdAt,
         read: false,
@@ -227,7 +228,7 @@ export default function BalancesTab({
       const payeeName = getUserName(customPayee);
       const payeeUpi = getMemberUpi(customPayee) || FALLBACK_DEFAULT_UPI;
       const amountStr = amt.toFixed(2);
-      const note = encodeURIComponent('SplitBills Payment');
+      const note = encodeURIComponent('Sharebills Payment');
       const gpayDirectUrl = `gpay://upi/pay?pa=${payeeUpi}&pn=${encodeURIComponent(
         payeeName
       )}&am=${amountStr}&cu=INR&tn=${note}`;
@@ -473,7 +474,7 @@ export default function BalancesTab({
                             <button
                               type="button"
                               onClick={() => {
-                                const note = encodeURIComponent(`SplitBills to ${toName}`);
+                                const note = encodeURIComponent(`Sharebills to ${toName}`);
                                 window.location.href = `gpay://upi/pay?pa=${payeeUpi}&pn=${encodeURIComponent(
                                   toName
                                 )}&am=${settlement.amount.toFixed(2)}&cu=INR&tn=${note}`;

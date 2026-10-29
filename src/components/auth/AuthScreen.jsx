@@ -13,7 +13,7 @@ import {
   signInWithCredential,
   signInWithPopup,
 } from 'firebase/auth';
-import roomsplitIcon from '../../assets/roomsplit-icon.webp';
+import sharebillsIcon from '../../assets/sharebills-icon.webp';
 import { Button } from '../common/UI';
 import { auth } from '../../firebase';
 
@@ -110,7 +110,7 @@ export default function AuthScreen({
       case 'auth/account-exists-with-different-credential':
         return 'An account already uses this email with another sign-in method. Sign in with that method first.';
       case 'auth/credential-already-in-use':
-        return 'This Google account is already linked to another SplitBills profile.';
+        return 'This Google account is already linked to another Sharebills profile.';
       default:
         return 'Could not complete the request. Please try again.';
     }
@@ -562,7 +562,7 @@ export default function AuthScreen({
         <div className="flex-1 flex flex-col justify-between">
           <div className="mobile-auth-hero relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-blue-600 px-7 pb-8 text-center">
             <div className="relative mb-6 flex h-[76px] w-[76px] items-center justify-center overflow-hidden rounded-[26px] border border-slate-200/80 bg-white p-2.5 shadow-[0_12px_30px_rgba(15,23,42,0.1)]">
-              <img src={roomsplitIcon} alt="SplitBills logo" className="h-full w-full rounded-[18px] object-cover" />
+              <img src={sharebillsIcon} alt="Sharebills logo" className="h-full w-full rounded-[18px] object-cover" />
             </div>
             <span className="relative rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white">
               Room Split
@@ -577,10 +577,10 @@ export default function AuthScreen({
 
           <div className="mobile-auth-panel w-full rounded-t-[28px] border-t border-slate-200/80 bg-white px-6 pt-6 pb-[max(2rem,env(safe-area-inset-bottom))] flex flex-col gap-3">
             <Button onClick={() => handleOpenSheet('login')} className="w-full h-11 text-sm">
-              Sign in to SplitBills
+              Sign in to Sharebills
             </Button>
             <div className="text-center mt-1">
-              <span className="text-slate-500 text-xs">New to SplitBills? </span>
+              <span className="text-slate-500 text-xs">New to Sharebills? </span>
               <button
                 type="button"
                 onClick={() => handleOpenSheet('signup')}
@@ -638,9 +638,9 @@ export default function AuthScreen({
           <div>
             <div className="flex items-center gap-3 mb-8">
               <div className="w-10 h-10 overflow-hidden bg-white rounded-xl p-1.5 flex items-center justify-center">
-                <img src={roomsplitIcon} alt="SplitBills logo" className="h-full w-full rounded-lg object-cover" />
+                <img src={sharebillsIcon} alt="Sharebills logo" className="h-full w-full rounded-lg object-cover" />
               </div>
-              <span className="text-lg font-bold tracking-tight">SplitBills</span>
+              <span className="text-lg font-bold tracking-tight">Sharebills</span>
             </div>
             <h2 className="text-3xl font-bold leading-tight tracking-tight mb-3">
               Clear shared accounting for modern households.
@@ -665,7 +665,7 @@ export default function AuthScreen({
             </ul>
           </div>
 
-          <p className="text-slate-500 text-xs">© {new Date().getFullYear()} SplitBills</p>
+          <p className="text-slate-500 text-xs">© {new Date().getFullYear()} Sharebills</p>
         </div>
 
         <div className="w-[55%] bg-white p-10 flex flex-col justify-center items-center">
@@ -676,7 +676,7 @@ export default function AuthScreen({
                 onClick={onBackToLanding}
                 className="mb-4 text-xs font-semibold text-slate-500 hover:text-slate-900"
               >
-                ← Back to SplitBills
+                ← Back to Sharebills
               </button>
             )}
             <div className="mb-6">

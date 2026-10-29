@@ -27,7 +27,7 @@ import {
   CircleDollarSign,
   Check,
 } from 'lucide-react';
-import roomsplitIcon from '../../assets/roomsplit-icon.webp';
+import sharebillsIcon from '../../assets/sharebills-icon.webp';
 import PrimaryNav from '../common/PrimaryNav';
 import MonthlyAnalyticsTab from './MonthlyAnalyticsTab';
 import ProfileTabView from './ProfileTab';
@@ -84,6 +84,9 @@ export default function Dashboard({
 
   // Activity Drawer / Notification Center Popup State
   const [isActivityOpen, setIsActivityOpen] = useState(false);
+  const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
+  const newMenuRef = useRef(null);
+  const [optimisticallyReadNotificationIds, setOptimisticallyReadNotificationIds] = useState(() => new Set());
   const [activityContextNotification, setActivityContextNotification] = useState(null);
   const [selectedActivityIds, setSelectedActivityIds] = useState(new Set());
   const [activityDeleteIds, setActivityDeleteIds] = useState(null);
@@ -94,6 +97,24 @@ export default function Dashboard({
   useEffect(() => () => {
     if (activityPressTimerRef.current) clearTimeout(activityPressTimerRef.current);
   }, []);
+
+  useEffect(() => {
+    if (!isNewMenuOpen) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (!newMenuRef.current?.contains(event.target)) setIsNewMenuOpen(false);
+    };
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setIsNewMenuOpen(false);
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isNewMenuOpen]);
 
   // Quick Expense Modal State
   const [quickExpenseOpen, setQuickExpenseOpen] = useState(false);
@@ -192,8 +213,8 @@ export default function Dashboard({
     [notifications, user?.id]
   );
   const unreadNotifications = useMemo(
-    () => userNotifications.filter((n) => !n.read),
-    [userNotifications]
+    () => userNotifications.filter((n) => !n.read && !optimisticallyReadNotificationIds.has(n.id)),
+    [optimisticallyReadNotificationIds, userNotifications]
   );
 
   const getUserName = (userId) => {
@@ -344,6 +365,32 @@ export default function Dashboard({
       console.error('Could not clear activity notifications:', error);
       showToast?.('Could not clear activity. Please try again.', 'error');
     }
+  };
+
+  const markActivityNotificationsRead = (notificationIds) => {
+    if (!onMarkNotificationsRead || notificationIds.length === 0) return;
+
+    const idsToMark = notificationIds.filter((id) => !optimisticallyReadNotificationIds.has(id));
+    if (!idsToMark.length) return;
+
+    setOptimisticallyReadNotificationIds((previous) => new Set([...previous, ...idsToMark]));
+    Promise.resolve(onMarkNotificationsRead(idsToMark)).catch((error) => {
+      console.error('Could not mark activity notifications as read:', error);
+      setOptimisticallyReadNotificationIds((previous) => (
+        new Set([...previous].filter((id) => !idsToMark.includes(id)))
+      ));
+      showToast?.('Could not update activity notifications. Please try again.', 'error');
+    });
+  };
+
+  const handleActivityToggle = () => {
+    if (isActivityOpen) {
+      setIsActivityOpen(false);
+      return;
+    }
+
+    setIsActivityOpen(true);
+    markActivityNotificationsRead(unreadNotifications.map((notification) => notification.id));
   };
 
   const startActivityLongPress = (event, notification) => {
@@ -727,7 +774,7 @@ export default function Dashboard({
         >
           <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/90 bg-white shadow-sm">
             <img
-              src={user?.photoDataUrl || roomsplitIcon}
+              src={user?.photoDataUrl || sharebillsIcon}
               alt=""
               className="h-full w-full rounded-full object-cover"
             />
@@ -749,7 +796,7 @@ export default function Dashboard({
         <div className="flex flex-shrink-0 items-center gap-1.5">
           <button
             type="button"
-            onClick={() => setIsActivityOpen((previous) => !previous)}
+            onClick={handleActivityToggle}
             title="Activity notifications"
             aria-label="Activity notifications"
             aria-expanded={isActivityOpen}
@@ -1143,7 +1190,9 @@ export default function Dashboard({
             <div className="hidden md:block space-y-6">
               {/* 1. Desktop Top Command Bar with Activity on Top Right */}
               <div
-                className={`liquid-glass flex flex-col gap-3 rounded-3xl p-4 lg:flex-row lg:items-center lg:justify-between lg:px-5 ${
+                className={`liquid-glass relative flex flex-col gap-3 rounded-3xl p-4 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between lg:px-5 ${
+                  isNewMenuOpen ? 'z-[60]' : 'z-10'
+                } ${
                   activeTab === 'groups' ? '' : 'hidden'
                 }`}
               >
@@ -1167,9 +1216,9 @@ export default function Dashboard({
                   </h1>
                 </div>
 
-                <div className="flex flex-shrink-0 flex-nowrap items-center gap-2">
-                  <div className="group relative w-36 lg:w-48 xl:w-56">
-                    <span className="pointer-events-none absolute left-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100/80 text-slate-500 transition-colors group-focus-within:bg-blue-50 group-focus-within:text-blue-600">
+                <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-2 lg:w-full xl:w-auto xl:flex-nowrap">
+                  <div className="group relative w-56 min-w-[12rem] flex-1">
+                    <span className="pointer-events-none absolute left-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 transition-colors group-focus-within:bg-emerald-100">
                       <Search size={14} strokeWidth={2.25} />
                     </span>
                     <input
@@ -1178,7 +1227,7 @@ export default function Dashboard({
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search spaces..."
                       aria-label="Search spaces"
-                      className="relative z-0 h-10 w-full rounded-full border border-white/90 bg-white/70 pl-11 pr-9 text-xs font-semibold text-slate-800 shadow-[0_4px_16px_rgba(15,23,42,0.06)] backdrop-blur-xl transition-all placeholder:text-slate-400 hover:bg-white/90 focus:border-blue-200 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+                      className="relative z-0 h-10 w-full rounded-full border border-emerald-700/70 bg-white/70 pl-11 pr-9 text-xs font-semibold text-slate-800 shadow-[0_4px_16px_rgba(15,23,42,0.06)] backdrop-blur-xl transition-all placeholder:text-slate-400 hover:border-emerald-700 hover:bg-white/90 focus:border-emerald-700 focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-700/10"
                     />
                     {searchQuery && (
                       <button
@@ -1196,35 +1245,87 @@ export default function Dashboard({
                     <button
                       type="button"
                       onClick={() => openQuickExpenseModal()}
-                      className="inline-flex h-9 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 px-3 text-xs font-semibold text-white shadow-sm shadow-emerald-600/20 transition-all hover:from-emerald-500 hover:to-emerald-700 active:scale-95"
+                      className="inline-flex h-10 w-40 flex-shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 px-3 text-xs font-bold leading-none text-white shadow-sm shadow-emerald-600/20 transition-all hover:from-emerald-500 hover:to-emerald-700 active:scale-95"
                     >
-                      <Receipt size={13} />
+                      <Receipt size={15} strokeWidth={2.25} />
                       <span>Quick Expense</span>
                     </button>
                   )}
 
-                  <button
-                    type="button"
-                    onClick={onJoinGroup}
-                    className="liquid-glass-interactive inline-flex h-9 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-xs font-semibold text-slate-700"
-                  >
-                    <UserPlus size={13} className="text-blue-600" />
-                    <span>Join with Code</span>
-                  </button>
+                  {(onJoinGroup || onCreateGroup) && (
+                    <div className="relative flex-shrink-0" ref={newMenuRef}>
+                      <button
+                        type="button"
+                        onClick={() => setIsNewMenuOpen((open) => !open)}
+                        aria-haspopup="menu"
+                        aria-expanded={isNewMenuOpen}
+                        aria-controls="overview-new-menu"
+                        className={`inline-flex h-10 items-center gap-2 rounded-xl px-3.5 text-xs font-bold text-white shadow-sm shadow-blue-600/25 transition-colors active:scale-95 ${
+                          isNewMenuOpen ? 'bg-blue-800' : 'bg-blue-700 hover:bg-blue-800'
+                        }`}
+                      >
+                        <Plus size={15} strokeWidth={2.5} />
+                        <span>New</span>
+                        <ChevronDown
+                          size={14}
+                          className={`transition-transform ${isNewMenuOpen ? 'rotate-180' : ''}`}
+                        />
+                      </button>
 
-                  <button
-                    type="button"
-                    onClick={onCreateGroup}
-                    className="inline-flex h-9 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-gradient-to-b from-blue-600 to-blue-600 px-3.5 text-xs font-semibold text-white shadow-sm shadow-blue-600/25 transition-all hover:from-blue-500 hover:to-blue-600 active:scale-95"
-                  >
-                    <Plus size={14} />
-                    <span>New Space</span>
-                  </button>
+                      {isNewMenuOpen && (
+                        <div
+                          id="overview-new-menu"
+                          role="menu"
+                          aria-label="Create or join a space"
+                          className="absolute right-0 top-full z-[70] mt-2 w-56 origin-top-right rounded-2xl border border-white/80 bg-white/90 p-1.5 shadow-[0_16px_40px_rgba(15,23,42,0.18)] ring-1 ring-slate-900/5 backdrop-blur-2xl"
+                        >
+                          {onCreateGroup && (
+                            <button
+                              type="button"
+                              role="menuitem"
+                              onClick={() => {
+                                setIsNewMenuOpen(false);
+                                onCreateGroup();
+                              }}
+                              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-blue-50 hover:text-blue-700 focus-visible:bg-blue-50 focus-visible:outline-none"
+                            >
+                              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100/80 text-blue-600">
+                                <Plus size={16} strokeWidth={2.5} />
+                              </span>
+                              <span>
+                                <span className="block">Create a space</span>
+                                <span className="mt-0.5 block text-[11px] font-medium text-slate-500">Start tracking expenses</span>
+                              </span>
+                            </button>
+                          )}
+                          {onJoinGroup && (
+                            <button
+                              type="button"
+                              role="menuitem"
+                              onClick={() => {
+                                setIsNewMenuOpen(false);
+                                onJoinGroup();
+                              }}
+                              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-blue-50 hover:text-blue-700 focus-visible:bg-blue-50 focus-visible:outline-none"
+                            >
+                              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                                <UserPlus size={16} />
+                              </span>
+                              <span>
+                                <span className="block">Join with code</span>
+                                <span className="mt-0.5 block text-[11px] font-medium text-slate-500">Enter an invite code</span>
+                              </span>
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Desktop Top-Right Activity Popover Button */}
                   <button
                     type="button"
-                    onClick={() => setIsActivityOpen((prev) => !prev)}
+                    onClick={handleActivityToggle}
                     title="Activity & Notifications"
                     aria-label="Activity & Notifications"
                     className={`relative inline-flex h-9 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border px-3 text-xs font-semibold shadow-sm transition-all active:scale-95 ${
@@ -2009,6 +2110,7 @@ export default function Dashboard({
                   const isChat = /chat|message|dispute/i.test(n.type || n.category || '');
                   const isSelected = selectedActivityIds.has(n.id);
                   const isRent = /rent/i.test(n.type || n.category || '');
+                  const isUnread = !n.read && !optimisticallyReadNotificationIds.has(n.id);
                   return (
                     <div
                       key={n.id}
@@ -2033,8 +2135,8 @@ export default function Dashboard({
                           toggleActivitySelection(n.id);
                           return;
                         }
-                        if (!n.read && onMarkNotificationsRead) {
-                          onMarkNotificationsRead([n.id]);
+                        if (isUnread) {
+                          markActivityNotificationsRead([n.id]);
                         }
                         if (n.groupId) {
                           handleOpenGroup(n.groupId, isChat ? 'chat' : 'expenses');
@@ -2044,7 +2146,7 @@ export default function Dashboard({
                       className={`liquid-glass-interactive group relative flex items-start justify-between gap-3 rounded-2xl p-3 cursor-pointer border ${
                         isSelected
                           ? 'border-blue-400 bg-blue-50/70 ring-1 ring-blue-300'
-                          : !n.read
+                          : isUnread
                             ? 'border-blue-200/90 bg-blue-50/40'
                             : 'border-slate-200/60 bg-white/80'
                       }`}
@@ -2075,7 +2177,7 @@ export default function Dashboard({
                         </div>
                       </div>
 
-                      {!n.read && (
+                      {isUnread && (
                         <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-blue-600 ring-2 ring-white" />
                       )}
                     </div>
@@ -2461,13 +2563,13 @@ export default function Dashboard({
           >
             <div className="mx-auto mb-5 h-1.5 w-10 rounded-full bg-slate-300 sm:hidden" />
             <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-[20px] border border-blue-100 bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 shadow-sm">
-              <img src={roomsplitIcon} alt="" className="h-full w-full scale-110 object-cover" />
+              <img src={sharebillsIcon} alt="" className="h-full w-full scale-110 object-cover" />
             </div>
             <h2
               id="install-app-title"
               className="mt-4 text-center text-lg font-extrabold tracking-tight text-slate-900"
             >
-              Take SplitBills with you
+              Take Sharebills with you
             </h2>
             <p className="mt-1.5 text-center text-sm leading-relaxed text-slate-500">
               Install the app for quick access and a full-screen experience.
@@ -2525,7 +2627,7 @@ export default function Dashboard({
               id="logout-confirmation-title"
               className="mt-4 text-base font-bold tracking-tight text-slate-900"
             >
-              Sign out of SplitBills?
+              Sign out of Sharebills?
             </h2>
             <p
               id="logout-confirmation-description"

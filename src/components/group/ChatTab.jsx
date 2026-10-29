@@ -2276,13 +2276,13 @@ export default function ChatTab({
                       required
                     />
                   </label>
-                  <label className="block text-xs font-semibold text-slate-700">
+                  <label className="col-span-2 block min-w-0 text-xs font-semibold text-slate-700">
                     Date
                     <input
                       type="date"
                       value={disputeEditForm.date}
                       onChange={(event) => setDisputeEditForm((previous) => ({ ...previous, date: event.target.value }))}
-                      className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal text-slate-900"
+                      className="mt-1 block w-full min-w-0 max-w-full appearance-none rounded-xl border border-slate-200 px-3 py-2 text-base font-normal text-slate-900"
                       required
                     />
                   </label>

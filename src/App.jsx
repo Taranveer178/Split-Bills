@@ -113,11 +113,11 @@ const removeLegacyDemoGroups = (items) => (
 
 function LaunchScreen() {
   return (
-    <main className="launch-screen" role="status" aria-label="Loading SplitBills">
+    <main className="launch-screen" role="status" aria-label="Loading Sharebills">
       <div className="launch-screen__logo-frame">
-        <img className="launch-screen__logo" src="/roomsplit-icon-192.png" alt="" />
+        <img className="launch-screen__logo" src="/sharebills-icon-192.webp" alt="" />
       </div>
-      <h1 className="launch-screen__title">SplitBills</h1>
+      <h1 className="launch-screen__title">Sharebills</h1>
       <p className="launch-screen__subtitle">Shared expenses, simplified.</p>
       <span className="launch-screen__spinner" aria-hidden="true" />
     </main>
@@ -331,7 +331,7 @@ export default function App() {
     let unsubscribe;
     listenToForegroundMessages((payload) => {
       if (!isActive) return;
-      const title = payload.notification?.title || payload.data?.title || 'SplitBills';
+      const title = payload.notification?.title || payload.data?.title || 'Sharebills';
       const message = payload.notification?.body || payload.data?.message || 'You have a new update.';
       setToast({ message: `${title}: ${message}`, type: 'success', brandIcon: true });
       window.setTimeout(() => setToast(null), 3000);

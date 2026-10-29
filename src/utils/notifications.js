@@ -16,7 +16,7 @@ import { db, app, auth } from '../firebase';
 
 const VAPID_KEY = 'BNPn8ktElldgtANhbx-7Ks2kizVEHjj6sdWju7gc0JAgsX6jd8TNBqxcy7Auu6C2lEZbgDV_DHlo2dg3_EbLkko';
 const PUSH_API_URL = Capacitor.isNativePlatform()
-  ? 'https://split-bills.taranveer.in/api/send-push'
+  ? 'https://sharebills.in/api/send-push'
   : '/api/send-push';
 const PUSH_TOKEN_STORAGE_KEY = 'rs_fcm_device_token';
 let desiredUserId = null;
@@ -211,7 +211,7 @@ async function registerNativePush(userId) {
   await PushNotifications.createChannel({
     id: 'default',
     name: 'General Notifications',
-    description: 'SplitBills group activities and updates',
+    description: 'Sharebills group activities and updates',
     importance: 5,
     visibility: 1,
     sound: 'default',
@@ -355,7 +355,7 @@ export async function listenToForegroundMessages(onMessageReceived) {
 export async function triggerPushNotification({ senderId, recipientId, title, message, groupId }) {
   if (!senderId) throw new Error('A sender account is required to send push notifications.');
   const currentUser = auth?.currentUser;
-  if (!currentUser) throw new Error('Sign in to SplitBills before sending a test notification.');
+  if (!currentUser) throw new Error('Sign in to Sharebills before sending a test notification.');
   if (currentUser.isAnonymous) {
     throw new Error('This legacy account is not linked to Firebase Auth. Add an email and a password of at least 6 characters in Profile, save, then try again.');
   }
@@ -364,7 +364,7 @@ export async function triggerPushNotification({ senderId, recipientId, title, me
     throw new Error('Verify your account email, then try the notification again.');
   }
   const idToken = await currentUser.getIdToken(true);
-  if (!idToken) throw new Error('Sign in to SplitBills before sending a test notification.');
+  if (!idToken) throw new Error('Sign in to Sharebills before sending a test notification.');
 
   const response = await fetch(PUSH_API_URL, {
     method: 'POST',
@@ -375,7 +375,7 @@ export async function triggerPushNotification({ senderId, recipientId, title, me
     body: JSON.stringify({
       senderId,
       recipientId,
-      title: title || 'SplitBills',
+      title: title || 'Sharebills',
       message: message || 'You have a new update in your group.',
       groupId: groupId || '',
     }),

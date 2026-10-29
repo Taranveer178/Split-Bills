@@ -1,6 +1,6 @@
 {
   "appId": "com.taranveer.splitbills",
-  "appName": "SplitBills",
+  "appName": "Sharebills",
   "webDir": "dist",
   "plugins": {
     "FirebaseAuthentication": {

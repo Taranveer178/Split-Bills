@@ -108,7 +108,7 @@ export default function MembersTab({
     try {
       if (navigator.share) {
         await navigator.share({
-          title: `Join ${group.name} on SplitBills`,
+          title: `Join ${group.name} on Sharebills`,
           text: `Join our shared group "${group.name}". Use code: ${group.inviteCode}`,
           url: inviteUrl,
         });

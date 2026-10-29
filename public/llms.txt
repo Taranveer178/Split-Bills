@@ -1,12 +1,12 @@
-# RoomSplit
+# Sharebills
 
-RoomSplit helps people who share living spaces track shared expenses, split bills, view balances, and settle up.
+Sharebills helps people who share living spaces track shared expenses, split bills, view balances, and settle up.
 
 ## Links
 
-- [RoomSplit website](https://split-bills.taranveer.in/)
-- [Sitemap](https://split-bills.taranveer.in/sitemap.xml)
+- [Sharebills website](https://sharebills.in/)
+- [Sitemap](https://sharebills.in/sitemap.xml)
 
 ## Usage
 
-RoomSplit is an interactive application. Sign in to access personal groups, expenses, and account data. Do not assume that private account or group data is publicly accessible.
+Sharebills is an interactive application. Sign in to access personal groups, expenses, and account data. Do not assume that private account or group data is publicly accessible.
