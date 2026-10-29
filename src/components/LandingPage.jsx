@@ -1433,42 +1433,8 @@ export default function LandingPage({
       {/* SECTION 9: FINAL CTA & FOOTER                                       */}
       {/* =================================================================== */}
       <footer className="relative z-10 border-t border-[#2F6746] bg-[#173F2D] text-white">
-        <div className="mx-auto max-w-[1320px] px-4 py-12 sm:px-6">
-          <div className="flex flex-col items-center justify-between gap-6 rounded-3xl border border-white/90 bg-gradient-to-r from-[#3E7754] to-[#3E7754] p-8 text-center text-white shadow-xl sm:flex-row sm:text-left">
-            <div>
-              <h3 className="text-2xl font-extrabold tracking-tight">
-                Ready to simplify your flat expenses?
-              </h3>
-              <p className="mt-1 text-xs sm:text-sm text-[#DDE9DF]">
-                Create your first shared room in seconds or log in to your existing spaces.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={onGetStarted}
-                className="rounded-2xl bg-white px-5 py-3 text-xs font-extrabold text-[#356447] shadow-md transition-transform active:scale-95"
-              >
-                Get Started Free
-              </button>
-              <button
-                type="button"
-                onClick={onLogin}
-                className="rounded-2xl border border-white/40 bg-white/15 px-5 py-3 text-xs font-bold text-white backdrop-blur-md transition-transform active:scale-95"
-              >
-                Log in
-              </button>
-              <button
-                type="button"
-                onClick={handleInstallClick}
-                className="rounded-2xl border border-white/40 bg-white/15 px-4 py-3 text-xs font-bold text-white backdrop-blur-md transition-transform active:scale-95"
-              >
-                Install App
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-10 border-t border-white/20 pt-7">
+        <div className="mx-auto max-w-[1320px] px-4 py-10 sm:px-6 sm:py-12">
+          <div className="border-b border-white/15 pb-8">
             <div className="grid gap-8 sm:grid-cols-[1fr_auto] sm:items-start">
               <div className="space-y-5">
                 <div className="flex items-center gap-2 text-xs text-white/65">
@@ -1497,7 +1463,7 @@ export default function LandingPage({
                 </div>
               </div>
 
-              <div className="grid gap-6 border-t border-white/20 pt-5 sm:grid-cols-2 sm:border-t-0 sm:pt-0">
+              <div className="grid gap-6 border-t border-white/15 pt-5 sm:grid-cols-2 sm:border-t-0 sm:pt-0">
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/55">
                     Developed by
@@ -1574,7 +1540,7 @@ export default function LandingPage({
                 </div>
               </div>
             </div>
-            <p className="mt-7 border-t border-white/15 pt-4 text-center text-[11px] text-white/50 sm:text-left">
+            <p className="pt-5 text-center text-[11px] text-white/50 sm:text-left">
               © {new Date().getFullYear()} SplitBills. All rights reserved.
             </p>
           </div>
