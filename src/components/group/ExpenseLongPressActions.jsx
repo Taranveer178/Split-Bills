@@ -127,7 +127,7 @@ export default function ExpenseLongPressActions({
 
   return (
     <div
-      className="contents"
+      className="relative block touch-pan-y"
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={() => {

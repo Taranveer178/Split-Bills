@@ -968,10 +968,17 @@ export default function App() {
       }
 
       const canModifyExpense = (
-        currentExpense.createdBy === activeUserId || group.createdBy === activeUserId
+        currentExpense.createdBy === activeUserId || currentExpense.paidBy === activeUserId
       );
       if (action !== 'solved' && !canModifyExpense) {
-        throw new Error('Only the expense creator or group admin can update or delete it.');
+        throw new Error('Only the expense creator or payer can update or delete it.');
+      }
+      if (
+        action === 'solved' &&
+        currentExpense.createdBy !== activeUserId &&
+        dispute.disputedBy !== activeUserId
+      ) {
+        throw new Error('Only the expense creator or dispute raiser can mark it as solved.');
       }
 
       let updatedExpense = null;
@@ -1281,8 +1288,11 @@ export default function App() {
       await runTransaction(db, async (transaction) => {
         const expenseSnapshot = await transaction.get(expenseRef);
         if (!expenseSnapshot.exists()) throw new Error('This expense no longer exists.');
-        if (!activeUserId || expenseSnapshot.data().createdBy !== activeUserId) {
-          throw new Error('Only the member who recorded this expense can delete it.');
+        if (
+          !activeUserId ||
+          (expenseSnapshot.data().createdBy !== activeUserId && expenseSnapshot.data().paidBy !== activeUserId)
+        ) {
+          throw new Error('Only the expense creator or payer can delete it.');
         }
         if (expenseSnapshot.data().activeDisputeId) {
           throw new Error('Resolve the open dispute before deleting this expense.');
@@ -1293,8 +1303,8 @@ export default function App() {
     }
     const expense = expenses.find((item) => item.id === expenseId);
     if (!expense) throw new Error('This expense no longer exists.');
-    if (!activeUserId || expense.createdBy !== activeUserId) {
-      throw new Error('Only the member who recorded this expense can delete it.');
+    if (!activeUserId || (expense.createdBy !== activeUserId && expense.paidBy !== activeUserId)) {
+      throw new Error('Only the expense creator or payer can delete it.');
     }
     if (expense.activeDisputeId) {
       throw new Error('Resolve the open dispute before deleting this expense.');

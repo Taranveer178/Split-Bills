@@ -1177,7 +1177,14 @@ export default function ChatTab({
   );
   const canEditDisputedExpense = Boolean(
     resolutionExpense
-    && (resolutionExpense.createdBy === currentUser.id || group.createdBy === currentUser.id)
+    && (resolutionExpense.createdBy === currentUser.id || resolutionExpense.paidBy === currentUser.id)
+  );
+  const canMarkDisputeSolved = Boolean(
+    disputeResolutionMessage
+    && (
+      resolutionExpense?.createdBy === currentUser.id
+      || disputeResolutionMessage.disputedBy === currentUser.id
+    )
   );
 
   return (
@@ -1267,6 +1274,16 @@ export default function ChatTab({
           ) : (
             visibleMessages.map((msg, index) => {
               const isMe = msg.senderId === currentUser.id;
+              const disputedExpense = msg.type === 'expense_dispute'
+                ? expenses.find((expense) => expense.id === msg.expenseId)
+                : null;
+              const canResolveThisDispute = Boolean(
+                msg.type === 'expense_dispute'
+                && (
+                  msg.disputedBy === currentUser.id
+                  || disputedExpense?.createdBy === currentUser.id
+                )
+              );
               const sender = getUser(msg.senderId);
               const msgDate = getMessageDate(msg);
               const timeString = formatMessageTime(msgDate);
@@ -1474,7 +1491,7 @@ export default function ChatTab({
                                     {msg.disputeMessage}
                                   </p>
                                 )}
-                                {msg.status !== 'resolved' && (
+                                {msg.status !== 'resolved' && canResolveThisDispute && (
                                   msg.status === 'open' && (
                                   <button
                                     type="button"
@@ -2200,15 +2217,17 @@ export default function ChatTab({
                     Delete transaction
                   </button>
                 )}
-                <button
-                  type="button"
-                  disabled={resolvingDisputeIds.has(disputeResolutionMessage.id)}
-                  onClick={() => handleResolveExpenseDispute(disputeResolutionMessage, 'solved')}
-                  className="flex min-h-12 w-full items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 text-left text-sm font-bold text-emerald-700 hover:bg-emerald-100 disabled:opacity-60"
-                >
-                  <Check size={17} />
-                  {resolvingDisputeIds.has(disputeResolutionMessage.id) ? 'Saving…' : 'Mark as solved'}
-                </button>
+                {canMarkDisputeSolved && (
+                  <button
+                    type="button"
+                    disabled={resolvingDisputeIds.has(disputeResolutionMessage.id)}
+                    onClick={() => handleResolveExpenseDispute(disputeResolutionMessage, 'solved')}
+                    className="flex min-h-12 w-full items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 text-left text-sm font-bold text-emerald-700 hover:bg-emerald-100 disabled:opacity-60"
+                  >
+                    <Check size={17} />
+                    {resolvingDisputeIds.has(disputeResolutionMessage.id) ? 'Saving…' : 'Mark as solved'}
+                  </button>
+                )}
                 {canEditDisputedExpense && (
                   <button
                     type="button"
@@ -2344,7 +2363,7 @@ export default function ChatTab({
                             ...previous,
                             splits: { ...previous.splits, [memberId]: event.target.value },
                           }))}
-                          className="w-28 rounded-lg border border-slate-200 px-2 py-1.5 text-right text-xs text-slate-900"
+                          className="w-28 rounded-lg border border-slate-200 px-2 py-1.5 text-right text-xs text-slate-900 outline-none focus:border-slate-200 focus:outline-none focus:ring-0"
                         />
                       </label>
                     ))}

@@ -1686,7 +1686,7 @@ export default function Dashboard({
                             <ExpenseLongPressActions
                               key={exp.id}
                               expenseTitle={exp.title}
-                              canDelete={exp.createdBy === user?.id && !exp.activeDisputeId}
+                              canDelete={(exp.createdBy === user?.id || exp.paidBy === user?.id) && !exp.activeDisputeId}
                               canDispute={Boolean(
                                 grp
                                 && grp.members?.includes(user?.id)

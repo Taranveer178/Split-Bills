@@ -133,7 +133,10 @@ export default function ExpensesTab({
     });
 
   const canDeleteExpense = (exp) => {
-    return exp.createdBy === currentUser.id && !exp.activeDisputeId;
+    return (
+      (exp.createdBy === currentUser.id || exp.paidBy === currentUser.id) &&
+      !exp.activeDisputeId
+    );
   };
 
   const toggleSelectMode = () => {
@@ -148,7 +151,7 @@ export default function ExpensesTab({
   const handleCardClick = (exp) => {
     if (isSelectMode) {
       if (!canDeleteExpense(exp)) {
-        showToast('Only the member who recorded this expense can delete it.', 'error');
+        showToast('Only the expense creator or payer can delete it.', 'error');
         return;
       }
       setSelectedIds((prev) =>
@@ -370,12 +373,7 @@ export default function ExpensesTab({
                       key={exp.id}
                       expenseTitle={exp.title}
                       canDelete={hasAccess}
-                      canDispute={
-                        !isSelectMode &&
-                        !exp.isSettlement &&
-                        exp.category !== 'Settlement' &&
-                        !exp.activeDisputeId
-                      }
+                      canDispute={!isSelectMode && !exp.activeDisputeId}
                       hasActiveDispute={!isSelectMode && Boolean(exp.activeDisputeId)}
                       canCancelDispute={
                         !isSelectMode &&
