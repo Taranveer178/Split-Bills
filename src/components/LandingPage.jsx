@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import roomsplitIcon from '../assets/roomsplit-icon.webp';
 import {
   Plus,
   UserPlus,
@@ -13,7 +14,6 @@ import {
   Wallet,
   PieChart,
   CheckCircle2,
-  IndianRupee,
   MessageSquare,
   Sparkles,
   ShieldCheck,
@@ -125,9 +125,11 @@ export default function LandingPage({
             href="#top"
             className="flex items-center gap-2.5 text-left focus:outline-none"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#3E7754] to-[#3E7754] text-white shadow-md shadow-[#3E7754]/25">
-              <IndianRupee size={20} strokeWidth={2.5} />
-            </div>
+            <img
+              src={roomsplitIcon}
+              alt=""
+              className="h-10 w-10 rounded-2xl object-cover shadow-md shadow-[#3E7754]/25"
+            />
             <div>
               <span className="block text-base font-extrabold tracking-tight text-slate-900 leading-none">
                 SplitBills
@@ -381,9 +383,11 @@ export default function LandingPage({
                   {/* Mobile Top Bar */}
                   <div className="flex items-center justify-between gap-1.5">
                     <div className="flex items-center gap-2 rounded-full border border-white/90 bg-white/85 py-1 pl-1.5 pr-3 shadow-sm">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-tr from-[#3E7754] to-[#3E7754] text-[11px] font-bold text-white">
-                        ₹
-                      </span>
+                      <img
+                        src={roomsplitIcon}
+                        alt=""
+                        className="h-6 w-6 rounded-full object-cover"
+                      />
                       <div>
                         <span className="block text-[10px] font-extrabold text-slate-900 leading-none">
                           SplitBills
@@ -1468,9 +1472,11 @@ export default function LandingPage({
             <div className="grid gap-8 sm:grid-cols-[1fr_auto] sm:items-start">
               <div className="space-y-5">
                 <div className="flex items-center gap-2 text-xs text-white/65">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-white/15 font-bold text-white">
-                    ₹
-                  </span>
+                  <img
+                    src={roomsplitIcon}
+                    alt=""
+                    className="h-7 w-7 rounded-xl object-cover"
+                  />
                   <span className="font-extrabold text-white">SplitBills</span>
                   <span>· Shared Expense &amp; Flat Ledger</span>
                 </div>
