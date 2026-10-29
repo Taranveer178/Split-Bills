@@ -51,6 +51,19 @@ export default function LandingPage({
   const [demoBillAmount, setDemoBillAmount] = useState(2400);
   const [demoMembers, setDemoMembers] = useState(4);
 
+  useEffect(() => {
+    if (!isStandaloneWebApp) return undefined;
+
+    const statusBarMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if (!statusBarMeta) return undefined;
+
+    const previousStyle = statusBarMeta.content;
+    statusBarMeta.content = 'black-translucent';
+    return () => {
+      statusBarMeta.content = previousStyle;
+    };
+  }, [isStandaloneWebApp]);
+
   // Listen for native PWA install prompt
   useEffect(() => {
     const handleBeforeInstallPrompt = (e) => {
@@ -106,7 +119,7 @@ export default function LandingPage({
 
   if (isStandaloneWebApp) {
     return (
-      <main className="flex min-h-[100dvh] flex-col bg-[#3E7754] text-white">
+      <main className="flex min-h-[100dvh] flex-col bg-[#3E7754] pt-[env(safe-area-inset-top)] text-white">
         <section className="flex flex-1 flex-col items-center justify-center px-8 text-center">
           <img
             src={roomsplitIcon}
