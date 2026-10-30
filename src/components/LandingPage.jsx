@@ -129,8 +129,10 @@ export default function LandingPage({
   const [heroPhoneTab, setHeroPhoneTab] = useState('overview');
   const [heroDarkPreview, setHeroDarkPreview] = useState(false);
   const [activeHeroDisputeIndex, setActiveHeroDisputeIndex] = useState(0);
-  const heroDisputeTouchStartX = useRef(null);
+  const heroDisputePointerStart = useRef(null);
+  const heroDisputeTouchStart = useRef(null);
   const heroDisputeWasSwiped = useRef(false);
+  const [heroDisputeInteractionAt, setHeroDisputeInteractionAt] = useState(0);
   const [activePreviewTab, setActivePreviewTab] = useState('command');
   const [desktopDarkPreview, setDesktopDarkPreview] = useState(false);
   const [simplifyMode, setSimplifyMode] = useState('smart');
@@ -165,29 +167,54 @@ export default function LandingPage({
       setActiveHeroDisputeIndex((index) => (index + 1) % heroPreviewDisputes.length);
     }, 2400);
     return () => window.clearInterval(intervalId);
-  }, [heroPhoneTab]);
+  }, [heroPhoneTab, heroDisputeInteractionAt]);
 
-  const handleHeroDisputeTouchStart = (event) => {
-    heroDisputeTouchStartX.current = event.touches[0]?.clientX ?? null;
-    heroDisputeWasSwiped.current = false;
-  };
-
-  const handleHeroDisputeTouchEnd = (event) => {
-    const startX = heroDisputeTouchStartX.current;
-    const endX = event.changedTouches[0]?.clientX;
-    heroDisputeTouchStartX.current = null;
-    if (startX === null || endX === undefined) return;
-
+  const navigateHeroDisputeBySwipe = (startX, startY, endX, endY) => {
     const deltaX = startX - endX;
-    if (Math.abs(deltaX) < 36) return;
+    const deltaY = startY - endY;
+    if (Math.abs(deltaX) < 36 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
 
     heroDisputeWasSwiped.current = true;
+    setHeroDisputeInteractionAt(Date.now());
     setActiveHeroDisputeIndex((index) =>
       (index + (deltaX > 0 ? 1 : -1) + heroPreviewDisputes.length) % heroPreviewDisputes.length
     );
     window.setTimeout(() => {
       heroDisputeWasSwiped.current = false;
     }, 500);
+  };
+
+  const handleHeroDisputeTouchStart = (event) => {
+    const touch = event.touches[0];
+    if (!touch) return;
+    heroDisputeTouchStart.current = { x: touch.clientX, y: touch.clientY };
+    heroDisputeWasSwiped.current = false;
+  };
+
+  const handleHeroDisputeTouchEnd = (event) => {
+    const start = heroDisputeTouchStart.current;
+    const touch = event.changedTouches[0];
+    heroDisputeTouchStart.current = null;
+    if (!start || !touch) return;
+    navigateHeroDisputeBySwipe(start.x, start.y, touch.clientX, touch.clientY);
+  };
+
+  const handleHeroDisputePointerDown = (event) => {
+    if (event.pointerType === 'touch' || (event.pointerType === 'mouse' && event.button !== 0)) return;
+    heroDisputePointerStart.current = {
+      x: event.clientX,
+      y: event.clientY,
+      pointerId: event.pointerId,
+    };
+    heroDisputeWasSwiped.current = false;
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handleHeroDisputePointerUp = (event) => {
+    const start = heroDisputePointerStart.current;
+    heroDisputePointerStart.current = null;
+    if (!start || start.pointerId !== event.pointerId) return;
+    navigateHeroDisputeBySwipe(start.x, start.y, event.clientX, event.clientY);
   };
 
   // ===================================================================
@@ -1304,9 +1331,14 @@ export default function LandingPage({
                         onTouchStart={handleHeroDisputeTouchStart}
                         onTouchEnd={handleHeroDisputeTouchEnd}
                         onTouchCancel={() => {
-                          heroDisputeTouchStartX.current = null;
+                          heroDisputeTouchStart.current = null;
                         }}
-                        className={`overflow-hidden rounded-2xl border touch-pan-y ${
+                        onPointerDown={handleHeroDisputePointerDown}
+                        onPointerUp={handleHeroDisputePointerUp}
+                        onPointerCancel={() => {
+                          heroDisputePointerStart.current = null;
+                        }}
+                        className={`overflow-hidden rounded-2xl border touch-pan-y select-none ${
                           heroDarkPreview
                             ? 'border-amber-500/40 bg-amber-950/30'
                             : 'border-amber-200 bg-amber-50/90'
