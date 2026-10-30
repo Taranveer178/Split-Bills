@@ -200,7 +200,7 @@ export default function LandingPage({
   };
 
   const handleHeroDisputePointerDown = (event) => {
-    if (event.pointerType === 'touch' || (event.pointerType === 'mouse' && event.button !== 0)) return;
+    if (event.pointerType === 'touch' || event.pointerType === 'mouse') return;
     heroDisputePointerStart.current = {
       x: event.clientX,
       y: event.clientY,
@@ -211,9 +211,27 @@ export default function LandingPage({
   };
 
   const handleHeroDisputePointerUp = (event) => {
+    if (event.pointerType === 'mouse') return;
     const start = heroDisputePointerStart.current;
     heroDisputePointerStart.current = null;
     if (!start || start.pointerId !== event.pointerId) return;
+    navigateHeroDisputeBySwipe(start.x, start.y, event.clientX, event.clientY);
+  };
+
+  const handleHeroDisputeMouseDown = (event) => {
+    if (event.button !== 0) return;
+    heroDisputePointerStart.current = {
+      x: event.clientX,
+      y: event.clientY,
+      pointerId: null,
+    };
+    heroDisputeWasSwiped.current = false;
+  };
+
+  const handleHeroDisputeMouseUp = (event) => {
+    const start = heroDisputePointerStart.current;
+    heroDisputePointerStart.current = null;
+    if (!start || start.pointerId !== null) return;
     navigateHeroDisputeBySwipe(start.x, start.y, event.clientX, event.clientY);
   };
 
@@ -1338,6 +1356,8 @@ export default function LandingPage({
                         onPointerCancel={() => {
                           heroDisputePointerStart.current = null;
                         }}
+                        onMouseDown={handleHeroDisputeMouseDown}
+                        onMouseUp={handleHeroDisputeMouseUp}
                         className={`overflow-hidden rounded-2xl border touch-pan-y select-none ${
                           heroDarkPreview
                             ? 'border-amber-500/40 bg-amber-950/30'
@@ -1624,6 +1644,13 @@ export default function LandingPage({
           <div
             className="relative mx-auto h-[550px] sm:h-[620px] w-full max-w-[1100px]"
             style={{ perspective: '1300px' }}
+            onClick={(event) => {
+              if (window.innerWidth < 640 || event.target.closest('[data-carousel-slide], button')) return;
+              const { left, right, width } = event.currentTarget.getBoundingClientRect();
+              const sideWidth = Math.max(0, (width - 310) / 2);
+              if (event.clientX < left + sideWidth) handlePrevCarousel();
+              if (event.clientX > right - sideWidth) handleNextCarousel();
+            }}
           >
             <div
               className="relative h-full w-full"
@@ -1637,6 +1664,7 @@ export default function LandingPage({
                 return (
                   <div
                     key={slide.id}
+                    data-carousel-slide={slide.id}
                     onClick={() => setActiveCarouselIndex(index)}
                     style={style}
                     className="absolute left-1/2 top-1/2 w-[280px] sm:w-[310px] cursor-pointer transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]"
