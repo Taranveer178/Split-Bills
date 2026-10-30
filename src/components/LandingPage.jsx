@@ -979,14 +979,14 @@ export default function LandingPage({
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="block text-base font-extrabold leading-none tracking-tight text-slate-900">
-                  Sharebills
+                  ShareBills
                 </span>
                 <span className="rounded-full bg-[#EEF4EF] px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-[#3E7754] border border-[#BDD2C1]">
                   v2.5
                 </span>
               </div>
               <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-widest text-[#3E7754]">
-                Liquid Ledger
+                Shared Ledger
               </span>
             </div>
           </a>

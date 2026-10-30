@@ -19,7 +19,7 @@ export default function RentSettlementsTab({
   };
 
   return (
-    <section className="mx-auto max-w-5xl space-y-5 p-4 pb-20 sm:p-6 lg:p-8">
+    <section className="mx-auto max-w-[1320px] space-y-5 p-4 pb-20 sm:p-6 lg:p-8">
       <header className="page-heading flex min-w-0 items-center gap-2.5 rounded-full p-0 pr-4">
         <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-blue-600 to-blue-600 text-xs font-bold text-white shadow-sm">
           {user?.photoDataUrl ? (
@@ -41,48 +41,9 @@ export default function RentSettlementsTab({
           <p className="mt-1 text-xs text-slate-500">No pending rent, disputes, or settlements across your spaces.</p>
         </div>
       ) : (
-        <>
-          {disputes.length > 0 && (
-            <section className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">
-              <div className="mb-3 flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
-                <div>
-                  <h2 className="text-sm font-bold text-slate-900">Active disputes</h2>
-                  <p className="text-[11px] text-slate-500">Open expense disputes across your spaces</p>
-                </div>
-                <span className="rounded-lg bg-amber-50 px-2 py-0.5 font-mono text-xs font-bold text-amber-800">{disputes.length}</span>
-              </div>
-              <div className="divide-y divide-slate-100">
-                {disputes.map((expense) => {
-                  const group = groups.find((item) => item.id === expense.groupId);
-                  return (
-                    <button
-                      key={expense.id}
-                      type="button"
-                      onClick={() => onOpenDispute(expense)}
-                      className="dues-list-row mx-1 flex w-[calc(100%-0.5rem)] items-center justify-between gap-3 rounded-xl px-3 py-3 text-left transition-colors hover:bg-amber-50/70"
-                    >
-                      <span className="flex min-w-0 items-center gap-3">
-                        <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
-                          <AlertTriangle size={17} />
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block truncate text-sm font-semibold text-slate-900">{expense.title || 'Expense'}</span>
-                          <span className="block truncate text-xs text-slate-500">
-                            {group?.name || 'Group'}{expense.activeDisputeByName ? ` · raised by ${expense.activeDisputeByName}` : ''}
-                          </span>
-                        </span>
-                      </span>
-                      <span className="flex-shrink-0 font-mono text-xs font-bold text-slate-800">
-                        {formatCurrency(expense.totalAmount, group?.currency)}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
-          {rents.length > 0 && (
+        <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-12">
+          <div className="order-2 space-y-5 xl:order-1 xl:col-span-8">
+            {rents.length > 0 && (
             <section className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">
               <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
@@ -119,7 +80,7 @@ export default function RentSettlementsTab({
             </section>
           )}
 
-          {settlements.length > 0 && (
+            {settlements.length > 0 && (
             <section className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">
               <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
@@ -156,7 +117,50 @@ export default function RentSettlementsTab({
               </div>
             </section>
           )}
-        </>
+          </div>
+
+          {disputes.length > 0 && (
+            <aside className="order-1 xl:sticky xl:top-4 xl:order-2 xl:col-span-4">
+              <section className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">
+                <div className="mb-3 flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                  <div>
+                    <h2 className="text-sm font-bold text-slate-900">Active disputes</h2>
+                    <p className="text-[11px] text-slate-500">Open expense disputes across your spaces</p>
+                  </div>
+                  <span className="rounded-lg bg-amber-50 px-2 py-0.5 font-mono text-xs font-bold text-amber-800">{disputes.length}</span>
+                </div>
+                <div className="divide-y divide-slate-100">
+                  {disputes.map((expense) => {
+                    const group = groups.find((item) => item.id === expense.groupId);
+                    return (
+                      <button
+                        key={expense.id}
+                        type="button"
+                        onClick={() => onOpenDispute(expense)}
+                        className="dues-list-row mx-1 flex w-[calc(100%-0.5rem)] items-center justify-between gap-3 rounded-xl px-3 py-3 text-left transition-colors hover:bg-amber-50/70"
+                      >
+                        <span className="flex min-w-0 items-center gap-3">
+                          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+                            <AlertTriangle size={17} />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-semibold text-slate-900">{expense.title || 'Expense'}</span>
+                            <span className="block truncate text-xs text-slate-500">
+                              {group?.name || 'Group'}{expense.activeDisputeByName ? ` · raised by ${expense.activeDisputeByName}` : ''}
+                            </span>
+                          </span>
+                        </span>
+                        <span className="flex-shrink-0 font-mono text-xs font-bold text-slate-800">
+                          {formatCurrency(expense.totalAmount, group?.currency)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            </aside>
+          )}
+        </div>
       )}
     </section>
   );
