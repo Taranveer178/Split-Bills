@@ -697,8 +697,7 @@ export default function AuthScreen({
         </div>
       </div>
 
-      {isStandalonePwa && (
-        <section className="hidden min-h-[min(760px,calc(100dvh-3rem))] w-full max-w-6xl overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_28px_90px_rgba(27,65,41,0.14)] md:grid md:grid-cols-[1.05fr_0.95fr]">
+      <section className="hidden min-h-[min(760px,calc(100dvh-3rem))] w-full max-w-6xl overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_28px_90px_rgba(27,65,41,0.14)] md:grid md:grid-cols-[1.05fr_0.95fr]">
           <div className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-[#173F2D] via-[#23533A] to-[#3E7754] p-10 text-white lg:p-14">
             <div className="absolute -right-24 -top-20 h-80 w-80 rounded-full border border-white/10 bg-white/[0.04]" />
             <div className="absolute -bottom-36 -left-20 h-96 w-96 rounded-full border border-white/10 bg-white/[0.04]" />
@@ -736,15 +735,15 @@ export default function AuthScreen({
 
           <div className="flex items-center justify-center bg-[#fbfdfb] p-10 lg:p-14">
             <div className="w-full max-w-md">
-              {isSheetOpen ? (
+              {!isStandalonePwa || isSheetOpen ? (
                 <>
                   <button
                     type="button"
-                    onClick={closeSheet}
+                    onClick={onBackToLanding || closeSheet}
                     className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition-colors hover:text-slate-900"
                   >
                     <ArrowLeft size={17} />
-                    Back
+                    {onBackToLanding ? 'Back to Sharebills' : 'Back'}
                   </button>
                   <div className="mb-7">
                     <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">
@@ -801,75 +800,7 @@ export default function AuthScreen({
               )}
             </div>
           </div>
-        </section>
-      )}
-
-      {/* DESKTOP LAYOUT */}
-      <div className={`${isStandalonePwa ? 'hidden' : 'hidden md:flex'} w-full max-w-[920px] min-h-[540px] bg-white rounded-2xl border border-slate-200 shadow-[0_20px_60px_rgba(15,23,42,0.08)] overflow-hidden`}>
-        <div className="w-[45%] border-r border-slate-200/80 bg-white p-10 flex flex-col justify-between text-slate-900">
-          <div>
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-10 h-10 overflow-hidden bg-white rounded-xl p-1.5 flex items-center justify-center">
-                <img src={sharebillsIcon} alt="Sharebills logo" className="h-full w-full rounded-lg object-cover" />
-              </div>
-              <span className="text-lg font-bold tracking-tight">Sharebills</span>
-            </div>
-            <h2 className="text-3xl font-bold leading-tight tracking-tight mb-3">
-              Clear shared accounting for modern households.
-            </h2>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Log bills in seconds, split equally or custom, and settle dues directly via UPI.
-            </p>
-
-            <ul className="mt-8 space-y-2.5 text-xs text-slate-600">
-              <li className="flex items-center gap-2">
-                <CheckCircle2 size={15} className="text-emerald-400 flex-shrink-0" />
-                <span>Smart debt simplification across roommates</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 size={15} className="text-emerald-400 flex-shrink-0" />
-                <span>Direct UPI settlement & QR room invites</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 size={15} className="text-emerald-400 flex-shrink-0" />
-                <span>Monthly category analytics & real-time room chat</span>
-              </li>
-            </ul>
-          </div>
-
-          <p className="text-slate-500 text-xs">© {new Date().getFullYear()} Sharebills</p>
-        </div>
-
-        <div className="w-[55%] bg-white p-10 flex flex-col justify-center items-center">
-          <div className="w-full max-w-sm">
-            {onBackToLanding && (
-              <button
-                type="button"
-                onClick={onBackToLanding}
-                className="mb-4 text-xs font-semibold text-slate-500 hover:text-slate-900"
-              >
-                ← Back to Sharebills
-              </button>
-            )}
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-                {isForgotPassword ? 'Reset password' : isLogin ? 'Sign in' : 'Create account'}
-              </h2>
-              <p className="text-slate-500 mt-1 text-xs">
-                {isForgotPassword
-                  ? 'We’ll email you a password reset link.'
-                  : isLogin
-                    ? 'Enter your credentials to access your spaces.'
-                    : 'Set up your account in seconds.'}
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="w-full">
-              {renderAuthForm(desktopIdentifierRef, desktopPasswordRef, 'desktop')}
-            </form>
-          </div>
-        </div>
-      </div>
+      </section>
     </main>
   );
 }
