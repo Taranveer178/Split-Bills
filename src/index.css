@@ -83,6 +83,57 @@ textarea {
     inset 0 1px 1px rgba(255, 255, 255, 0.98);
 }
 
+.landing-page {
+  scroll-behavior: smooth;
+}
+
+.landing-dot-field {
+  opacity: 0.42;
+  background-image: radial-gradient(circle, rgba(48, 91, 62, 0.28) 1px, transparent 1.25px);
+  background-position: 0 0;
+  background-size: 28px 28px;
+  animation: landing-dot-drift 70s linear infinite;
+  will-change: background-position;
+}
+
+.landing-band {
+  isolation: isolate;
+}
+
+.landing-band::before {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  content: "";
+  transform: translateX(-50%);
+  border-block: 1px solid rgba(148, 163, 184, 0.1);
+  background-image: radial-gradient(circle, rgba(48, 91, 62, 0.14) 0.9px, transparent 1.15px);
+  background-position: 0 0;
+  background-size: 28px 28px;
+  animation: landing-dot-drift 70s linear infinite;
+}
+
+.landing-band-white::before {
+  background-color: rgba(255, 255, 255, 0.76);
+}
+
+.landing-band-mist::before {
+  background-color: rgba(238, 244, 239, 0.78);
+}
+
+.landing-band-sage::before {
+  background-color: rgba(221, 233, 223, 0.72);
+}
+
+@keyframes landing-dot-drift {
+  to {
+    background-position: 60px 30px;
+  }
+}
+
 .breakdown-scrollbar,
 .scrollbar-hide {
   scrollbar-width: none;
@@ -379,6 +430,19 @@ textarea {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .landing-page {
+    scroll-behavior: auto;
+  }
+
+  .landing-dot-field {
+    animation: none;
+    will-change: auto;
+  }
+
+  .landing-band::before {
+    animation: none;
+  }
+
   .feature-carousel-card {
     transition-duration: 0.01ms;
   }

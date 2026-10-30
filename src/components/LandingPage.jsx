@@ -885,18 +885,7 @@ export default function LandingPage({
       : landingFeatures.filter((f) => f.category === featureCategory);
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#F3F7F3] font-sans text-slate-900 selection:bg-[#3E7754] selection:text-white">
-      {/* SOFT REFRACTIVE LIQUID GLASS MESH BACKDROP */}
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        <div className="absolute -top-28 -left-28 h-96 w-96 rounded-full bg-[#9AB99F]/30 blur-3xl" />
-        <div className="absolute top-1/4 -right-28 h-96 w-96 rounded-full bg-[#9AB99F]/25 blur-3xl animate-pulse" />
-        <div
-          className="absolute bottom-1/4 left-1/4 h-80 w-80 rounded-full bg-[#BDD2C1]/30 blur-3xl animate-pulse"
-          style={{ animationDelay: '2s' }}
-        />
-        <div className="absolute -bottom-24 right-1/3 h-80 w-80 rounded-full bg-[#BDD2C1]/25 blur-3xl" />
-      </div>
-
+    <div className="landing-page relative min-h-screen overflow-x-hidden bg-[#F3F7F3] font-sans text-slate-900 selection:bg-[#3E7754] selection:text-white">
       {/* STICKY LIQUID GLASS NAVBAR */}
       <header className="sticky top-0 z-50 px-3 pt-3 sm:px-6">
         <nav className="mx-auto flex max-w-[1340px] items-center justify-between rounded-full border border-white/90 bg-white/80 px-4 py-2.5 shadow-lg shadow-[#233E2F]/5 backdrop-blur-2xl sm:px-6">
@@ -1040,9 +1029,12 @@ export default function LandingPage({
       </header>
 
       {/* =================================================================== */}
-      {/* SECTION 1: HERO + SLIM IPHONE BEZEL WITH VISIBLE DYNAMIC ISLAND      */}
+      {/* SECTION 1: HERO + SLIM IPHONE BEZEL (DOT FIELD APPLIED HERE)        */}
       {/* =================================================================== */}
       <section id="top" className="relative z-10 mx-auto max-w-[1340px] px-4 pb-16 pt-8 sm:px-6 md:pb-24 md:pt-12">
+        {/* Dot field scoped exclusively to Section 1 */}
+        <div aria-hidden="true" className="landing-dot-field pointer-events-none absolute inset-0 -z-10" />
+
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12">
           <div className="text-center lg:col-span-7 lg:text-left">
             <RevealOnScroll delay={50}>
@@ -1147,7 +1139,7 @@ export default function LandingPage({
                 </button>
               </div>
 
-              {/* SLIM IPHONE FRAME (Accurate 4px border + Dynamic Island inside Screen) */}
+              {/* SLIM IPHONE FRAME */}
               <div className="relative mx-auto rounded-[50px] border-[4px] border-slate-800/90 bg-slate-950 p-[6px] shadow-[0_25px_60px_-15px_rgba(20,41,29,0.35)] ring-1 ring-white/20 transition-all duration-300">
                 {/* Screen Viewport */}
                 <div
@@ -1505,174 +1497,176 @@ export default function LandingPage({
       </section>
 
       {/* =================================================================== */}
-      {/* SECTION 2: 3D CIRCULAR CAROUSEL (FASTER 2600ms SLIDE SPEED)         */}
+      {/* SECTION 2: 3D CIRCULAR CAROUSEL (FIXED BLEEDING ON LEFT/RIGHT)      */}
       {/* =================================================================== */}
       <section
         id="mobile-showcase"
-        className="relative z-10 mx-auto max-w-[1360px] px-4 py-16 sm:px-6 overflow-hidden"
+        className="relative z-10 w-full overflow-hidden bg-[#F3F7F3] py-16"
       >
-        <RevealOnScroll className="text-center">
-          <span className="rounded-full border border-[#BDD2C1] bg-[#EEF4EF]/80 px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-[#3E7754]">
-            Mobile-First Experience
-          </span>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl md:text-5xl">
-            Designed like a native iOS & Android app
-          </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-sm sm:text-base text-slate-600">
-            Swipe or explore the 3D mobile suite—from in-chat dispute resolution and monthly flat rent tracking
-            to camera QR scanning, GPay deep-links, and audit-ready CSV/PDF statements.
-          </p>
-        </RevealOnScroll>
+        <div className="mx-auto max-w-[1360px] px-4 sm:px-6">
+          <RevealOnScroll className="text-center">
+            <span className="rounded-full border border-[#BDD2C1] bg-[#EEF4EF]/80 px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-[#3E7754]">
+              Mobile-First Experience
+            </span>
+            <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl md:text-5xl">
+              Designed like a native iOS & Android app
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-sm sm:text-base text-slate-600">
+              Swipe or explore the 3D mobile suite—from in-chat dispute resolution and monthly flat rent tracking
+              to camera QR scanning, GPay deep-links, and audit-ready CSV/PDF statements.
+            </p>
+          </RevealOnScroll>
 
-        {/* 3D PERSPECTIVE CAROUSEL STAGE */}
-        <div
-          className="relative mt-8 sm:mt-12 w-full select-none"
-          onMouseEnter={() => setIsCarouselHovered(true)}
-          onMouseLeave={() => setIsCarouselHovered(false)}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-        >
-          {/* Nav Buttons */}
-          <div className="pointer-events-none absolute inset-x-0 top-1/2 z-40 -translate-y-1/2 flex items-center justify-between px-2 sm:px-6">
-            <button
-              type="button"
-              onClick={handlePrevCarousel}
-              aria-label="Previous Screen"
-              className="pointer-events-auto flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-full border border-white/90 bg-white/85 text-slate-800 shadow-xl backdrop-blur-xl transition-all duration-300 hover:scale-110 hover:bg-white hover:text-[#3E7754] active:scale-95"
-            >
-              <ChevronLeft size={22} />
-            </button>
-            <button
-              type="button"
-              onClick={handleNextCarousel}
-              aria-label="Next Screen"
-              className="pointer-events-auto flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-full border border-white/90 bg-white/85 text-slate-800 shadow-xl backdrop-blur-xl transition-all duration-300 hover:scale-110 hover:bg-white hover:text-[#3E7754] active:scale-95"
-            >
-              <ChevronRight size={22} />
-            </button>
-          </div>
-
-          {/* 3D Preserved Perspective Container */}
+          {/* 3D PERSPECTIVE CAROUSEL STAGE */}
           <div
-            className="relative mx-auto h-[550px] sm:h-[620px] w-full max-w-[1100px]"
-            style={{ perspective: '1300px' }}
-            onClick={(event) => {
-              if (window.innerWidth < 640 || event.target.closest('[data-carousel-slide], button')) return;
-              const { left, right, width } = event.currentTarget.getBoundingClientRect();
-              const sideWidth = Math.max(0, (width - 310) / 2);
-              if (event.clientX < left + sideWidth) handlePrevCarousel();
-              if (event.clientX > right - sideWidth) handleNextCarousel();
-            }}
+            className="relative mt-8 sm:mt-12 w-full select-none"
+            onMouseEnter={() => setIsCarouselHovered(true)}
+            onMouseLeave={() => setIsCarouselHovered(false)}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
           >
+            {/* Nav Buttons */}
+            <div className="pointer-events-none absolute inset-x-0 top-1/2 z-40 -translate-y-1/2 flex items-center justify-between px-2 sm:px-6">
+              <button
+                type="button"
+                onClick={handlePrevCarousel}
+                aria-label="Previous Screen"
+                className="pointer-events-auto flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-full border border-white/90 bg-white/85 text-slate-800 shadow-xl backdrop-blur-xl transition-all duration-300 hover:scale-110 hover:bg-white hover:text-[#3E7754] active:scale-95"
+              >
+                <ChevronLeft size={22} />
+              </button>
+              <button
+                type="button"
+                onClick={handleNextCarousel}
+                aria-label="Next Screen"
+                className="pointer-events-auto flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-full border border-white/90 bg-white/85 text-slate-800 shadow-xl backdrop-blur-xl transition-all duration-300 hover:scale-110 hover:bg-white hover:text-[#3E7754] active:scale-95"
+              >
+                <ChevronRight size={22} />
+              </button>
+            </div>
+
+            {/* 3D Preserved Perspective Container */}
             <div
-              className="relative h-full w-full"
-              style={{ transformStyle: 'preserve-3d' }}
+              className="relative mx-auto h-[550px] sm:h-[620px] w-full max-w-[1100px]"
+              style={{ perspective: '1300px' }}
+              onClick={(event) => {
+                if (window.innerWidth < 640 || event.target.closest('[data-carousel-slide], button')) return;
+                const { left, right, width } = event.currentTarget.getBoundingClientRect();
+                const sideWidth = Math.max(0, (width - 310) / 2);
+                if (event.clientX < left + sideWidth) handlePrevCarousel();
+                if (event.clientX > right - sideWidth) handleNextCarousel();
+              }}
             >
-              {mobileSlides.map((slide, index) => {
-                const style = getSlideStyle(index);
-                const isActive = index === activeCarouselIndex;
-                const Icon = slide.icon;
+              <div
+                className="relative h-full w-full"
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                {mobileSlides.map((slide, index) => {
+                  const style = getSlideStyle(index);
+                  const isActive = index === activeCarouselIndex;
+                  const Icon = slide.icon;
 
-                return (
-                  <div
-                    key={slide.id}
-                    data-carousel-slide={slide.id}
-                    onClick={() => setActiveCarouselIndex(index)}
-                    style={style}
-                    className="absolute left-1/2 top-1/2 w-[280px] sm:w-[310px] cursor-pointer transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]"
-                  >
-                    {/* Floating Screen Header Pill */}
+                  return (
                     <div
-                      className={`mx-auto mb-2.5 flex w-max items-center gap-1.5 rounded-full border px-3 py-1 shadow-md transition-all duration-500 ${
-                        isActive
-                          ? 'border-[#9AB99F] bg-white text-[#3E7754] scale-105'
-                          : 'border-white/80 bg-white/70 text-slate-600 scale-95'
-                      }`}
+                      key={slide.id}
+                      data-carousel-slide={slide.id}
+                      onClick={() => setActiveCarouselIndex(index)}
+                      style={style}
+                      className="absolute left-1/2 top-1/2 w-[280px] sm:w-[310px] cursor-pointer transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]"
                     >
-                      <Icon size={12} className={isActive ? 'text-[#3E7754]' : 'text-slate-400'} />
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider">
-                        {slide.tag}
-                      </span>
-                    </div>
-
-                    {/* Hardware Bezel & Mockup Glass Shell */}
-                    <div
-                      className={`group relative overflow-hidden rounded-[44px] border-[9px] border-slate-900 bg-[#F3F7F3] p-2.5 transition-all duration-500 ${
-                        isActive
-                          ? 'shadow-[0_25px_60px_-15px_rgba(20,41,29,0.35)] ring-4 ring-[#63B686]/30'
-                          : 'shadow-xl hover:shadow-2xl'
-                      }`}
-                    >
-                      <div className="mx-auto mb-2 h-4 w-20 rounded-full bg-slate-900" />
-
-                      <div className="relative min-h-[420px] sm:min-h-[460px] overflow-hidden rounded-[32px] bg-[#F3F7F3]">
-                        {slide.customImage ? (
-                          <img
-                            src={slide.customImage}
-                            alt={slide.title}
-                            className="h-full w-full object-cover rounded-[32px]"
-                          />
-                        ) : (
-                          slide.renderScreen()
-                        )}
-
-                        <div className="pointer-events-none absolute inset-0 rounded-[32px] bg-gradient-to-tr from-white/0 via-white/5 to-white/30" />
+                      {/* Floating Screen Header Pill */}
+                      <div
+                        className={`mx-auto mb-2.5 flex w-max items-center gap-1.5 rounded-full border px-3 py-1 shadow-md transition-all duration-500 ${
+                          isActive
+                            ? 'border-[#9AB99F] bg-white text-[#3E7754] scale-105'
+                            : 'border-white/80 bg-white/70 text-slate-600 scale-95'
+                        }`}
+                      >
+                        <Icon size={12} className={isActive ? 'text-[#3E7754]' : 'text-slate-400'} />
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider">
+                          {slide.tag}
+                        </span>
                       </div>
 
-                      <div className="mx-auto mt-2 h-1 w-24 rounded-full bg-slate-300" />
+                      {/* Hardware Bezel & Mockup Glass Shell */}
+                      <div
+                        className={`group relative overflow-hidden rounded-[44px] border-[9px] border-slate-900 bg-[#F3F7F3] p-2.5 transition-all duration-500 ${
+                          isActive
+                            ? 'shadow-[0_25px_60px_-15px_rgba(20,41,29,0.35)] ring-4 ring-[#63B686]/30'
+                            : 'shadow-xl hover:shadow-2xl'
+                        }`}
+                      >
+                        <div className="mx-auto mb-2 h-4 w-20 rounded-full bg-slate-900" />
 
-                      {!isActive && (
-                        <div className="pointer-events-none absolute inset-0 rounded-[35px] bg-slate-900/10 backdrop-blur-[0.5px] transition-opacity duration-500" />
-                      )}
+                        <div className="relative min-h-[420px] sm:min-h-[460px] overflow-hidden rounded-[32px] bg-[#F3F7F3]">
+                          {slide.customImage ? (
+                            <img
+                              src={slide.customImage}
+                              alt={slide.title}
+                              className="h-full w-full object-cover rounded-[32px]"
+                            />
+                          ) : (
+                            slide.renderScreen()
+                          )}
+
+                          <div className="pointer-events-none absolute inset-0 rounded-[32px] bg-gradient-to-tr from-white/0 via-white/5 to-white/30" />
+                        </div>
+
+                        <div className="mx-auto mt-2 h-1 w-24 rounded-full bg-slate-300" />
+
+                        {!isActive && (
+                          <div className="pointer-events-none absolute inset-0 rounded-[35px] bg-slate-900/10 backdrop-blur-[0.5px] transition-opacity duration-500" />
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Active Screen Summary Text */}
+            <div className="mx-auto mt-6 max-w-xl text-center px-4">
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold ${
+                  mobileSlides[activeCarouselIndex].badgeColor
+                }`}
+              >
+                <Sparkles size={12} />
+                {mobileSlides[activeCarouselIndex].tag}
+              </span>
+              <h3 className="mt-2 text-xl sm:text-2xl font-extrabold text-slate-900 transition-all">
+                {mobileSlides[activeCarouselIndex].title}
+              </h3>
+              <p className="mt-1 text-xs sm:text-sm text-slate-600 transition-all">
+                {mobileSlides[activeCarouselIndex].desc}
+              </p>
+            </div>
+
+            {/* Navigation Indicator Pills */}
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-2 px-3">
+              {mobileSlides.map((slide, idx) => {
+                const isCurrent = idx === activeCarouselIndex;
+                return (
+                  <button
+                    key={slide.id}
+                    type="button"
+                    onClick={() => setActiveCarouselIndex(idx)}
+                    className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition-all duration-300 ${
+                      isCurrent
+                        ? 'bg-gradient-to-b from-[#3E7754] to-[#3E7754] text-white shadow-md shadow-[#3E7754]/25 scale-105'
+                        : 'border border-white/80 bg-white/70 text-slate-600 hover:bg-white hover:text-slate-900'
+                    }`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        isCurrent ? 'bg-white animate-pulse' : 'bg-slate-300'
+                      }`}
+                    />
+                    <span>{slide.shortTitle}</span>
+                  </button>
                 );
               })}
             </div>
-          </div>
-
-          {/* Active Screen Summary Text */}
-          <div className="mx-auto mt-6 max-w-xl text-center px-4">
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold ${
-                mobileSlides[activeCarouselIndex].badgeColor
-              }`}
-            >
-              <Sparkles size={12} />
-              {mobileSlides[activeCarouselIndex].tag}
-            </span>
-            <h3 className="mt-2 text-xl sm:text-2xl font-extrabold text-slate-900 transition-all">
-              {mobileSlides[activeCarouselIndex].title}
-            </h3>
-            <p className="mt-1 text-xs sm:text-sm text-slate-600 transition-all">
-              {mobileSlides[activeCarouselIndex].desc}
-            </p>
-          </div>
-
-          {/* Navigation Indicator Pills */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2 px-3">
-            {mobileSlides.map((slide, idx) => {
-              const isCurrent = idx === activeCarouselIndex;
-              return (
-                <button
-                  key={slide.id}
-                  type="button"
-                  onClick={() => setActiveCarouselIndex(idx)}
-                  className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition-all duration-300 ${
-                    isCurrent
-                      ? 'bg-gradient-to-b from-[#3E7754] to-[#3E7754] text-white shadow-md shadow-[#3E7754]/25 scale-105'
-                      : 'border border-white/80 bg-white/70 text-slate-600 hover:bg-white hover:text-slate-900'
-                  }`}
-                >
-                  <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      isCurrent ? 'bg-white animate-pulse' : 'bg-slate-300'
-                    }`}
-                  />
-                  <span>{slide.shortTitle}</span>
-                </button>
-              );
-            })}
           </div>
         </div>
       </section>
@@ -2151,11 +2145,16 @@ export default function LandingPage({
         </div>
       </section>
 
-      {/* SECTION 5: SMART DEBT SIMPLIFIER & SPLIT DEMO */}
+      {/* =================================================================== */}
+      {/* SECTION 5: SMART DEBT SIMPLIFIER (DOT FIELD APPLIED HERE)           */}
+      {/* =================================================================== */}
       <section
         id="smart-split"
-        className="relative z-10 overflow-hidden border-y border-white/80 bg-white/40 px-4 py-20 sm:px-6"
+        className="relative z-10 overflow-hidden border-y border-[#DDE9DF] bg-[#EEF4EF] px-4 py-20 sm:px-6"
       >
+        {/* Dot field scoped exclusively to Section 5 */}
+        <div aria-hidden="true" className="landing-dot-field pointer-events-none absolute inset-0 -z-10" />
+
         <div className="mx-auto grid max-w-[1340px] items-center gap-12 lg:grid-cols-12">
           <RevealOnScroll className="lg:col-span-5">
             <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5 text-xs font-bold text-[#326b4a] shadow-xs">
@@ -2455,9 +2454,10 @@ export default function LandingPage({
         </RevealOnScroll>
       </section>
 
-      {/* SECTION 8: DEVELOPERS */}
+      {/* =================================================================== */}
+      {/* SECTION 8: DEVELOPERS (EQUAL WIDTH CARDS)                           */}
+      {/* =================================================================== */}
       <section id="developers" className="relative z-10 overflow-hidden px-4 py-16 sm:px-6">
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[28rem] w-[42rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#BDD2C1]/25 blur-3xl" />
         <div className="relative mx-auto max-w-[1120px]">
           <RevealOnScroll className="mx-auto max-w-2xl text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-[#BDD2C1] bg-white/80 px-3.5 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#356447] shadow-xs">
@@ -2465,19 +2465,21 @@ export default function LandingPage({
               The people behind the product
             </span>
             <h2 className="mt-4 text-3xl font-black tracking-tight text-slate-950 sm:text-5xl">
-              Meet the <span className="text-[#43855F]">builders.</span>
+              Meet the <span className="text-[#43855F]">developers.</span>
             </h2>
             <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-slate-600 sm:text-base">
-              Curious minds, practical ideas, and a shared mission to make everyday shared living
-              effortless and transparent.
+              Built and supported by the people shaping a clearer way to share everyday expenses.
             </p>
           </RevealOnScroll>
 
-          <div className="mt-10 grid gap-5 md:grid-cols-2">
+          {/* Equal 2-column grid layout on medium/large devices */}
+          <div className="mt-10 grid gap-6 md:grid-cols-2 md:items-stretch">
             {[
               {
                 name: 'Taranveer Singh',
                 initials: 'TS',
+                role: 'Creator & Lead Developer',
+                contribution: 'Created Sharebills and leads product direction and development.',
                 links: [
                   { label: 'Portfolio', href: 'https://taranveer.in', icon: Globe },
                   { label: 'GitHub', href: 'https://github.com/taranveer178', icon: CodeXml },
@@ -2492,6 +2494,8 @@ export default function LandingPage({
               {
                 name: 'Sushant Monga',
                 initials: 'SM',
+                role: 'Developer & Technical Support',
+                contribution: 'Development, troubleshooting, and technical support.',
                 links: [
                   { label: 'Portfolio', href: 'https://sushantmonga.in', icon: Globe },
                   { label: 'GitHub', href: 'https://github.com/Sushantmonga87', icon: CodeXml },
@@ -2504,19 +2508,26 @@ export default function LandingPage({
                 ],
               },
             ].map((developer, idx) => (
-              <RevealOnScroll key={developer.name} delay={idx * 150}>
-                <article className="group relative isolate overflow-hidden rounded-[28px] border border-white/90 bg-white/80 p-6 shadow-md backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-[#9AB99F] hover:shadow-xl">
+              <RevealOnScroll
+                key={developer.name}
+                delay={idx * 150}
+                className="w-full"
+              >
+                <article className="group relative isolate flex h-full flex-col justify-between overflow-hidden rounded-[28px] border border-white/90 bg-white/80 p-6 shadow-md backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-[#BDD2C1] hover:bg-white hover:shadow-xl md:p-8">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-[4.25rem] w-[4.25rem] flex-shrink-0 items-center justify-center rounded-[22px] bg-gradient-to-br from-[#63B686] to-[#326b4a] text-lg font-black tracking-tight text-white shadow-lg shadow-[#326b4a]/20 transition-transform duration-300 group-hover:rotate-[-5deg] group-hover:scale-105">
+                    <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-[22px] bg-gradient-to-br from-[#63B686] to-[#326b4a] text-xl font-black text-white shadow-lg shadow-[#326b4a]/20 transition-transform duration-300 group-hover:rotate-[-5deg] group-hover:scale-105">
                       {developer.initials}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#43855F]">
-                        {idx === 0 ? 'Lead Developer' : 'Developer'}
+                      <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#43855F]">
+                        {developer.role}
                       </p>
-                      <h3 className="mt-1 text-2xl font-black leading-tight tracking-tight text-slate-950 sm:text-[1.7rem]">
+                      <h3 className="mt-1 text-2xl font-black leading-tight tracking-tight text-slate-950 sm:text-3xl">
                         {developer.name}
                       </h3>
+                      <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                        {developer.contribution}
+                      </p>
                     </div>
                   </div>
                   <div className="mt-6 flex flex-wrap gap-2">
