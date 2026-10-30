@@ -1,2707 +1,2717 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Plus,
+  UserPlus,
   Download,
-  ChevronDown,
-  ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Pin,
   Bell,
+  BellOff,
+  Search,
   Receipt,
+  AlertTriangle,
+  ArrowUpRight,
   ArrowDownLeft,
-  ArrowLeftRight,
   Wallet,
   PieChart,
   CheckCircle2,
-  CheckCheck,
-  Check,
-  MessageSquare,
-  Sparkles,
-  Zap,
-  Smartphone,
-  Layers,
-  Lock,
-  Menu,
   X,
-  QrCode,
-  ScanLine,
-  Camera,
-  ArrowRight,
-  Globe,
-  Send,
-  Link,
-  CodeXml,
-  Mail,
-  Users,
-  AlertTriangle,
+  MessageSquare,
+  Trash2,
+  LogOut,
+  Smartphone,
+  FileDown,
   Home,
   CircleDollarSign,
-  FileDown,
-  FileText,
-  Smile,
-  ImagePlus,
-  CornerUpRight,
-  Moon,
-  Sun,
-  Search,
-  Copy,
-  ShieldCheck,
-  CalendarDays,
-  Utensils,
-  Car,
-  ShoppingBag,
-  SlidersHorizontal,
-  UserPlus,
+  Check,
 } from 'lucide-react';
+import sharebillsIcon from '../../assets/sharebills-icon.webp';
+import PrimaryNav from '../common/PrimaryNav';
+import MonthlyAnalyticsTab from './MonthlyAnalyticsTab';
+import ProfileTabView from './ProfileTab';
+import DesktopSpacesTab from './DesktopSpacesTab';
+import SpaceLongPressActions from './SpaceLongPressActions';
+import ExpenseLongPressActions from '../group/ExpenseLongPressActions';
+import ActiveDisputesPanel from '../common/ActiveDisputesPanel';
+import TransactionsTab from './TransactionsTab';
+import RentSettlementsTab from './RentSettlementsTab';
+import TransactionExportModal from './TransactionExportModal';
+import { calculateSettlements } from '../../utils/settlement';
+import { CATEGORIES, PAYMENT_METHODS } from '../../utils/constants';
+import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
 
-const sharebillsIcon = 'data:image/webp;base64,UklGRkYWAABXRUJQVlA4WAoAAAAAAAAAvwAAvwAAVlA4ICgWAADQbQCdASrAAMAAPkkgjUUioiEjqHL7GHAJCWZtgjBomDryc1s+vubPhg8/+Fv7l/6v858t/J3rT6APjf8t/fP959wfbG/Tf/M9wT9Nv9f/g+wt5o/6b/jv+5/ifeN9Ff91+275AP6l/lOs29BT9qPVw/6f7mfCT+0H7Y/Ad+wP/Zu3nT2fCVCPvv/ccZP5N4hf4v/Lf9PmCnVl6mfwHn525PHCUAPzd/2fuA+Qz/p/0Pn3+kv/R/ofgK/n/9k/7H+A9q32Leh7+zP//N0XrqlY3Ii8pyn93L38wZ3JVbfLX//D4MR/dFDVQXhBE6EEmw98FkdJ56AgEQCTWwtpP+kzuLoSib2TqFv9Jn+Ok4/eOjtjiYf5w9msus8Q8OEBs6zmDtMXEjlMIpyT3v6gTTiNqwpOvEYwZCJvADMGZzF8EM1LHyb98suSFAU0c2Lp+9MqDv9VlIvqdk0RVo1QoHSvW3EtMLpy6TGZuJ0OBQ2/02xdILWh8l31me50n1WGUhhH2a02L8LYYUsqxhwQI33sZdEqm7Hxu9wqtQT6pem9C9iwj5aARvt/UqNsVtERSunbD9hpQ3I1Hzy6yDWTDshYtaTcPYBasPNpB+xMi+skZoqRbK5Un+29IJxYWHS73mt/XR6XcgMNS9dn/YiaZtWg7A+Kc4EAbtwSoSX1n99DpNMgWk4xXMjjvwX1cK/P5NWlZ9KS3U3uiTl+5f7bAZqFxwnWp8m+J72FqOyAMBYwCaqwQRbqyOoGiFRQkH5Z4N2QIPyyUE1d2M62yFy70k+uB0yGlmTM00mSvKQ9WSGg4Tuj6p9IdAGl2hIXCvGv3LXyFP/Y7Uiy2Jf2VzTtmvhcuT5d3jpt9firFghrsGzfjG8T7aIFX1rKGdNPMtqygwiCgB15xxYREdy9EfoFx6hNlxInNMPvbeQOVYvafbp9yWCjB6BIM6+Y9LTzetAbaI9p7xmIMKVroIWv9HJEI4tCqU+XGzg49esOMLdJkbjWSNLMmn1H6RHQ8Q1Vi+f+Sm2WWNJvJh6hZBPWOBek8YHiuoj7P1aCzmEUUXsIMd8nUCy0zZLXpXJnzwyMF/EHOvDmcOM2RyhP9krJhVfMxzBdcMgfoTN5//7SwsvFYn+VeINSgluom/RVSpNXYbWflDNTAnvb/78fRo0T/pXCa3ty5lmEmBNWAAD++k3P6b9yPIwx/7pO//aTv/2k2ycmoBwMD2b6oFLdqZcg6nBa7KDZxJwjgSaRbUfU0FD8eoOYzrAkD/+Ozgmvq9PY9Dk3Aus/roX6g3gCEWx/BkkHrunc0AYhLXnT/FOQZpe1I0ETvPBJfPgT8Z/ziCRtfV46NyTNcSV4/6EDoN/JPADISH9X4QlSZt+WlJ0aOWa/jLzwLDZ7FKMZ3LVAXfHnssgHf5OEkaPkB4ErxogMIu9NCw00qdBQXbK070+SkqnTZs3R6EbeHYbgkvU1CvtjtaSx3t79J2MfB7m67uq8Z5tnA31sHoZU66dLu305D5Ts0/P3KdYhJM5xuK1Qt9X5lne1rLx5/ikKqn1uknvw/VzOQwNAC9mfxKyRXd5x1eEtU1oy/0Qdq2GM2I2D54fZWEYTSiICr7R+cEcg0NNna+7qDhSAC7x6u1p/0R8m57fowwjRQzDP+jpN6RGEgblJGY4oMnht/EL2ncxQO3lThOIZLb/5Mm8LxCNkAYxBT0Q87dlZyU8pkDBEOMSOPQ/u2m7a5CWojqXTiicjOS8LFCYvIzRejZuOQJoREATp+HffmGhzHy8qAtwwjnsJeFSpPkDGevH+Ov+l1bRqnLICCuTv1RaBmZyNJfKhXIbJcpzEBRkkFBWeTAlWuAuvCaztW+gc3PZHHS9ex9HpYRqq3DezS7gr3TAc5/mto4ODtGOhJGPGwGUjbPH1gZtOP1EGcFDlUqeVCsJfWVzGUpd1z8x0ITGEBlZgGKDp0iImRhv2BTY8gXfewOVWwoa0lrsPcXw/3y/3VP1Ywr/I7DZ7hh5yEHMFXuoGjkEaPcdnZJ0OZ5X3ZclXs9B351RcuXIHqhuhhQo9HkOXSnxnSE7jjSOnJEBc1F3C5eVaTVJNuD4dozaSkO3MdBUQduyuaTCGOH7eZsgbRQl2fQpNv7kfoh93oVGLi0oQ1II9m0DiY3DXXudk4HiveNPwj6KjCMbp9beR+FkEP0oy55dVqAwKlfR2F+db/l0CE/XBRscd8o2P+O+SKicy+y3n4VjxVt9ElpfAZzIcVN7grQwp1VnZPZzOCBNHzWdckMmfTtICoxxCK57a581aYhfjmSsq0GETrQR0II41HJZzKbGTiI6F1SzZYtuivrepfyTCgjIrNNfHk1wmTh4KHHOVvoiWPX02R9KS8itCPxhbw6e+A++mSXeqFB1fDQf1uz6XL82Yyq3MzXBkfQq0FAgsWJDHb11R1fp+/Cl7n3E57anaBDTLOHo6JsprUS1TPE7nBwd5IdCA6eyi36uLeMM/Uwi2fF6Z5rOnqznKgQslTQcHPywX6GgkVl7UgEHqC0IhqN+MAs4tiLkjmwJNeAssEZG8V1tSeBz37lSCO3nXJpYcXujFfoPvRgOfcLo7VA2evXzx/jRnF5ul7U1I9rvfK0QlmH9Owaszugmn8ABknn1JfHy838e8DXvmfNLsS3kvdaPP67ejzJMpbzmDTFSE80Xy55HnWVFavL98LfABorgeHc3jnWTjFCAOU7yid9qEDckJ80KooHmKfHtiQib0l9t5ZfvVn4tH4HEKz48oSz7ATKWzmhrfxjeKkLJiP+nf54SfbWJ6ombkz0z9rtdrtZajDy6c/pF4KHljc55imyuxYfvw4yQj5jLKpGv+aQo3Xob5I7cUDftZ23r0qy3wWkoeDELgzLkFePowwDz+1xtCDXUeIk14xODK/8Bri60hg3LONYmISgWcPhz8GMYwCgdJFQyXK0WKnjV0lcPbZ9SeVJ/wxT7USpA7Zw/hGzNDsWqaXInFQ7WcUst+FoD3yolWgR2KrWb6sqPisOw3rniql2jWFfYzoBmkHrqoCGOnFGicrs96LoMTQ7esUCKH+B9/g7vCkO4osx8bVIC9Yz6nbdwdjoV7e0L0X34D8OZZPIrNwNWpnzrRF29f4dk05p9tY/br1XmTqv2mArHv988GNgQZzo113Fov5DCB1HIZ9PFKscp5ZKQPED8Tvmg8CBnKxE9mmaycsm+kzL6cFHpAzyYZvaQfV6bNlx/DF612JmGRZ5zSQfoHYNn3PnCkKrVlA4j97+djThcfnFmSw/ag3JnsvN/Mu/TM7VbLr78VdFVx0cFDQm56unUBw8VN3KwSv4FxckxtIaCp9jm/ABf9PV9WQKhC7ceVUegibr1s3BYKmlbZIwysy9gja/eWueiw2DZYowmFEzAacYxsAQYyvWNpLVojsJbUlNtblezX32N64B81e5HupLhHFpiui3ddN0op1zRy2f3SZ3z9PwLV4drQc9XNF8uCAlPOhhN4MkU3qoywIpbKiTKGVVOKd3GS7s1lA5Yoqcfgsa1MStExB9E+s9xM//Plq0z5OM75GvT7jRdiU05QNRqjdTForI/JWAlUFGwBqjm5wSIG+JnTfZt/GxgCxQ+3DV3Q60STwWS2IjjjpMZ9nAt8DtX8gMIUpR4Z525dllgCntQRwBdetws5qMWSlDYb0zQc3zvAxim62nl2ucX9R0DXfZ1R8q5HxoX4wpW7Tefjx7/r5ic5ai5ZUydqVyrhyK24O7ckJ8NxFbjZF7SACE1BdR04vBGr+fu1ud4691dATmAn+/FpZU8L+WFJLY/JArl2Qe9gyriS9wd/xfo1UdHzTpZPURV02QncZQ41k3hvShMbBEg/2lbM4JXayBUhRvHpNUsqQCfg2BAhvCNKfSvv0qdjvc3PJUo4flgufFnFB1l7Ch14OXO/VME4uHFFy6FVOOAXGxELrAOxefa3UiF1M1gIrY++iGo9DnkQS8GZWmjYXNHsJuqt+aYj5w20xjicwUBqnrUDXFXlJ7t0GsIpL2Pxilig3sN7StPyJ0hKdA1z+uAiclyxDINp1sVmub0l9ZHjr8fRDAm/6cvGAX0o4Z+D48Nb2QM1FOtL4kSP3kKB6ZVReK3/2EerKqWQ2m3R33K4orqs94UBPQ9AhNLs1oZCMFH9GqYjaP/AAvnnR2BOpParyPMO6EKLMRvDzKs9j/JvMQ53lniJbXsp6rXTipfXF8ZsE30yf//Si82B40igD8b0ERM6rWkACegstJ9hPzP4cuC3ODuPKlgqGQsT1uzlijTD32nqW9vDDCI9rLPNLcwxlA1/uwcp2emgk5AsOtVfvztDGAOinrNACEyT9LZKkDHPJ/RQuyZ+QxU/HH0D9Anh7UHYQRM8OKhvT5JxTz4LVaQJSLAqT8yXeumPMYyMfztiDgOT+qRhCVatbGsX6sKVRLAH+B7IxWn6GSnaf5pzGNAPRdB1e1rFNHSAHYqQ7lWZtZ9LrAdfzuJAu33WQOLloGCCl1vr6UTVd4RZkr+mZXx7/eWULfk04Fn/xiZd2VjPYtYbkKTAyr4O53Ta6U1It1zRGri4hCulzbImXK+bDHCxzjjE3/n4GHUvzzklD0H/fwnYV5oMsEpdF0kVhIiCxI1hfG2lcXIfAVFzVcCL8CuPzE7ny7s5BucKffpcF1bm+BIz2Pf3QH2WgKZnYyeGIknuc19vbfen7GoYQafpDqxvsaVSg6codPjvosE9M0ywIrEATge0vx2yRFZlMMg52unqsDPMbFrDAiLFXIglgLb1NEf5nPW5xFbgqFCedxAQQhcdJIuEIAVcqEPmhyg5n6R49aCi/59Udd7OGhoCecKmIqZ+IBKHRZPEy3vZeU9zs5LDshzYjZFhc/Y/aZPZIbwJmz1+9zIhsL91HtEDdFXga7sTZk2W+rvwrkf/afNYaAuDT5QqcI6706YWGzKjbErWu25qB6VYKnGvgaO6AFbGGuG5eWZBg3Qw3IygWx4gPGTEAoVYmtvCaxafim35Og3ciJXaxN0IYGi7dFbGD5Vadsu4LaPsnEbFU6eYZ3J/JR4Lq+9yH0c0jMGWZ6uELabmVExZaXqOJ60/QRH8QbNt+IA4Tjxv45tgYNGV/5z5DC60d/loNc+CvuQR0P3DKDBIrtl04m7iQ2G4BBEAmKE1SoXewyX9VuS0If7fUy9apjf4Ms91TEpFMRI/qXFQLD4wjrsRJL4Jz4+O7Ge+OCFlJnf+GrHPkR8pY+EqFg8qtX0qxjAd3iIlXBuFD5saAvAzlCQoNwWgKScJrbLV0CqZ3ylm4+h0Nv4fsblze3P5WJJCf/Nmtf3r0xhH5LNpyM09cYjlTvfKXx3V0bpGWl/pNZqFKTPf5NdAppshLdNBB5cT1S/2qOWtZVmuuDWqCIkEBxJcEnQorkzYwRW4QPKV1ZUcav5PnIWETJBwiIG3OZCEOVSo5bt5Foh8/J2zdoeFVUryk65RfDfKl+wSQT63yTIh3GbnBDamcvMBlXBwe2z0QGXFrVPT8iO9lUOHaVUtE+LikcCCo6d/grPrirDxNS37XUXRK6C4qhRfPawTElg8nrPpA++R5Fs7FJDQwgls+cqGfz9FIrOzLMAqJ7iKPzQTMehQiXcOkbB8QSM6JXt0qWksnfXBIMbWKDNvN3ueoMIhjgclZEQxB8rvh1r7yjSYYZAxeeZsBivJSolGwKkeFaikNq8/eeHYVqrU69U1AEsTzvOW82NtmwXnJzXiVuTTuHrN3/pAY5cqpihi4PkIC8hfZW1U3cp5j7XatdivGyjgxxvptjFAYk5z2as8EzhvTJ6Uf1M5L8j0myRsa33ioadZOB6rlULyQ4h3tkTh5hv1FcC/tnc8D+FmNiGpsKVyFT0YkBQ/NJufFzlmYSc32a1lQfvfpULH3I7zYuvvHnXZ1HWcZXEnD44DtLy0DqGBjkd1b5Exa1y7lar4OkBoBRv3pD+sitAh5EIuhaAqeqPZ1z9I/nicilJaRMe9BgkeTpZZu4x5Gy8sjea6zlkZaq+1F+ZVjjEcZepWlcEc0yGA52MR5gUgWRsx3fDY8J8roS0ryyv1RMAHAawyrPTgZh8glxfjXWBgKXuC4fg8CD/m5fez0woJSr80rN/lnIJhCkT4ReVGyS8Acrcbtyu1W7aHCyUEGP2lLVwiOWf8XCTVNbZQQQ6r+fE27w+lqeL329QBIiqyrCzkQFIIS0BKe/yqv9oz7f+gDSE7yYhMLBaHBDP47maackUaisKv5hvzt9l4CjQNKynjY7Z2nZly9QsPw5A+MVpdpZCSLnohIDpWiVDvw6cWtwe4iAKd8B4YQ6QmYphJ7LPuS62E/IaaGQcSYe7zxYF864pSgtBZgT9u1n0+5d7FxisW5o3QapAgnzM9jvawY+4B3TpRi0zTOBZDHX7pAAU6BdjInuYFumVS+9Pv0r2N5xZ4nVe1wypnYefgwSdfLeS1OFdVFu5VhNjVJHEhYHiRbKy6VdCQGfJI16a3opx/fonL1I+iOEeYnhUZR2/Sqv7212FSpc5BV05RAoJXgsqUm2hoysUvSiVKDZx063rtF3xVYQMCKn/qfpZQYNxq1bGlcJQDTh0AVLbcfb7dmF+DzHf5FNH0qtlcxI1FPf/fdJZFUhCn1NpOxH1VVWyUnL5Vl/czw3pG2ytgSUug4gm7Bs4v6UlxpI5HbwQw3f3DCJRqBWF81ZAe7BgO/p99kWXAWaGwgO5MjwtVQbQEh9dwgnDFweOtpp3ra6DFSGKP0Jj9Rc0PzvLaTfV5M86rxyiIW4/xnRR1IbGFg4kI0aeDOyyXVyrs6JJbY5rTndPUaRdN+RQWWolrFJsGtRE6qJHdArE0t5OieOnSoaVj0Pi9aEHYaSBr4WkLxfyr5yMN9kANXYDwnN0O+M1NcRC8JGTTRFWj4U/f+E1jb5oTeAvAor3B7VAwhp6RW0pPttriumCj5QXonLlx0qC0yqfcf/kThBGvW0/ALCr69P98fmJBnC4H/iY/u0QZxDfI7WlLcijQrlNzEjwk3rdcoGIurM3UOcPwZb0+UbNYjPu0EitnoHa2E0u/9jUJpoK7tPM4zLi1A9kCxbZZGpQ/BeoQNcOsQ/60UFmKcPgm0upnOktapewlsoyZIMu+bAWfLvNEu0QLu/t/G5a5ZqRpfZid6uT4tr9TYQqU55OIzSbLMuenOO8+S4wFXLBiKLosDWzRBvcLwGO5cc+zJVh43KD69gpvPMPZaWcfxqVDJvVP5W2q7MBlk3uLfdcXOgEAII4Fi4b0s5B4njZXOPCVUD9nudiBog4Z+LkYNo2G764+zp61jibmJVKJdgFYVY6X8+TxYUvw/ag89ArlEUTlbmbLJ6vVO5fzKhqXTpI1YtuD4uU/cDg3cBULQDInN7+8Uo6VE45PFnUU7Q/hrKjr6Pt9UagHhOjyDeSrt/X49Kh7S/HnDg1i6oM1SXJ5RANCFqFULPlc20a+IaGYcYdY10hq1sGBwN7xuoxV8BhafeOsZmngi/mT3JY7RTe13MOS1mvCWCcKCC4hhmyHUhkpfxLqorkCkUDaVBWiZJX+wuC6m4gJ6ZoAAA==';
-
-// ===================================================================
-// CUSTOM SCROLL ANIMATION HOOK & COMPONENT
-// ===================================================================
-const RevealOnScroll = ({
-  children,
-  className = '',
-  delay = 0,
-  threshold = 0.12,
-  dataShowcaseSlide,
-}) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const currentRef = ref.current;
-    if (!currentRef || typeof IntersectionObserver === 'undefined') {
-      setIsVisible(true);
-      return undefined;
-    }
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.unobserve(entry.target);
-        }
-      },
-      { threshold, rootMargin: '0px 0px -40px 0px' }
-    );
-
-    observer.observe(currentRef);
-    return () => {
-      if (currentRef) observer.unobserve(currentRef);
-    };
-  }, [threshold]);
-
-  return (
-    <div
-      ref={ref}
-      data-showcase-slide={dataShowcaseSlide}
-      className={`transition-all duration-700 ease-out ${
-        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
-      } ${className}`}
-      style={{ transitionDelay: `${delay}ms` }}
-    >
-      {children}
-    </div>
-  );
-};
-
-const heroPreviewDisputes = [
-  { title: 'WiFi + OTT Bill', raisedBy: 'Sushant', space: 'Flat 402 · Tap to resolve in chat' },
-  { title: 'Groceries · ₹2,450', raisedBy: 'Aarav', space: 'Flat 402 · Your share was updated' },
-  { title: 'Weekend cab · ₹980', raisedBy: 'Tanmay', space: 'Kasol Trip · Review split in chat' },
-];
-
-export default function LandingPage({
-  onLogin,
-  onGetStarted,
-  onCreateAccount,
-  onDownloadApp,
-  onInstallApp,
+export default function Dashboard({
+  user,
+  users = [],
+  groups = [],
+  notifications = [],
+  expenses = [],
+  onLogout,
+  onOpenGroup,
+  onCreateGroup,
+  onJoinGroup,
+  onSaveExpense,
+  onDeleteExpense,
+  onRaiseExpenseDispute,
+  onCancelExpenseDispute,
+  rentRecords = [],
+  onMarkRentPaid,
+  onSendNotification,
+  onUpdateUser,
+  onMarkNotificationsRead,
+  onClearNotifications,
+  onTabChange,
+  initialTab = 'groups',
   deferredPromptAvailable = false,
+  onInstallApp,
   isAppInstalled = false,
-  isStandaloneWebApp = false,
-  showcaseScreens = null,
+  theme = 'light',
+  onThemeChange,
+  showToast,
 }) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const [installDialogOpen, setInstallDialogOpen] = useState(false);
+  const [spaceFilter, setSpaceFilter] = useState('active'); // 'active' | 'pinned' | 'archived'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [ledgerFilter, setLedgerFilter] = useState('all'); // 'all' | 'mine' | 'settlements'
+  const [transactionExportOpen, setTransactionExportOpen] = useState(false);
+  const [mobileSection, setMobileSection] = useState('spaces');
+  const [copiedCodeId, setCopiedCodeId] = useState(null);
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [dailyRentReminderRecords, setDailyRentReminderRecords] = useState([]);
 
-  // Interactive preview states
-  const [heroPhoneTab, setHeroPhoneTab] = useState('overview');
-  const [heroDarkPreview, setHeroDarkPreview] = useState(false);
-  const [activeHeroDisputeIndex, setActiveHeroDisputeIndex] = useState(0);
-  const [activePreviewTab, setActivePreviewTab] = useState('command');
-  const [desktopDarkPreview, setDesktopDarkPreview] = useState(false);
-  const [simplifyMode, setSimplifyMode] = useState('smart');
-  const [splitDemoMode, setSplitDemoMode] = useState('equal');
-  const [openFaq, setOpenFaq] = useState(0);
-  const [previewModal, setPreviewModal] = useState(null);
+  // Activity Drawer / Notification Center Popup State
+  const [isActivityOpen, setIsActivityOpen] = useState(false);
+  const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
+  const newMenuRef = useRef(null);
+  const [optimisticallyReadNotificationIds, setOptimisticallyReadNotificationIds] = useState(() => new Set());
+  const [activityContextNotification, setActivityContextNotification] = useState(null);
+  const [selectedActivityIds, setSelectedActivityIds] = useState(new Set());
+  const [activityDeleteIds, setActivityDeleteIds] = useState(null);
+  const [isDeletingActivity, setIsDeletingActivity] = useState(false);
+  const activityPressTimerRef = useRef(null);
+  const activityLongPressRef = useRef(false);
 
-  // States used inside the 6 interactive carousel screens
-  const [disputeDemoStatus, setDisputeDemoStatus] = useState('open');
-  const [rentDemoPaid, setRentDemoPaid] = useState(false);
-  const [selectedCurrency, setSelectedCurrency] = useState('INR');
-  const [exportScopeDemo, setExportScopeDemo] = useState('all');
-  const [copiedCode, setCopiedCode] = useState(false);
-
-  // Filter state for redesigned features
-  const [featureCategory, setFeatureCategory] = useState('all');
-
-  const currencySymbols = {
-    INR: '₹',
-    USD: '$',
-    EUR: '€',
-    GBP: '£',
-    CAD: 'CA$',
-    AUD: 'A$',
-  };
-  const sym = currencySymbols[selectedCurrency] || '₹';
-
-  // Fast dispute rotation in Hero screen (2400ms)
-  useEffect(() => {
-    if (heroPhoneTab !== 'overview' || heroPreviewDisputes.length < 2) return undefined;
-    const intervalId = window.setInterval(() => {
-      setActiveHeroDisputeIndex((index) => (index + 1) % heroPreviewDisputes.length);
-    }, 2400);
-    return () => window.clearInterval(intervalId);
-  }, [heroPhoneTab]);
-
-  // ===================================================================
-  // 3D CIRCULAR CAROUSEL STATES & HANDLERS (2600ms ROTATION)
-  // ===================================================================
-  const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
-  const [isCarouselHovered, setIsCarouselHovered] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const touchStartX = useRef(0);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 640);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+  useEffect(() => () => {
+    if (activityPressTimerRef.current) clearTimeout(activityPressTimerRef.current);
   }, []);
 
-  const handleCopyDemoCode = () => {
-    try {
-      if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText('FLT402');
-      }
-    } catch {
-      // Fallback
-    }
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
-  };
-
-  const mobileSlides = [
-    {
-      id: 'disputes',
-      tag: '1. In-Chat Expense Disputes',
-      title: 'Flag & Fix Wrong Bills Without Friction',
-      shortTitle: 'Disputes',
-      desc: 'Long-press any bill to raise a dispute with a note. Sharebills posts an interactive card in room chat so the payer can edit or solve it.',
-      icon: AlertTriangle,
-      badgeColor: 'bg-amber-50 text-amber-800 border-amber-200',
-      customImage: showcaseScreens?.[0] || null,
-      renderScreen: () => (
-        <div className="rounded-[24px] bg-[#F3F7F3] p-3.5 space-y-2.5 text-left">
-          <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
-            <div className="flex items-center gap-2">
-              <AlertTriangle size={14} className="text-amber-600" />
-              <div>
-                <p className="text-xs font-extrabold text-slate-900">Dispute Resolution</p>
-                <p className="text-[9px] font-semibold text-slate-500">
-                  Long-press any bill to flag
-                </p>
-              </div>
-            </div>
-            <span
-              className={`rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase ${
-                disputeDemoStatus === 'open'
-                  ? 'bg-amber-200 text-amber-900'
-                  : 'bg-emerald-100 text-emerald-700'
-              }`}
-            >
-              {disputeDemoStatus === 'open'
-                ? 'Open'
-                : disputeDemoStatus === 'updated'
-                ? 'Edited & Solved'
-                : 'Resolved'}
-            </span>
-          </div>
-
-          <div className="rounded-2xl border border-amber-200 bg-amber-50/90 p-3">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-extrabold text-slate-900">
-                Swiggy Dinner Order
-              </p>
-              <span className="font-mono text-xs font-extrabold text-amber-900">
-                {disputeDemoStatus === 'updated' ? '₹1,120.00' : '₹1,480.00'}
-              </span>
-            </div>
-            <p className="mt-0.5 text-[10px] text-slate-600">
-              Raised by <strong>Sushant</strong> in Flat 402
-            </p>
-            <p className="mt-2 rounded-xl bg-white/90 p-2 text-[10px] text-slate-700">
-              “Dessert was only for 2 people—please adjust custom split shares.”
-            </p>
-
-            <div className="mt-2.5 grid grid-cols-3 gap-1.5">
-              <button
-                type="button"
-                onClick={() => setDisputeDemoStatus('updated')}
-                className={`rounded-lg py-1.5 text-[9px] font-extrabold transition-all ${
-                  disputeDemoStatus === 'updated'
-                    ? 'bg-[#3E7754] text-white'
-                    : 'bg-white text-slate-800 border border-amber-200 hover:bg-amber-100'
-                }`}
-              >
-                Edit Bill
-              </button>
-              <button
-                type="button"
-                onClick={() => setDisputeDemoStatus('solved')}
-                className={`rounded-lg py-1.5 text-[9px] font-extrabold transition-all ${
-                  disputeDemoStatus === 'solved'
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-white text-slate-800 border border-amber-200 hover:bg-amber-100'
-                }`}
-              >
-                Mark Solved
-              </button>
-              <button
-                type="button"
-                onClick={() => setDisputeDemoStatus('open')}
-                className="rounded-lg border border-slate-200 bg-white py-1.5 text-[9px] font-bold text-slate-600 hover:bg-slate-100"
-              >
-                Reset
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between rounded-xl border border-white bg-white px-3 py-2 text-[10px]">
-            <span className="font-semibold text-slate-600">Auto-notifies all members</span>
-            <span className="font-extrabold text-[#3E7754]">Push + Chat ✓</span>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: 'rent',
-      tag: '2. Monthly Flat Rent Tracker',
-      title: 'Dedicated Monthly Rent Ledger',
-      shortTitle: 'Rent Tracker',
-      desc: 'Splits flat rent down to the exact cent across members, tracks individual Paid vs. Unpaid status, and sends automated daily reminders.',
-      icon: Home,
-      badgeColor: 'bg-[#EEF4EF] text-[#356447] border-[#BDD2C1]',
-      customImage: showcaseScreens?.[1] || null,
-      renderScreen: () => (
-        <div className="rounded-[24px] bg-white p-3.5 space-y-2.5 text-left">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
-                <Home size={14} />
-              </span>
-              <div>
-                <p className="text-xs font-extrabold text-slate-900">October 2026 Rent</p>
-                <p className="text-[9px] text-slate-500">Flat 402 · ₹24,000 total</p>
-              </div>
-            </div>
-            <span className="rounded-lg bg-amber-50 px-2 py-0.5 font-mono text-[10px] font-bold text-amber-800">
-              ₹6,000/ea
-            </span>
-          </div>
-
-          <div className="space-y-1.5">
-            {[
-              { name: 'Taranveer (You)', share: '₹6,000', paid: rentDemoPaid },
-              { name: 'Sushant Monga', share: '₹6,000', paid: true },
-              { name: 'Tanmay Sharma', share: '₹6,000', paid: true },
-              { name: 'Aarav Verma', share: '₹6,000', paid: false },
-            ].map((member) => (
-              <div
-                key={member.name}
-                className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/80 px-2.5 py-1.5 text-[10px]"
-              >
-                <span className="font-bold text-slate-800">{member.name}</span>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-mono font-semibold text-slate-600">
-                    {member.share}
-                  </span>
-                  <span
-                    className={`rounded-md px-1.5 py-0.5 text-[9px] font-extrabold ${
-                      member.paid
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-amber-100 text-amber-800'
-                    }`}
-                  >
-                    {member.paid ? 'Paid ✓' : 'Pending'}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setRentDemoPaid((prev) => !prev)}
-            className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-[11px] font-extrabold text-white shadow-xs transition-all ${
-              rentDemoPaid
-                ? 'bg-emerald-600 hover:bg-emerald-700'
-                : 'bg-[#3E7754] hover:bg-[#356447]'
-            }`}
-          >
-            <Check size={13} />
-            <span>
-              {rentDemoPaid ? 'Your Rent Share Marked Paid!' : 'Tap to Mark Your ₹6,000 Paid'}
-            </span>
-          </button>
-        </div>
-      ),
-    },
-    {
-      id: 'chat',
-      tag: '3. Rich Media, GIF & Reply Chat',
-      title: 'WhatsApp-Grade Chat Inside Every Room',
-      shortTitle: 'Rich Chat',
-      desc: 'Reply to messages, react with emojis, share GIFs, stickers, photos, videos, and PDFs, and preview links right next to the ledger.',
-      icon: MessageSquare,
-      badgeColor: 'bg-[#EEF4EF] text-[#356447] border-[#BDD2C1]',
-      customImage: showcaseScreens?.[2] || null,
-      renderScreen: () => (
-        <div className="rounded-[24px] bg-[#F3F7F3] p-3.5 space-y-2 text-left">
-          <div className="mx-auto flex w-fit items-center gap-1.5 rounded-full border border-white bg-white/95 px-3 py-1 text-xs shadow-md">
-            {['❤️', '👍', '😂', '😮', '😢', '🙏'].map((emoji) => (
-              <span key={emoji} className="cursor-pointer transition-transform hover:scale-125">
-                {emoji}
-              </span>
-            ))}
-          </div>
-
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-2.5 text-[10px] shadow-2xs">
-            <div className="flex items-center gap-1 text-[9px] font-semibold italic text-slate-400">
-              <CornerUpRight size={10} /> Forwarded from Kasol Trip
-            </div>
-            <p className="mt-0.5 font-bold text-[#3E7754]">Sushant</p>
-            <p className="text-slate-800">Booked our riverside camp! Check link:</p>
-            <div className="mt-1.5 rounded-lg border border-slate-200 bg-slate-50 p-1.5">
-              <p className="text-[8px] font-bold uppercase text-slate-400">booking.kasol.in</p>
-              <p className="text-[10px] font-bold text-slate-800">
-                Parvati Valley Riverside Cottages · 5 Guests
-              </p>
-            </div>
-          </div>
-
-          <div className="ml-auto max-w-[86%] rounded-2xl bg-[#3E7754] p-2.5 text-[10px] text-white shadow-xs">
-            <div className="mb-1 rounded border-l-2 border-white bg-white/15 px-2 py-0.5 text-[9px]">
-              <span className="font-bold">Sushant:</span> Booked our riverside camp!
-            </div>
-            <div className="flex items-center justify-between gap-2">
-              <span>Awesome! Uploading petrol receipt PDF 🧾</span>
-              <CheckCheck size={12} className="text-emerald-200" />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-[9px] font-bold text-slate-600">
-            <span>😊 Emoji</span>
-            <span className="rounded bg-[#EEF4EF] px-1.5 py-0.5 text-[#3E7754]">
-              GIPHY GIFs
-            </span>
-            <span>🐼 Stickers</span>
-            <span>📎 Media</span>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: 'payments',
-      tag: '4. 1-Tap GPay UPI & Breakdown',
-      title: 'Deep-Linked Google Pay & UPI Intents',
-      shortTitle: 'GPay & UPI',
-      desc: 'Launch Google Pay or UPI apps with your flatmate’s VPA and exact settlement amount pre-filled, or record custom partial payments.',
-      icon: Zap,
-      badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      customImage: showcaseScreens?.[3] || null,
-      renderScreen: () => (
-        <div className="rounded-[24px] bg-[#F3F7F3] p-3.5 space-y-2.5 text-left">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold text-slate-900">Smart Balances</span>
-            <div className="flex rounded-lg bg-slate-200/80 p-0.5 text-[9px] font-bold">
-              <span className="rounded-md bg-white px-2 py-0.5 text-[#3E7754] shadow-2xs">
-                Optimized
-              </span>
-              <span className="px-2 py-0.5 text-slate-500">Pairwise</span>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-white bg-white p-3 shadow-xs">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-extrabold text-slate-900">You owe Sushant</p>
-                <p className="font-mono text-[9px] text-slate-500">
-                  UPI: sushant@okicici
-                </p>
-              </div>
-              <span className="font-mono text-sm font-extrabold text-rose-600">
-                -₹1,240
-              </span>
-            </div>
-
-            <div className="mt-2.5 grid grid-cols-2 gap-1.5">
-              <span className="flex items-center justify-center gap-1 rounded-xl bg-[#3E7754] py-1.5 text-[10px] font-bold text-white shadow-xs">
-                <Zap size={11} /> Pay via GPay
-              </span>
-              <span className="flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-50 py-1.5 text-[10px] font-bold text-slate-700">
-                View 4 Bills
-              </span>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-2.5">
-            <p className="text-[10px] font-extrabold text-emerald-950">
-              Custom Quick Pay &amp; Confirmations
-            </p>
-            <p className="mt-0.5 text-[9px] text-emerald-800">
-              Record partial payments or confirm received settlements with instant push alerts.
-            </p>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: 'spaces',
-      tag: '5. Camera QR Scan & 6 Currencies',
-      title: 'Instant QR Onboarding & Global Currencies',
-      shortTitle: 'QR & Currencies',
-      desc: 'Point your camera at a room QR code or share 6-character codes. Set spaces in INR (₹), USD ($), EUR (€), GBP (£), CAD, or AUD.',
-      icon: QrCode,
-      badgeColor: 'bg-[#EEF4EF] text-[#356447] border-[#BDD2C1]',
-      customImage: showcaseScreens?.[4] || null,
-      renderScreen: () => (
-        <div className="rounded-[24px] bg-white p-3.5 space-y-2.5 text-left">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <QrCode size={14} className="text-[#3E7754]" />
-              <span className="text-xs font-extrabold text-slate-900">
-                Scan or Share Invite
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={handleCopyDemoCode}
-              className="inline-flex items-center gap-1 rounded-lg border border-[#BDD2C1] bg-[#EEF4EF] px-2 py-0.5 font-mono text-[10px] font-extrabold text-[#3E7754]"
-            >
-              <Copy size={10} />
-              <span>{copiedCode ? 'Copied!' : 'FLT402'}</span>
-            </button>
-          </div>
-
-          <div className="relative flex flex-col items-center justify-center rounded-2xl bg-slate-950 p-3.5 text-white">
-            <div className="flex h-20 w-20 items-center justify-center rounded-2xl border-2 border-dashed border-emerald-400 bg-white/10">
-              <ScanLine size={34} className="text-emerald-400 animate-pulse" />
-            </div>
-            <p className="mt-2 flex items-center gap-1 text-[9px] font-semibold text-emerald-300">
-              <Camera size={11} /> Point camera at roommate’s QR code
-            </p>
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between text-[10px] font-bold text-slate-600">
-              <span>Room Currency</span>
-              <span className="font-mono text-[#3E7754]">
-                Example: {sym}1,250.00
-              </span>
-            </div>
-            <div className="mt-1.5 grid grid-cols-6 gap-1">
-              {['INR', 'USD', 'EUR', 'GBP', 'CAD', 'AUD'].map((cur) => (
-                <button
-                  key={cur}
-                  type="button"
-                  onClick={() => setSelectedCurrency(cur)}
-                  className={`rounded-lg py-1 text-[9px] font-extrabold transition-all ${
-                    selectedCurrency === cur
-                      ? 'bg-[#3E7754] text-white shadow-2xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {cur}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: 'exports',
-      tag: '6. CSV & Printable PDF Exports',
-      title: 'One-Click CSV & PDF Ledger Statements',
-      shortTitle: 'Exports',
-      desc: 'Download clean, audit-ready spreadsheets or printable PDF statements filtered by payer, settlement type, and date window.',
-      icon: FileDown,
-      badgeColor: 'bg-[#EEF4EF] text-[#356447] border-[#BDD2C1]',
-      customImage: showcaseScreens?.[5] || null,
-      renderScreen: () => (
-        <div className="rounded-[24px] bg-white p-3.5 space-y-2.5 text-left">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EEF4EF] text-[#3E7754]">
-                <FileText size={14} />
-              </span>
-              <div>
-                <p className="text-xs font-extrabold text-slate-900">Export Transactions</p>
-                <p className="text-[9px] text-slate-500">28 records matched</p>
-              </div>
-            </div>
-            <FileDown size={14} className="text-[#3E7754]" />
-          </div>
-
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
-              Filter Scope
-            </p>
-            <div className="mt-1 grid grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1">
-              {[
-                { id: 'all', label: 'All' },
-                { id: 'mine', label: 'Paid by me' },
-                { id: 'settlements', label: 'Settlements' },
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setExportScopeDemo(item.id)}
-                  className={`rounded-lg py-1 text-[9px] font-bold transition-all ${
-                    exportScopeDemo === item.id
-                      ? 'bg-white text-[#3E7754] shadow-2xs'
-                      : 'text-slate-600'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
-              Date Window
-            </p>
-            <div className="mt-1 grid grid-cols-3 gap-1 text-center text-[9px] font-bold">
-              <span className="rounded-lg border border-[#3E7754] bg-[#EEF4EF] py-1 text-[#3E7754]">
-                This Month
-              </span>
-              <span className="rounded-lg border border-slate-200 py-1 text-slate-600">
-                Last 90d
-              </span>
-              <span className="rounded-lg border border-slate-200 py-1 text-slate-600">
-                All Time
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            <button
-              type="button"
-              onClick={triggerGetStarted}
-              className="flex items-center justify-center gap-1 rounded-xl bg-[#3E7754] py-2 text-[10px] font-bold text-white shadow-xs"
-            >
-              <Download size={11} /> CSV File
-            </button>
-            <button
-              type="button"
-              onClick={triggerGetStarted}
-              className="flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-50 py-2 text-[10px] font-bold text-slate-700"
-            >
-              <FileText size={11} /> Print PDF
-            </button>
-          </div>
-        </div>
-      ),
-    },
-  ];
-
-  const handleNextCarousel = useCallback(() => {
-    setActiveCarouselIndex((prev) => (prev + 1) % mobileSlides.length);
-  }, [mobileSlides.length]);
-
-  const handlePrevCarousel = useCallback(() => {
-    setActiveCarouselIndex((prev) => (prev - 1 + mobileSlides.length) % mobileSlides.length);
-  }, [mobileSlides.length]);
-
-  // Faster 2600ms slide transition
   useEffect(() => {
-    if (isCarouselHovered) return undefined;
-    const interval = setInterval(() => {
-      handleNextCarousel();
-    }, 2600);
-    return () => clearInterval(interval);
-  }, [isCarouselHovered, handleNextCarousel]);
+    if (!isNewMenuOpen) return undefined;
 
-  const handleTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
+    const handlePointerDown = (event) => {
+      if (!newMenuRef.current?.contains(event.target)) setIsNewMenuOpen(false);
+    };
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setIsNewMenuOpen(false);
+    };
 
-  const handleTouchEnd = (e) => {
-    const deltaX = touchStartX.current - e.changedTouches[0].clientX;
-    if (Math.abs(deltaX) > 40) {
-      if (deltaX > 0) {
-        handleNextCarousel();
-      } else {
-        handlePrevCarousel();
-      }
-    }
-  };
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isNewMenuOpen]);
+
+  // Quick Expense Modal State
+  const [quickExpenseOpen, setQuickExpenseOpen] = useState(false);
+  const [quickGroupId, setQuickGroupId] = useState('');
+  const [quickTitle, setQuickTitle] = useState('');
+  const [quickAmount, setQuickAmount] = useState('');
+  const [quickCategory, setQuickCategory] = useState('Food');
+  const [quickMethod, setQuickMethod] = useState('UPI');
+  const [savingQuick, setSavingQuick] = useState(false);
 
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'ArrowLeft') handlePrevCarousel();
-      if (e.key === 'ArrowRight') handleNextCarousel();
+    if (!showLogoutConfirmation) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && !isSigningOut) {
+        setShowLogoutConfirmation(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showLogoutConfirmation, isSigningOut]);
+
+  useEffect(() => {
+    if (!installDialogOpen) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setInstallDialogOpen(false);
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handlePrevCarousel, handleNextCarousel]);
+  }, [installDialogOpen]);
 
-  const getSlideStyle = (index) => {
-    const total = mobileSlides.length;
-    let diff = (((index - activeCarouselIndex) % total) + total) % total;
-    if (diff > total / 2) diff -= total;
+  useEffect(() => {
+    if (!user?.id) return undefined;
 
-    const absDiff = Math.abs(diff);
+    const now = new Date();
+    const localDateKey = [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, '0'),
+      String(now.getDate()).padStart(2, '0'),
+    ].join('-');
+    const storageKey = `rs_rent_reminders:${user.id}:${localDateKey}`;
+    const seenRentIds = (() => {
+      try {
+        return JSON.parse(localStorage.getItem(storageKey) || '[]');
+      } catch {
+        return [];
+      }
+    })();
 
-    const spacing = isMobile ? 135 : 240;
-    const depth = isMobile ? 110 : 160;
-    const angle = isMobile ? 22 : 28;
+    const seenRentIdSet = new Set(seenRentIds);
+    if (activeTab !== 'groups') {
+      const timeout = window.setTimeout(() => setDailyRentReminderRecords([]), 0);
+      return () => window.clearTimeout(timeout);
+    }
 
-    const translateX = diff * spacing;
-    const translateZ = -absDiff * depth - (absDiff > 1 ? 55 : 0);
-    const rotateY = -diff * angle;
-    const scale = Math.max(0.72, 1 - absDiff * 0.12);
-    const opacity = absDiff > 2 ? 0 : Math.max(0, 1 - absDiff * 0.28);
-    const zIndex = 30 - absDiff * 10;
-    const pointerEvents = absDiff > 1 ? 'none' : 'auto';
+    const pendingRents = rentRecords.filter((rent) => (
+      Number(rent.shares?.[user.id]) > 0 && !rent.payments?.[user.id]?.paid
+    ));
+    const unseenRents = pendingRents.filter((rent) => !seenRentIdSet.has(rent.id));
+    if (!unseenRents.length) return undefined;
+
+    const nextSeenRentIds = [...seenRentIdSet, ...unseenRents.map((rent) => rent.id)];
+    const timeout = window.setTimeout(() => {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(nextSeenRentIds));
+      } catch (error) {
+        console.warn('Could not save the daily rent reminder state:', error);
+      }
+      setDailyRentReminderRecords(unseenRents);
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [activeTab, rentRecords, user?.id]);
+
+  const confirmLogout = async () => {
+    if (!onLogout || isSigningOut) return;
+    setIsSigningOut(true);
+    try {
+      await onLogout();
+      setShowLogoutConfirmation(false);
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
+
+  const pinnedGroupIds = user?.pinnedGroupIds || [];
+  const archivedGroupIds = user?.archivedGroupIds || [];
+  const mutedGroupIds = user?.mutedGroupIds || [];
+
+  // Scoped notifications for this user
+  const userNotifications = useMemo(
+    () =>
+      notifications.filter(
+        (n) => !n.recipientId || n.recipientId === user?.id
+      ),
+    [notifications, user?.id]
+  );
+  const unreadNotifications = useMemo(
+    () => userNotifications.filter((n) => !n.read && !optimisticallyReadNotificationIds.has(n.id)),
+    [optimisticallyReadNotificationIds, userNotifications]
+  );
+
+  const getUserName = (userId) => {
+    if (userId === user?.id) return 'You';
+    return users.find((u) => u.id === userId)?.username || 'Roommate';
+  };
+
+  const myGroups = useMemo(
+    () => groups.filter((group) => group.members && group.members.includes(user?.id)),
+    [groups, user?.id]
+  );
+  const activeDisputes = useMemo(() => {
+    const groupIds = new Set(myGroups.map((group) => group.id));
+    return expenses
+      .filter((expense) => expense.activeDisputeId && groupIds.has(expense.groupId))
+      .sort((first, second) => (
+        Date.parse(second.activeDisputeCreatedAt || second.createdAt || 0)
+        - Date.parse(first.activeDisputeCreatedAt || first.createdAt || 0)
+      ));
+  }, [expenses, myGroups]);
+  // Unread message & transaction count per space
+  const unreadCountsByGroup = useMemo(() => {
+    const map = {};
+    myGroups.forEach((group) => {
+      let chatCount = 0;
+
+      if (typeof group.unreadCount === 'number') {
+        chatCount = group.unreadCount;
+      } else if (typeof group.unreadMessages === 'number') {
+        chatCount = group.unreadMessages;
+      } else if (
+        group.unreadCount &&
+        typeof group.unreadCount === 'object' &&
+        typeof group.unreadCount[user?.id] === 'number'
+      ) {
+        chatCount = group.unreadCount[user?.id];
+      } else if (
+        group.unreadBy &&
+        typeof group.unreadBy === 'object' &&
+        typeof group.unreadBy[user?.id] === 'number'
+      ) {
+        chatCount = group.unreadBy[user?.id];
+      } else if (Array.isArray(group.messages)) {
+        const lastReadTime =
+          group.lastReadBy?.[user?.id] || user?.lastReadGroupChat?.[group.id] || 0;
+        chatCount = group.messages.filter(
+          (m) =>
+            m.senderId &&
+            m.senderId !== user?.id &&
+            (!m.readBy || !m.readBy.includes(user?.id)) &&
+            (!lastReadTime || new Date(m.createdAt || 0) > new Date(lastReadTime))
+        ).length;
+      }
+
+      const groupUnreadNotifs = notifications.filter(
+        (n) =>
+          !n.read &&
+          n.groupId === group.id &&
+          (!n.recipientId || n.recipientId === user?.id)
+      );
+
+      const chatNotifs = groupUnreadNotifs.filter(
+        (n) =>
+          n.type === 'CHAT_MESSAGE' ||
+          n.type === 'NEW_MESSAGE' ||
+          n.type === 'MESSAGE' ||
+          n.category === 'chat' ||
+          /message|chat|dispute/i.test(n.type || '')
+      ).length;
+
+      const transactionNotifs = groupUnreadNotifs.filter(
+        (n) =>
+          n.type === 'EXPENSE_ADDED' ||
+          n.type === 'BILL_ADDED' ||
+          n.type === 'TRANSACTION' ||
+          n.type === 'SETTLEMENT' ||
+          n.category === 'expense' ||
+          (!/dispute/i.test(n.type || '') &&
+            /expense|bill|transaction|settle/i.test(n.type || ''))
+      ).length;
+
+      const effectiveChatCount = Math.max(chatCount, chatNotifs);
+      map[group.id] = {
+        chat: effectiveChatCount,
+        total: effectiveChatCount + transactionNotifs,
+      };
+    });
+    return map;
+  }, [myGroups, notifications, user?.id, user?.lastReadGroupChat]);
+
+  const unreadMessagesByGroup = useMemo(
+    () => Object.fromEntries(
+      Object.entries(unreadCountsByGroup).map(([groupId, counts]) => [groupId, counts.total])
+    ),
+    [unreadCountsByGroup]
+  );
+  const unreadChatByGroup = useMemo(
+    () => Object.fromEntries(
+      Object.entries(unreadCountsByGroup).map(([groupId, counts]) => [groupId, counts.chat])
+    ),
+    [unreadCountsByGroup]
+  );
+
+  const totalUnreadSpacesCount = useMemo(
+    () => Object.values(unreadMessagesByGroup).reduce((sum, c) => sum + (c || 0), 0),
+    [unreadMessagesByGroup]
+  );
+
+  const handleOpenGroup = (groupId, subTab, expenseDraft = null) => {
+    if (onMarkNotificationsRead) {
+      const groupUnread = notifications.filter(
+        (n) =>
+          !n.read &&
+          n.groupId === groupId &&
+          (!n.recipientId || n.recipientId === user?.id) &&
+          (
+            subTab === 'chat'
+              ? (
+                  n.type === 'CHAT_MESSAGE' ||
+                  n.type === 'NEW_MESSAGE' ||
+                  n.type === 'MESSAGE' ||
+                  n.category === 'chat' ||
+                  (
+                    !n.type?.startsWith('EXPENSE_DISPUTE') &&
+                    /message|chat|dispute/i.test(n.type || '')
+                  )
+                )
+              : !(
+                  n.type === 'CHAT_MESSAGE' ||
+                  n.type === 'NEW_MESSAGE' ||
+                  n.type === 'MESSAGE' ||
+                  n.category === 'chat' ||
+                  /message|chat|dispute/i.test(n.type || '')
+                )
+          )
+      );
+      if (groupUnread.length > 0) {
+        onMarkNotificationsRead(groupUnread.map((n) => n.id));
+      }
+    }
+    onOpenGroup?.(groupId, subTab, unreadChatByGroup[groupId] || 0, expenseDraft);
+  };
+
+  const handleClearAllActivity = async () => {
+    if (!onClearNotifications) return;
+    try {
+      await onClearNotifications(userNotifications.map((notification) => notification.id));
+      showToast?.('All activity notifications cleared');
+    } catch (error) {
+      console.error('Could not clear activity notifications:', error);
+      showToast?.('Could not clear activity. Please try again.', 'error');
+    }
+  };
+
+  const markActivityNotificationsRead = (notificationIds) => {
+    if (!onMarkNotificationsRead || notificationIds.length === 0) return;
+
+    const idsToMark = notificationIds.filter((id) => !optimisticallyReadNotificationIds.has(id));
+    if (!idsToMark.length) return;
+
+    setOptimisticallyReadNotificationIds((previous) => new Set([...previous, ...idsToMark]));
+    Promise.resolve(onMarkNotificationsRead(idsToMark)).catch((error) => {
+      console.error('Could not mark activity notifications as read:', error);
+      setOptimisticallyReadNotificationIds((previous) => (
+        new Set([...previous].filter((id) => !idsToMark.includes(id)))
+      ));
+      showToast?.('Could not update activity notifications. Please try again.', 'error');
+    });
+  };
+
+  const handleActivityToggle = () => {
+    if (isActivityOpen) {
+      setIsActivityOpen(false);
+      return;
+    }
+
+    setIsActivityOpen(true);
+    markActivityNotificationsRead(unreadNotifications.map((notification) => notification.id));
+  };
+
+  const startActivityLongPress = (event, notification) => {
+    if (event.type === 'mousedown' && event.button !== 0) return;
+    if (activityPressTimerRef.current) clearTimeout(activityPressTimerRef.current);
+    activityLongPressRef.current = false;
+    activityPressTimerRef.current = setTimeout(() => {
+      activityLongPressRef.current = true;
+      setActivityContextNotification(notification);
+    }, 450);
+  };
+
+  const stopActivityLongPress = () => {
+    if (activityPressTimerRef.current) {
+      clearTimeout(activityPressTimerRef.current);
+      activityPressTimerRef.current = null;
+    }
+  };
+
+  const toggleActivitySelection = (notificationId) => {
+    setSelectedActivityIds((previous) => {
+      const next = new Set(previous);
+      if (next.has(notificationId)) next.delete(notificationId);
+      else next.add(notificationId);
+      return next;
+    });
+  };
+
+  const confirmActivityDeletion = async () => {
+    if (!activityDeleteIds?.length || !onClearNotifications || isDeletingActivity) return;
+    setIsDeletingActivity(true);
+    try {
+      await onClearNotifications(activityDeleteIds);
+      setSelectedActivityIds((previous) => (
+        new Set([...previous].filter((id) => !activityDeleteIds.includes(id)))
+      ));
+      setActivityDeleteIds(null);
+      showToast?.('Activity deleted');
+    } catch (error) {
+      console.error('Could not delete activity:', error);
+      showToast?.('Could not delete activity. Please try again.', 'error');
+    } finally {
+      setIsDeletingActivity(false);
+    }
+  };
+
+  const groupMetrics = useMemo(() => {
+    const map = {};
+    let totalNetBalance = 0;
+    let totalOwedToYou = 0;
+    let totalYouOwe = 0;
+    const allMySettlements = [];
+    const myUnpaidRents = rentRecords
+      .filter((rent) => (
+        Number(rent.shares?.[user?.id]) > 0 && !rent.payments?.[user?.id]?.paid
+      ))
+      .map((rent) => ({
+        ...rent,
+        groupName: myGroups.find((group) => group.id === rent.groupId)?.name || 'Space',
+      }))
+      .sort((first, second) => second.month.localeCompare(first.month));
+
+    myGroups.forEach((group) => {
+      const grpExpenses = expenses.filter((e) => e.groupId === group.id);
+      const nonSettlements = grpExpenses.filter(
+        (e) => !e.isSettlement && e.category !== 'Settlement'
+      );
+      const roomSpend = nonSettlements.reduce(
+        (sum, e) => sum + (parseFloat(e.totalAmount) || 0),
+        0
+      );
+      const { balances, settlements } = calculateSettlements(grpExpenses, group.members || []);
+      const myNet = balances[user?.id] || 0;
+
+      if (!archivedGroupIds.includes(group.id)) {
+        totalNetBalance += myNet;
+        if (myNet > 0.01) totalOwedToYou += myNet;
+        if (myNet < -0.01) totalYouOwe += Math.abs(myNet);
+      }
+
+      settlements.forEach((s) => {
+        if (s.from === user?.id || s.to === user?.id) {
+          allMySettlements.push({
+            ...s,
+            groupId: group.id,
+            groupName: group.name,
+          });
+        }
+      });
+
+      const latestExpense = grpExpenses
+        .slice()
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0)
+        )[0];
+
+      map[group.id] = {
+        myNet,
+        roomSpend,
+        billCount: nonSettlements.length,
+        latestExpense,
+        settlements,
+        unreadCount: unreadMessagesByGroup[group.id] || 0,
+      };
+    });
 
     return {
-      transform: `translate(-50%, -50%) translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
-      zIndex,
-      opacity,
-      pointerEvents,
+      byGroup: map,
+      totalNetBalance: Math.round(totalNetBalance * 100) / 100,
+      totalOwedToYou: Math.round(totalOwedToYou * 100) / 100,
+      totalYouOwe: Math.round(totalYouOwe * 100) / 100,
+      allMySettlements,
+      myUnpaidRents,
     };
-  };
+  }, [myGroups, expenses, rentRecords, user?.id, archivedGroupIds, unreadMessagesByGroup]);
 
-  useEffect(() => {
-    if (!isStandaloneWebApp) return undefined;
+  const overviewDisputes = activeDisputes.slice(0, 2);
+  const overviewRentPreview = groupMetrics.myUnpaidRents.slice(
+    0,
+    Math.max(0, 2 - overviewDisputes.length)
+  );
+  const overviewSettlementPreview = groupMetrics.allMySettlements.slice(
+    0,
+    Math.max(0, 2 - overviewDisputes.length - overviewRentPreview.length)
+  );
 
-    const statusBarMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-    if (!statusBarMeta) return undefined;
+  const monthlySummary = useMemo(() => {
+    const now = new Date();
+    const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const myGroupIds = new Set(myGroups.map((g) => g.id));
+    const monthExpenses = expenses.filter(
+      (e) =>
+        myGroupIds.has(e.groupId) &&
+        !e.isSettlement &&
+        e.category !== 'Settlement' &&
+        (e.date?.startsWith(monthPrefix) || !e.date)
+    );
 
-    const previousStyle = statusBarMeta.content;
-    statusBarMeta.content = 'black-translucent';
-    return () => {
-      statusBarMeta.content = previousStyle;
+    let myShare = 0;
+    let iPaid = 0;
+    const byCat = {};
+
+    monthExpenses.forEach((e) => {
+      const total = parseFloat(e.totalAmount) || 0;
+      if (e.paidBy === user?.id) iPaid += total;
+      const share = parseFloat(e.splits?.[user?.id]) || 0;
+      if (share > 0) {
+        myShare += share;
+        const cat = e.category || 'Other';
+        byCat[cat] = (byCat[cat] || 0) + share;
+      }
+    });
+
+    const categories = Object.entries(byCat)
+      .map(([name, amount]) => ({
+        name,
+        amount,
+        pct: myShare > 0 ? Math.round((amount / myShare) * 100) : 0,
+      }))
+      .sort((a, b) => b.amount - a.amount);
+
+    return {
+      monthLabel: now.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+      myShare,
+      iPaid,
+      billCount: monthExpenses.length,
+      categories,
     };
-  }, [isStandaloneWebApp]);
+  }, [expenses, myGroups, user?.id]);
 
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    return () =>
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-  }, []);
+  const activeGroups = useMemo(
+    () =>
+      myGroups
+        .filter((group) => !archivedGroupIds.includes(group.id))
+        .sort(
+          (first, second) =>
+            Number(pinnedGroupIds.includes(second.id)) -
+            Number(pinnedGroupIds.includes(first.id))
+        ),
+    [myGroups, archivedGroupIds, pinnedGroupIds]
+  );
 
-  const triggerLogin = () => {
-    if (typeof onLogin === 'function') {
-      onLogin();
-    } else {
-      setPreviewModal('login');
+  const archivedGroups = useMemo(
+    () => myGroups.filter((group) => archivedGroupIds.includes(group.id)),
+    [myGroups, archivedGroupIds]
+  );
+
+  const pinnedGroups = useMemo(
+    () => activeGroups.filter((group) => pinnedGroupIds.includes(group.id)),
+    [activeGroups, pinnedGroupIds]
+  );
+
+  const visibleGroups = useMemo(() => {
+    const base =
+      spaceFilter === 'archived'
+        ? archivedGroups
+        : spaceFilter === 'pinned'
+          ? pinnedGroups
+          : activeGroups;
+    if (!searchQuery.trim()) return base;
+    const q = searchQuery.toLowerCase();
+    return base.filter(
+      (g) =>
+        g.name?.toLowerCase().includes(q) ||
+        g.description?.toLowerCase().includes(q) ||
+        g.inviteCode?.toLowerCase().includes(q)
+    );
+  }, [spaceFilter, archivedGroups, pinnedGroups, activeGroups, searchQuery]);
+
+  const recentTransactions = useMemo(() => {
+    const myGroupIds = new Set(myGroups.map((g) => g.id));
+    let list = expenses
+      .filter((e) => myGroupIds.has(e.groupId))
+      .slice()
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0)
+      );
+
+    if (ledgerFilter === 'mine') {
+      list = list.filter((e) => e.paidBy === user?.id);
+    } else if (ledgerFilter === 'settlements') {
+      list = list.filter((e) => e.isSettlement || e.category === 'Settlement');
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (e) =>
+          e.title?.toLowerCase().includes(q) || e.category?.toLowerCase().includes(q)
+      );
+    }
+
+    return list;
+  }, [expenses, myGroups, ledgerFilter, user?.id, searchQuery]);
+
+  const exportTransactions = useMemo(() => {
+    const myGroupIds = new Set(myGroups.map((group) => group.id));
+    return expenses.filter((expense) => myGroupIds.has(expense.groupId));
+  }, [expenses, myGroups]);
+
+  const updateGroupPreference = async (groupId, preference, enabled) => {
+    const currentIds = user?.[preference] || [];
+    const nextIds = enabled
+      ? [...new Set([...currentIds, groupId])]
+      : currentIds.filter((id) => id !== groupId);
+
+    try {
+      await onUpdateUser(user?.id, { [preference]: nextIds });
+    } catch {
+      showToast?.('Could not update this group. Please try again.', 'error');
     }
   };
 
-  const triggerGetStarted = () => {
-    const handler = onCreateAccount || onGetStarted || onLogin;
-    if (typeof handler === 'function') {
-      handler();
-    } else {
-      setPreviewModal('signup');
+  useEffect(() => {
+    if (activeTab === 'notifications' && unreadNotifications.length) {
+      onMarkNotificationsRead(unreadNotifications.map((notification) => notification.id));
     }
-  };
+  }, [activeTab, unreadNotifications, onMarkNotificationsRead]);
 
   const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      await deferredPrompt.userChoice;
-      setDeferredPrompt(null);
+    if (!deferredPromptAvailable) {
+      setInstallDialogOpen(true);
       return;
     }
-    if (deferredPromptAvailable && typeof onInstallApp === 'function') {
-      await onInstallApp();
-      return;
+    const wasInstalled = await onInstallApp?.();
+    if (wasInstalled) {
+      setInstallDialogOpen(false);
     }
-    if (typeof onDownloadApp === 'function') {
-      onDownloadApp();
-      return;
-    }
-    setPreviewModal('install');
   };
 
-  const scrollToSection = (id) => {
-    setMobileMenuOpen(false);
-    const el = document.getElementById(id);
-    el?.scrollIntoView({ behavior: 'smooth' });
+  const handleTabSwitch = (tab) => {
+    setActiveTab(tab);
+    onTabChange(tab);
   };
 
-  const faqs = [
-    {
-      q: 'Is Sharebills completely free for roommates, flatmates, and trips?',
-      a: 'Yes! Creating unlimited spaces, logging expenses, tracking monthly rent, raising in-chat expense disputes, smart debt simplification, rich group chat, and exporting CSV/PDF statements are 100% free with zero paywalls.',
-    },
-    {
-      q: 'How do Expense Disputes work inside a space?',
-      a: 'Long-press or right-click any bill to raise a dispute with a note (for example, if you were away that weekend). Sharebills posts an interactive Dispute Card directly in the group chat and notifies members. The payer or creator can update the bill amounts/splits, mark it solved, or delete it in one tap.',
-    },
-    {
-      q: 'How is the Monthly Rent Tracker different from regular expenses?',
-      a: 'Every space includes a dedicated Monthly Rent Panel that splits flat rent down to the exact cent across members, tracks individual Paid vs. Unpaid status with timestamps, and sends automatic daily rent reminders until everyone marks their share as paid.',
-    },
-    {
-      q: 'How does the Smart Settlement algorithm and Google Pay / UPI link work?',
-      a: 'Instead of everyone paying everyone back for every Blinkit or Swiggy order, Sharebills calculates each member’s net position and minimizes total transfers. When settling in INR spaces, tapping "Pay via UPI" deep-links straight into Google Pay / UPI with your roommate’s UPI ID and exact amount pre-filled.',
-    },
-    {
-      q: 'How do roommates join a space using the QR Scanner or Invite Code?',
-      a: 'Every space generates a 6-character invite code, a direct join link, and a scannable QR code. Roommates can tap "Join a Space" and use the built-in live camera QR scanner or paste the code to sync instantly.',
-    },
-    {
-      q: 'Can we export transactions to CSV or PDF and use multiple currencies?',
-      a: 'Yes! You can configure spaces in INR (₹), USD ($), EUR (€), GBP (£), CAD (CA$), or AUD (A$). From the Transactions tab, open the Export modal to filter by All, Paid by Me, or Settlements across custom date ranges and download a CSV spreadsheet or printable PDF report.',
-    },
-  ];
+  const handleCopyInvite = (event, group) => {
+    event.stopPropagation();
+    if (!group.inviteCode) return;
+    try {
+      navigator.clipboard?.writeText(group.inviteCode);
+      setCopiedCodeId(group.id);
+      showToast?.(`Invite code ${group.inviteCode} copied`);
+      setTimeout(() => setCopiedCodeId(null), 1800);
+    } catch {
+      showToast?.('Could not copy code', 'error');
+    }
+  };
 
-  const landingFeatures = [
-    {
-      category: 'rent-disputes',
-      icon: AlertTriangle,
-      badge: 'FIRST IN CLASS',
-      color: 'bg-amber-50 text-amber-600 border-amber-200',
-      title: 'In-Chat Expense Disputes',
-      desc: 'Long-press any bill to flag discrepancies. Post interactive dispute cards right in group chat so payers can edit shares or mark it resolved in 1 tap.',
-    },
-    {
-      category: 'rent-disputes',
-      icon: Home,
-      badge: 'AUTOMATED',
-      color: 'bg-[#EEF4EF] text-[#3E7754] border-[#BDD2C1]',
-      title: 'Monthly Flat Rent Tracker',
-      desc: 'A dedicated ledger for monthly flat rent with automated daily reminders and transparent Paid vs. Unpaid badges for all flatmates.',
-    },
-    {
-      category: 'chat-media',
-      icon: MessageSquare,
-      badge: 'UPGRADED',
-      color: 'bg-sky-50 text-sky-600 border-sky-200',
-      title: 'Room Chat with Rich Media',
-      desc: 'Discuss bills with threaded replies, emoji reactions, GIPHY GIFs, stickers, receipt photos, and document previews alongside the ledger.',
-    },
-    {
-      category: 'core-splits',
-      icon: Zap,
-      badge: 'INDIA FIRST',
-      color: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-      title: '1-Tap GPay & UPI Payments',
-      desc: 'Pre-filled UPI links launch Google Pay, PhonePe, or Paytm with the receiver’s UPI ID and exact rupee amount ready for instant settlement.',
-    },
-    {
-      category: 'core-splits',
-      icon: SlidersHorizontal,
-      badge: 'FLEXIBLE',
-      color: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-      title: 'Equal & Custom Splits',
-      desc: 'Split bills equally, exclude roommates who were out of town, or assign exact amounts and shares to individual room members.',
-    },
-    {
-      category: 'global-exports',
-      icon: QrCode,
-      badge: 'INSTANT JOIN',
-      color: 'bg-[#EEF4EF] text-[#356447] border-[#BDD2C1]',
-      title: 'Camera QR Scan & 6-Char Code',
-      desc: 'Onboard flatmates in 2 seconds with the built-in live camera QR scanner, downloadable QR card, or 6-digit space invite code.',
-    },
-    {
-      category: 'global-exports',
-      icon: FileDown,
-      badge: 'AUDIT READY',
-      color: 'bg-purple-50 text-purple-600 border-purple-200',
-      title: 'CSV & Printable PDF Exports',
-      desc: 'Download clean, printable statements or CSV spreadsheets filtered by payer, settlement type, and customizable date windows.',
-    },
-    {
-      category: 'global-exports',
-      icon: Globe,
-      badge: 'MULTI-CURRENCY',
-      color: 'bg-amber-50 text-amber-700 border-amber-200',
-      title: 'Six Global Currencies',
-      desc: 'Configure spaces in INR (₹), USD ($), EUR (€), GBP (£), CAD (CA$), or AUD (A$) for home spaces or international vacations.',
-    },
-    {
-      category: 'core-splits',
-      icon: PieChart,
-      badge: 'ANALYTICS',
-      color: 'bg-[#EEF4EF] text-[#3E7754] border-[#BDD2C1]',
-      title: 'Monthly Spending Breakdown',
-      desc: 'Visual segment bars and category drilldowns comparing what you owe vs. what you paid across rent, food, groceries, and travel.',
-    },
-    {
-      category: 'chat-media',
-      icon: Layers,
-      badge: 'ORGANIZATION',
-      color: 'bg-slate-100 text-slate-700 border-slate-200',
-      title: 'Pin, Mute & Archive Spaces',
-      desc: 'Keep active flats pinned at the top, mute noisy notification chatter, and archive finished trips without losing transaction history.',
-    },
-    {
-      category: 'chat-media',
-      icon: Moon,
-      badge: 'MODERN UI',
-      color: 'bg-slate-900 text-amber-300 border-slate-700',
-      title: 'Liquid Glass & AMOLED Dark',
-      desc: 'Seamlessly switch between an airy frosted liquid glass theme and true pitch-black AMOLED dark mode tailored for OLED mobile screens.',
-    },
-    {
-      category: 'global-exports',
-      icon: Smartphone,
-      badge: 'CROSS-PLATFORM',
-      color: 'bg-rose-50 text-rose-600 border-rose-200',
-      title: 'Installable PWA & Push Alerts',
-      desc: 'Install directly on iOS, Android, and Desktop with background Firebase push notifications and Google One-Tap sign in.',
-    },
-  ];
+  const openQuickExpenseModal = (defaultGroupId = '') => {
+    const targetId = defaultGroupId || activeGroups[0]?.id || myGroups[0]?.id || '';
+    if (!targetId) {
+      onCreateGroup();
+      return;
+    }
+    setQuickGroupId(targetId);
+    setQuickTitle('');
+    setQuickAmount('');
+    setQuickCategory('Food');
+    setQuickMethod('UPI');
+    setQuickExpenseOpen(true);
+  };
 
-  const filteredFeatures =
-    featureCategory === 'all'
-      ? landingFeatures
-      : landingFeatures.filter((f) => f.category === featureCategory);
+  const handleSaveQuickExpense = async (event) => {
+    event.preventDefault();
+    const targetGroup = myGroups.find((g) => g.id === quickGroupId);
+    const numAmount = parseFloat(quickAmount);
+    if (!targetGroup || !quickTitle.trim() || Number.isNaN(numAmount) || numAmount <= 0) {
+      showToast?.('Enter a valid description and amount.', 'error');
+      return;
+    }
+
+    if (!onSaveExpense) {
+      setQuickExpenseOpen(false);
+      handleOpenGroup(targetGroup.id, 'add');
+      return;
+    }
+
+    setSavingQuick(true);
+    try {
+      const members = targetGroup.members?.length ? targetGroup.members : [user?.id];
+      const share = (numAmount / members.length).toFixed(2);
+      const splits = {};
+      members.forEach((mId) => {
+        splits[mId] = share;
+      });
+
+      const now = new Date();
+      const today = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+        .toISOString()
+        .split('T')[0];
+
+      const newExpense = {
+        id: `exp_${Date.now()}`,
+        groupId: targetGroup.id,
+        title: quickTitle.trim(),
+        totalAmount: numAmount.toFixed(2),
+        paidBy: user?.id,
+        createdBy: user?.id,
+        paymentMethod: quickMethod,
+        category: quickCategory,
+        date: today,
+        splits,
+        createdAt: new Date().toISOString(),
+      };
+
+      await onSaveExpense(newExpense);
+
+      if (onSendNotification) {
+        const others = members.filter((id) => id !== user?.id);
+        const notifs = others.map((memberId) => ({
+          id: `notif_${Date.now()}_${memberId}`,
+          recipientId: memberId,
+          senderId: user?.id,
+          createdBy: user?.id,
+          createdByName: user?.username || 'Roommate',
+          groupId: targetGroup.id,
+          type: 'EXPENSE_ADDED',
+          message: `${user?.username} added "${newExpense.title}" for ${formatCurrency(newExpense.totalAmount, targetGroup.currency)} (Your share: ${formatCurrency(share, targetGroup.currency)}).`,
+          expenseId: newExpense.id,
+          createdAt: new Date().toISOString(),
+          read: false,
+        }));
+        if (notifs.length) onSendNotification(notifs).catch(() => {});
+      }
+
+      showToast?.(`Added "${newExpense.title}" to ${targetGroup.name}`);
+      setQuickExpenseOpen(false);
+    } catch {
+      showToast?.('Could not save expense. Please try again.', 'error');
+    } finally {
+      setSavingQuick(false);
+    }
+  };
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#F3F7F3] font-sans text-slate-900 selection:bg-[#3E7754] selection:text-white">
-      {/* SOFT REFRACTIVE LIQUID GLASS MESH BACKDROP */}
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        <div className="absolute -top-28 -left-28 h-96 w-96 rounded-full bg-[#9AB99F]/30 blur-3xl" />
-        <div className="absolute top-1/4 -right-28 h-96 w-96 rounded-full bg-[#9AB99F]/25 blur-3xl animate-pulse" />
-        <div
-          className="absolute bottom-1/4 left-1/4 h-80 w-80 rounded-full bg-[#BDD2C1]/30 blur-3xl animate-pulse"
-          style={{ animationDelay: '2s' }}
-        />
-        <div className="absolute -bottom-24 right-1/3 h-80 w-80 rounded-full bg-[#BDD2C1]/25 blur-3xl" />
-      </div>
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-white font-sans md:flex-row">
 
-      {/* STICKY LIQUID GLASS NAVBAR */}
-      <header className="sticky top-0 z-50 px-3 pt-3 sm:px-6">
-        <nav className="mx-auto flex max-w-[1340px] items-center justify-between rounded-full border border-white/90 bg-white/80 px-4 py-2.5 shadow-lg shadow-[#233E2F]/5 backdrop-blur-2xl sm:px-6">
-          <a href="#top" className="group flex items-center gap-2.5 text-left focus:outline-none">
+      {/* --- NATIVE MOBILE APP TOP BAR (< md) --- */}
+      <header
+        className={`relative z-30 flex h-14 flex-shrink-0 items-center justify-between gap-2 bg-transparent px-3.5 md:hidden ${
+          ['profile', 'transactions', 'monthly'].includes(activeTab) ? 'hidden' : ''
+        }`}
+      >
+        <button
+          type="button"
+          onClick={() => handleTabSwitch('profile')}
+          aria-label="Open profile"
+          className="flex min-w-0 items-center gap-2 border-0 bg-transparent py-1 text-left shadow-none focus-visible:outline-none"
+        >
+          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/90 bg-white shadow-sm">
             <img
-              src={sharebillsIcon}
-              alt="Sharebills Logo"
-              className="h-10 w-10 rounded-2xl object-cover shadow-md shadow-[#3E7754]/25 transition-transform group-hover:scale-105"
+              src={user?.photoDataUrl || sharebillsIcon}
+              alt=""
+              className="h-full w-full rounded-full object-cover"
             />
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="block text-base font-extrabold leading-none tracking-tight text-slate-900">
-                  Sharebills
-                </span>
-                <span className="rounded-full bg-[#EEF4EF] px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-[#3E7754] border border-[#BDD2C1]">
-                  v2.5
-                </span>
-              </div>
-              <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-widest text-[#3E7754]">
-                Liquid Ledger
+          </span>
+          <div className="min-w-0">
+            <span className="block truncate text-sm font-bold leading-tight text-slate-900">
+              Hi, <span className="font-extrabold text-slate-900">{user?.username || 'there'}</span>
+            </span>
+            <span className="block truncate text-sm font-semibold leading-tight text-blue-600">
+              {new Date().getHours() < 12
+                ? 'Good Morning'
+                : new Date().getHours() < 18
+                  ? 'Good Afternoon'
+                  : 'Good Evening'}
+            </span>
+          </div>
+        </button>
+
+        <div className="flex flex-shrink-0 items-center gap-1.5">
+          <button
+            type="button"
+            onClick={handleActivityToggle}
+            title="Activity notifications"
+            aria-label="Activity notifications"
+            aria-expanded={isActivityOpen}
+            className={`relative flex h-9 w-9 items-center justify-center rounded-full border shadow-sm transition-all active:scale-95 ${
+              isActivityOpen
+                ? 'border-blue-500 bg-blue-50 text-blue-600'
+                : 'border-white/80 bg-white/80 text-slate-600 hover:text-blue-600'
+            }`}
+          >
+            <Bell
+              size={15}
+              className={
+                isActivityOpen
+                  ? 'fill-blue-600/20 text-blue-600'
+                  : unreadNotifications.length > 0
+                    ? 'text-blue-600'
+                    : 'text-slate-600'
+              }
+            />
+            {unreadNotifications.length > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[9px] font-extrabold leading-none text-white shadow-sm">
+                {unreadNotifications.length > 99 ? '99+' : unreadNotifications.length}
               </span>
-            </div>
-          </a>
-
-          <div className="hidden items-center gap-1 lg:flex">
-            {[
-              { label: 'Mobile App', id: 'mobile-showcase' },
-              { label: 'Command Center', id: 'desktop-preview' },
-              { label: 'All Features', id: 'features' },
-              { label: 'Smart Split', id: 'smart-split' },
-              { label: 'How It Works', id: 'how-it-works' },
-              { label: 'FAQ', id: 'faq' },
-            ].map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => scrollToSection(item.id)}
-                className="rounded-full px-3.5 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-[#EEF4EF]/80 hover:text-[#3E7754]"
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="hidden items-center gap-2 sm:flex">
-            {!isAppInstalled && (
-              <button
-                type="button"
-                onClick={handleInstallClick}
-                className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#BDD2C1]/80 bg-[#EEF4EF]/70 px-3.5 text-xs font-bold text-[#356447] transition-all hover:-translate-y-0.5 hover:bg-[#DDE9DF]/80 active:scale-95"
-              >
-                <Download size={13} />
-                <span>Install App</span>
-              </button>
             )}
-            <button
-              type="button"
-              onClick={triggerLogin}
-              className="inline-flex h-9 items-center rounded-full border border-slate-200/90 bg-white/90 px-4 text-xs font-bold text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#9AB99F] hover:text-[#3E7754] active:scale-95"
-            >
-              Log in
-            </button>
-            <button
-              type="button"
-              onClick={triggerGetStarted}
-              className="inline-flex h-9 items-center gap-1.5 rounded-full bg-gradient-to-b from-[#3E7754] to-[#2C503A] px-4 text-xs font-bold text-white shadow-md shadow-[#3E7754]/25 transition-all hover:-translate-y-0.5 hover:from-[#588362] hover:to-[#3E7754] hover:shadow-lg active:scale-95"
-            >
-              <span>Get Started</span>
-              <ArrowRight size={13} />
-            </button>
-          </div>
+          </button>
+        </div>
+      </header>
 
-          <div className="flex items-center gap-2 sm:hidden">
-            <button
-              type="button"
-              onClick={triggerLogin}
-              className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm"
+      {/* --- MAIN CONTENT AREA --- */}
+      <main className="relative z-10 min-w-0 flex-1 overscroll-y-contain overflow-y-auto pb-24 scrollbar-hide md:order-2 md:pb-8">
+        {(activeTab === 'groups' || activeTab === 'spaces' || activeTab === 'transactions') && (
+          <div
+            className={`mx-auto max-w-[1360px] p-3.5 sm:p-5 md:px-6 md:pb-6 lg:px-8 lg:pb-8 ${
+              activeTab === 'spaces' || activeTab === 'transactions'
+                ? 'md:pt-0 lg:pt-0'
+                : 'md:pt-6 lg:pt-8'
+            }`}
+          >
+            {/* ===================================================================== */}
+            {/* NATIVE MOBILE APP DASHBOARD (< md)                                    */}
+            {/* ===================================================================== */}
+            <div
+              className={`space-y-4 md:hidden ${
+                activeTab !== 'groups' ? 'hidden' : ''
+              }`}
             >
-              Log in
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen((prev) => !prev)}
-              aria-label="Toggle Menu"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/90 bg-white/90 text-slate-700 shadow-sm"
-            >
-              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
-            </button>
-          </div>
-        </nav>
+              {/* 1. Native Wallet Hero Card */}
+              <div className="relative overflow-hidden rounded-[26px] border border-slate-200/80 bg-white p-4 text-slate-900 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.16)]">
+                <div className="relative z-10 flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                      Net Position
+                    </span>
+                    <div className="mt-0.5 flex items-baseline gap-2">
+                      <span className="font-mono text-2xl font-extrabold tracking-tight text-slate-900">
+                        {groupMetrics.totalNetBalance > 0.01
+                          ? `+₹${groupMetrics.totalNetBalance.toFixed(0)}`
+                          : groupMetrics.totalNetBalance < -0.01
+                            ? `-₹${Math.abs(groupMetrics.totalNetBalance).toFixed(0)}`
+                            : '₹0'}
+                      </span>
+                      <span className="rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                        {groupMetrics.totalNetBalance > 0.01
+                          ? 'To receive'
+                          : groupMetrics.totalNetBalance < -0.01
+                            ? 'To pay'
+                            : 'Settled'}
+                      </span>
+                    </div>
+                  </div>
 
-        {mobileMenuOpen && (
-          <div className="mx-auto mt-2 max-w-[1340px] rounded-3xl border border-white/90 bg-white/95 p-4 shadow-2xl backdrop-blur-2xl lg:hidden">
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { label: 'Mobile App', id: 'mobile-showcase' },
-                { label: 'Command Center', id: 'desktop-preview' },
-                { label: 'All Features', id: 'features' },
-                { label: 'Smart Split', id: 'smart-split' },
-                { label: 'How It Works', id: 'how-it-works' },
-                { label: 'FAQ', id: 'faq' },
-              ].map((item) => (
+                  <button
+                    type="button"
+                    onClick={() => openQuickExpenseModal()}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-2xl border border-blue-700 bg-blue-700 px-3 text-xs font-bold text-white active:scale-95 transition-transform shadow-sm"
+                  >
+                    <Plus size={14} strokeWidth={2.5} />
+                    <span>Add Bill</span>
+                  </button>
+                </div>
+
+                {/* Inner Frosted Glass Pill Strip */}
+                <div className="relative z-10 mt-3 grid grid-cols-3 divide-x divide-slate-200 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-2 text-center">
+                  <div>
+                    <p className="text-xs font-medium text-slate-500">To Receive</p>
+                    <p className="mt-0.5 font-mono text-xs font-extrabold text-emerald-700">
+                      +₹{groupMetrics.totalOwedToYou.toFixed(0)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-slate-500">To Pay</p>
+                    <p className="mt-0.5 font-mono text-xs font-extrabold text-rose-700">
+                      -₹{groupMetrics.totalYouOwe.toFixed(0)}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleTabSwitch('monthly')}
+                    className="text-center"
+                  >
+                    <p className="text-xs font-medium text-slate-500">
+                      {monthlySummary.monthLabel.split(' ')[0]} Share
+                    </p>
+                    <p className="mt-0.5 font-mono text-xs font-extrabold text-slate-900">
+                      ₹{monthlySummary.myShare.toFixed(0)}
+                    </p>
+                  </button>
+                </div>
+              </div>
+
+              {/* 2. Native iOS Segmented Glass Control with Active / Archived Toggle */}
+              <div className="liquid-glass grid grid-cols-3 gap-1 rounded-2xl p-1">
                 <button
-                  key={item.id}
                   type="button"
-                  onClick={() => scrollToSection(item.id)}
-                  className="rounded-2xl bg-slate-100/80 px-3.5 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-[#EEF4EF] hover:text-[#3E7754]"
+                  onClick={() => {
+                    setSpaceFilter('active');
+                    setMobileSection('spaces');
+                  }}
+                  aria-pressed={mobileSection === 'spaces' && spaceFilter === 'active'}
+                  className={`flex h-8 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-xs font-semibold transition-all duration-200 ${
+                    mobileSection === 'spaces' && spaceFilter === 'active'
+                      ? 'bg-gradient-to-b from-blue-600 to-blue-600 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
                 >
-                  {item.label}
+                  <span className="truncate">Active</span>
+                  <span>({activeGroups.length})</span>
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSpaceFilter('archived');
+                    setMobileSection('spaces');
+                  }}
+                  aria-pressed={mobileSection === 'spaces' && spaceFilter === 'archived'}
+                  className={`flex h-8 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-xs font-semibold transition-all duration-200 ${
+                    mobileSection === 'spaces' && spaceFilter === 'archived'
+                      ? 'bg-gradient-to-b from-blue-600 to-blue-600 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <span className="truncate">Archived</span>
+                  <span>({archivedGroups.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMobileSection('dues')}
+                  aria-pressed={mobileSection === 'dues'}
+                  className={`flex h-8 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-xs font-semibold transition-all duration-200 ${
+                    mobileSection === 'dues'
+                      ? 'bg-gradient-to-b from-blue-600 to-blue-600 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <span className="truncate">Dues</span>
+                  <span>({groupMetrics.allMySettlements.length + groupMetrics.myUnpaidRents.length})</span>
+                </button>
+              </div>
+
+              {/* 3A. Mobile Section: Spaces */}
+              {mobileSection === 'spaces' && (
+                <div className="flex flex-col gap-3.5">
+                  {spaceFilter === 'active' && activeDisputes.length > 0 && (
+                    <ActiveDisputesPanel
+                      disputes={activeDisputes}
+                      groups={myGroups}
+                      onOpenDispute={(expense) => handleOpenGroup(expense.groupId, 'chat')}
+                      carousel
+                    />
+                  )}
+                  {visibleGroups.length === 0 ? (
+                    <div className="liquid-glass rounded-2xl px-4 py-7 text-center">
+                      <p className="text-sm font-bold text-slate-800">
+                        {spaceFilter === 'archived' ? 'No archived spaces' : 'No spaces yet'}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {spaceFilter === 'archived'
+                          ? 'Archive spaces anytime to organize your dashboard.'
+                          : 'Create a new shared room or join an existing flat with a code.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-3.5">
+                      {visibleGroups.map((group) => {
+                        const metrics = groupMetrics.byGroup[group.id] || {
+                          myNet: 0,
+                          roomSpend: 0,
+                          unreadCount: 0,
+                        };
+                        const unreadCount = unreadMessagesByGroup[group.id] || 0;
+                        const isPinned = pinnedGroupIds.includes(group.id);
+                        const isMuted = mutedGroupIds.includes(group.id);
+                        const isArchived = archivedGroupIds.includes(group.id);
+
+                        return (
+                          <div key={group.id} className="block">
+                            <SpaceLongPressActions
+                              groupName={group.name}
+                              isPinned={isPinned}
+                              isArchived={isArchived}
+                              onTogglePin={() => updateGroupPreference(group.id, 'pinnedGroupIds', !isPinned)}
+                              onToggleArchive={() => {
+                                updateGroupPreference(group.id, 'archivedGroupIds', !isArchived);
+                                showToast?.(isArchived ? `Restored "${group.name}"` : `Archived "${group.name}"`);
+                              }}
+                            >
+                              <div
+                                onClick={() => handleOpenGroup(group.id)}
+                                className="liquid-glass-interactive flex items-center justify-between gap-2.5 rounded-2xl px-3.5 py-3 cursor-pointer shadow-sm"
+                              >
+                                <div className="flex min-w-0 items-center gap-3">
+                                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-blue-600 to-blue-600 text-xs font-bold text-white shadow-sm">
+                                    {group.imageDataUrl ? (
+                                      <img
+                                        src={group.imageDataUrl}
+                                        alt=""
+                                        className="h-full w-full object-cover"
+                                      />
+                                    ) : (
+                                      group.name.charAt(0).toUpperCase()
+                                    )}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-1.5">
+                                      <h3 className="truncate text-sm font-semibold text-slate-900">
+                                        {group.name}
+                                      </h3>
+                                      {isPinned && (
+                                        <Pin size={11} aria-label="Pinned" title="Pinned" className="flex-shrink-0 text-blue-600" />
+                                      )}
+                                      {groupMetrics.myUnpaidRents.some((rent) => rent.groupId === group.id) && (
+                                        <button
+                                          type="button"
+                                          title="Rent is due · Open rent details"
+                                          aria-label={`Rent is due in ${group.name}. Open rent details.`}
+                                          onClick={(event) => {
+                                            event.stopPropagation();
+                                            handleOpenGroup(group.id, 'members');
+                                          }}
+                                          className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 transition-colors hover:bg-amber-200"
+                                        >
+                                          <CircleDollarSign size={15} />
+                                        </button>
+                                      )}
+                                      {isMuted && (
+                                        <BellOff size={10} className="flex-shrink-0 text-amber-500" />
+                                      )}
+                                      {isArchived && (
+                                        <span className="rounded bg-slate-200 px-1 py-0.2 text-[9px] font-bold text-slate-600">
+                                          Archived
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                                      <span>{group.members.length} members</span>
+                                      <span>·</span>
+                                      <span>{formatCurrency(metrics.roomSpend, group.currency, 0)}</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex flex-shrink-0 items-center gap-1.5">
+                                  {unreadCount > 0 && !isArchived && (
+                                    <span className="flex h-5 min-w-[18px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-extrabold text-white leading-none">
+                                      {unreadCount > 99 ? '99+' : unreadCount}
+                                    </span>
+                                  )}
+
+                                  <span
+                                    className={`rounded-xl px-2 py-0.5 font-mono text-[11px] font-semibold border ${
+                                      metrics.myNet > 0.01
+                                        ? 'bg-emerald-50/90 text-emerald-700 border-emerald-200/80'
+                                        : metrics.myNet < -0.01
+                                          ? 'bg-rose-50/90 text-rose-600 border-rose-200/80'
+                                          : 'bg-slate-100/80 text-slate-600 border-slate-200/60'
+                                    }`}
+                                  >
+                                    {metrics.myNet > 0.01
+                                      ? `+${formatCurrency(metrics.myNet, group.currency, 0)}`
+                                      : metrics.myNet < -0.01
+                                        ? `-${formatCurrency(Math.abs(metrics.myNet), group.currency, 0)}`
+                                        : 'Settled'}
+                                  </span>
+                                </div>
+                              </div>
+                            </SpaceLongPressActions>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 3B. Mobile Section: Dues */}
+              {mobileSection === 'dues' && (
+                <div className="flex flex-col gap-3">
+                  {groupMetrics.allMySettlements.length === 0 && groupMetrics.myUnpaidRents.length === 0 ? (
+                    <div className="liquid-glass rounded-2xl px-4 py-8 text-center">
+                      <CheckCircle2 size={24} className="mx-auto mb-1.5 text-emerald-600" />
+                      <p className="text-xs font-bold text-slate-900">All balances settled</p>
+                      <p className="mt-0.5 text-[11px] text-slate-500">
+                        No pending rent or dues across any of your spaces.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                    {groupMetrics.myUnpaidRents.slice(0, 5).map((rent) => (
+                      <div
+                        key={`mobile-rent-${rent.id}`}
+                        onClick={() => handleOpenGroup(rent.groupId, 'members')}
+                        className="liquid-glass-interactive flex cursor-pointer items-center justify-between gap-3 rounded-2xl p-3"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-bold text-slate-900">
+                            {rent.groupName} · {new Date(`${rent.month}-01T00:00:00`).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} rent
+                          </p>
+                          <p className="truncate text-[11px] text-slate-500">Unpaid rent share</p>
+                        </div>
+                        <span className="flex-shrink-0 font-mono text-xs font-extrabold text-amber-700">
+                          {formatCurrency(rent.shares?.[user?.id], rent.currency)}
+                        </span>
+                      </div>
+                    ))}
+                    {groupMetrics.allMySettlements.slice(0, 5).map((item, idx) => {
+                      const iOwe = item.from === user?.id;
+                      const otherName = getUserName(iOwe ? item.to : item.from);
+                      return (
+                        <div
+                          key={`${item.groupId}-${idx}`}
+                          onClick={() => handleOpenGroup(item.groupId, 'balances')}
+                          className="liquid-glass-interactive flex items-center justify-between gap-3 rounded-2xl p-3 cursor-pointer"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-bold text-slate-900">
+                              {iOwe ? `To pay ${otherName}` : `To receive from ${otherName}`}
+                            </p>
+                            <p className="truncate text-[11px] text-slate-500">{item.groupName}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`font-mono text-xs font-extrabold ${
+                                iOwe ? 'text-rose-600' : 'text-emerald-600'
+                              }`}
+                            >
+                              {iOwe ? '-' : '+'}{formatCurrency(
+                                item.amount,
+                                myGroups.find((group) => group.id === item.groupId)?.currency,
+                                0
+                              )}
+                            </span>
+                            <span className="rounded-xl bg-gradient-to-b from-blue-600 to-blue-600 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+                              Settle
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    </>
+                  )}
+                </div>
+              )}
+
             </div>
-            <div className="mt-3 flex flex-col gap-2 border-t border-slate-200/70 pt-3">
-              <button
-                type="button"
-                onClick={handleInstallClick}
-                className="flex h-10 w-full items-center justify-center gap-2 rounded-2xl border border-[#BDD2C1] bg-[#EEF4EF] text-xs font-bold text-[#356447]"
+
+            {/* Mobile View: Render Transactions Tab */}
+            {activeTab === 'transactions' && (
+              <div className="md:hidden">
+                <TransactionsTab
+                  transactions={recentTransactions}
+                  groups={myGroups}
+                  user={user}
+                  users={users}
+                  getUserName={getUserName}
+                  onOpenGroup={handleOpenGroup}
+                  ledgerFilter={ledgerFilter}
+                  onLedgerFilterChange={setLedgerFilter}
+                  onOpenExport={() => setTransactionExportOpen(true)}
+                  onDeleteExpense={onDeleteExpense}
+                  onRaiseExpenseDispute={onRaiseExpenseDispute}
+                  onCancelExpenseDispute={onCancelExpenseDispute}
+                  showToast={showToast}
+                />
+              </div>
+            )}
+
+            {/* Mobile View: Render Spaces Tab */}
+            {activeTab === 'spaces' && (
+              <div className="md:hidden">
+                <DesktopSpacesTab
+                  groups={visibleGroups}
+                  activeCount={activeGroups.length}
+                  pinnedCount={pinnedGroups.length}
+                  archivedCount={archivedGroups.length}
+                  spaceFilter={spaceFilter}
+                  onSpaceFilterChange={setSpaceFilter}
+                  groupMetrics={groupMetrics}
+                  rentRecords={rentRecords}
+                  unreadMessagesByGroup={unreadMessagesByGroup}
+                  unreadChatByGroup={unreadChatByGroup}
+                  users={users}
+                  user={user}
+                  pinnedGroupIds={pinnedGroupIds}
+                  archivedGroupIds={archivedGroupIds}
+                  mutedGroupIds={mutedGroupIds}
+                  onOpenGroup={handleOpenGroup}
+                  onUpdateGroupPreference={updateGroupPreference}
+                  onQuickAdd={openQuickExpenseModal}
+                  onCopyInvite={handleCopyInvite}
+                  copiedCodeId={copiedCodeId}
+                />
+              </div>
+            )}
+
+            {/* ===================================================================== */}
+            {/* DESKTOP LIQUID GLASS COMMAND CENTER (md+)                             */}
+            {/* ===================================================================== */}
+            <div className="hidden md:block space-y-6">
+              {/* 1. Desktop Top Command Bar with Activity on Top Right */}
+              <div
+                className={`liquid-glass relative flex flex-col gap-3 rounded-3xl p-4 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between lg:px-5 ${
+                  isNewMenuOpen ? 'z-[60]' : 'z-10'
+                } ${
+                  activeTab === 'groups' ? '' : 'hidden'
+                }`}
               >
-                <Download size={14} />
-                <span>Download / Install App</span>
-              </button>
-              <div className="grid grid-cols-2 gap-2">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-blue-600">
+                    <span>
+                      {new Date().toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </span>
+                  </div>
+                  <h1 className="mt-0.5 truncate text-xl font-extrabold tracking-tight text-slate-900 xl:text-2xl">
+                    {new Date().getHours() < 12
+                      ? 'Good Morning'
+                      : new Date().getHours() < 18
+                        ? 'Good Afternoon'
+                        : 'Good Evening'}
+                    {user?.username ? `, ${user.username}` : ''}
+                  </h1>
+                </div>
+
+                <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-2 lg:w-full xl:w-auto xl:flex-nowrap">
+                  <div className="group relative w-56 min-w-[12rem] flex-1">
+                    <span className="pointer-events-none absolute left-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 transition-colors group-focus-within:bg-emerald-100">
+                      <Search size={14} strokeWidth={2.25} />
+                    </span>
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search spaces..."
+                      aria-label="Search spaces"
+                      className="relative z-0 h-10 w-full rounded-full border border-emerald-700/70 bg-white/70 pl-11 pr-9 text-xs font-semibold text-slate-800 shadow-[0_4px_16px_rgba(15,23,42,0.06)] backdrop-blur-xl transition-all placeholder:text-slate-400 hover:border-emerald-700 hover:bg-white/90 focus:border-emerald-700 focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-700/10"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery('')}
+                        aria-label="Clear search"
+                        className="absolute right-2 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-800"
+                      >
+                        <X size={12} strokeWidth={2.5} />
+                      </button>
+                    )}
+                  </div>
+
+                  {myGroups.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => openQuickExpenseModal()}
+                      className="inline-flex h-10 w-40 flex-shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 px-3 text-xs font-bold leading-none text-white shadow-sm shadow-emerald-600/20 transition-all hover:from-emerald-500 hover:to-emerald-700 active:scale-95"
+                    >
+                      <Receipt size={15} strokeWidth={2.25} />
+                      <span>Quick Expense</span>
+                    </button>
+                  )}
+
+                  {(onJoinGroup || onCreateGroup) && (
+                    <div className="relative flex-shrink-0" ref={newMenuRef}>
+                      <button
+                        type="button"
+                        onClick={() => setIsNewMenuOpen((open) => !open)}
+                        aria-haspopup="menu"
+                        aria-expanded={isNewMenuOpen}
+                        aria-controls="overview-new-menu"
+                        className={`inline-flex h-10 items-center gap-2 rounded-xl px-3.5 text-xs font-bold text-white shadow-sm shadow-blue-600/25 transition-colors active:scale-95 ${
+                          isNewMenuOpen ? 'bg-blue-800' : 'bg-blue-700 hover:bg-blue-800'
+                        }`}
+                      >
+                        <Plus size={15} strokeWidth={2.5} />
+                        <span>New</span>
+                        <ChevronDown
+                          size={14}
+                          className={`transition-transform ${isNewMenuOpen ? 'rotate-180' : ''}`}
+                        />
+                      </button>
+
+                      {isNewMenuOpen && (
+                        <div
+                          id="overview-new-menu"
+                          role="menu"
+                          aria-label="Create or join a space"
+                          className="absolute right-0 top-full z-[70] mt-2 w-56 origin-top-right rounded-2xl border border-white/80 bg-white/90 p-1.5 shadow-[0_16px_40px_rgba(15,23,42,0.18)] ring-1 ring-slate-900/5 backdrop-blur-2xl"
+                        >
+                          {onCreateGroup && (
+                            <button
+                              type="button"
+                              role="menuitem"
+                              onClick={() => {
+                                setIsNewMenuOpen(false);
+                                onCreateGroup();
+                              }}
+                              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-blue-50 hover:text-blue-700 focus-visible:bg-blue-50 focus-visible:outline-none"
+                            >
+                              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100/80 text-blue-600">
+                                <Plus size={16} strokeWidth={2.5} />
+                              </span>
+                              <span>
+                                <span className="block">Create a space</span>
+                                <span className="mt-0.5 block text-[11px] font-medium text-slate-500">Start tracking expenses</span>
+                              </span>
+                            </button>
+                          )}
+                          {onJoinGroup && (
+                            <button
+                              type="button"
+                              role="menuitem"
+                              onClick={() => {
+                                setIsNewMenuOpen(false);
+                                onJoinGroup();
+                              }}
+                              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-blue-50 hover:text-blue-700 focus-visible:bg-blue-50 focus-visible:outline-none"
+                            >
+                              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                                <UserPlus size={16} />
+                              </span>
+                              <span>
+                                <span className="block">Join with code</span>
+                                <span className="mt-0.5 block text-[11px] font-medium text-slate-500">Enter an invite code</span>
+                              </span>
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Desktop Top-Right Activity Popover Button */}
+                  <button
+                    type="button"
+                    onClick={handleActivityToggle}
+                    title="Activity & Notifications"
+                    aria-label="Activity & Notifications"
+                    className={`relative inline-flex h-9 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border px-3 text-xs font-semibold shadow-sm transition-all active:scale-95 ${
+                      isActivityOpen
+                        ? 'border-blue-400 bg-blue-50 text-blue-600'
+                        : 'border-slate-200/90 bg-white/90 text-slate-700 hover:bg-white hover:text-blue-600'
+                    }`}
+                  >
+                    <Bell
+                      size={14}
+                      className={
+                        isActivityOpen
+                          ? 'fill-blue-600/20 text-blue-600'
+                          : unreadNotifications.length > 0
+                            ? 'text-blue-600'
+                            : 'text-slate-500'
+                      }
+                    />
+                    <span>Activity</span>
+                    {unreadNotifications.length > 0 && (
+                      <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[9px] font-extrabold text-white leading-none shadow-sm">
+                        {unreadNotifications.length > 99 ? '99+' : unreadNotifications.length}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* 2. Desktop 4-Card Liquid Glass KPI Strip with Compressed Category Breakdown in Card 2 */}
+              <div
+                className={`grid grid-cols-2 gap-4 lg:grid-cols-4 ${
+                  activeTab === 'groups' ? '' : 'hidden'
+                }`}
+              >
+                <div className="liquid-glass rounded-3xl p-5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-500">Net Position</span>
+                    <span
+                      className={`inline-flex h-8 w-8 items-center justify-center rounded-xl ${
+                        groupMetrics.totalNetBalance >= 0
+                          ? 'bg-emerald-50 text-emerald-600 border border-emerald-200/60'
+                          : 'bg-rose-50 text-rose-600 border border-rose-200/60'
+                      }`}
+                    >
+                      {groupMetrics.totalNetBalance >= 0 ? (
+                        <ArrowDownLeft size={16} />
+                      ) : (
+                        <ArrowUpRight size={16} />
+                      )}
+                    </span>
+                  </div>
+                  <p
+                    className={`mt-2 font-mono text-2xl font-extrabold tracking-tight ${
+                      groupMetrics.totalNetBalance > 0.01
+                        ? 'text-emerald-600'
+                        : groupMetrics.totalNetBalance < -0.01
+                          ? 'text-rose-600'
+                          : 'text-slate-900'
+                    }`}
+                  >
+                    {groupMetrics.totalNetBalance > 0.01
+                      ? `+₹${groupMetrics.totalNetBalance.toFixed(2)}`
+                      : groupMetrics.totalNetBalance < -0.01
+                        ? `-₹${Math.abs(groupMetrics.totalNetBalance).toFixed(2)}`
+                        : '₹0.00'}
+                  </p>
+                  <div className="mt-2 flex items-center gap-2 text-[11px] font-semibold text-slate-500">
+                    <span className="text-emerald-600">
+                      +₹{groupMetrics.totalOwedToYou.toFixed(0)} to receive
+                    </span>
+                    <span>·</span>
+                    <span className="text-rose-600">
+                      -₹{groupMetrics.totalYouOwe.toFixed(0)} to pay
+                    </span>
+                  </div>
+                </div>
+
+                {/* Top Compressed Monthly Share Card with Segmented Category Bar */}
+                <div
+                  onClick={() => handleTabSwitch('monthly')}
+                  className="liquid-glass-interactive cursor-pointer rounded-3xl p-5"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-500">
+                      {monthlySummary.monthLabel} Share
+                    </span>
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                      <PieChart size={16} />
+                    </span>
+                  </div>
+                  <p className="mt-2 font-mono text-2xl font-extrabold tracking-tight text-slate-900">
+                    ₹{monthlySummary.myShare.toFixed(2)}
+                  </p>
+
+                  {monthlySummary.categories.length > 0 ? (
+                    <div className="mt-2.5 space-y-1.5">
+                      {/* Compressed Segmented Distribution Bar */}
+                      <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-slate-200/80">
+                        {monthlySummary.categories.slice(0, 4).map((cat, i) => {
+                          const barColors = [
+                            'bg-blue-600',
+                            'bg-blue-500',
+                            'bg-cyan-400',
+                            'bg-amber-400',
+                          ];
+                          return (
+                            <div
+                              key={cat.name}
+                              style={{ width: `${cat.pct}%` }}
+                              title={`${cat.name}: ₹${cat.amount.toFixed(0)} (${cat.pct}%)`}
+                              className={`h-full ${barColors[i % barColors.length]}`}
+                            />
+                          );
+                        })}
+                      </div>
+
+                      {/* Clean Non-Crowded Category Preview & Analytics Link */}
+                      <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500">
+                        <span className="truncate pr-1">
+                          {monthlySummary.categories.slice(0, 2).map((c) => `${c.name} ${c.pct}%`).join(' · ')}
+                        </span>
+                        <span className="flex-shrink-0 text-blue-600 font-bold hover:underline">
+                          Analytics →
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-[11px] font-semibold text-slate-400">
+                      Across {monthlySummary.billCount} bills · Analytics →
+                    </p>
+                  )}
+                </div>
+
                 <button
                   type="button"
-                  onClick={triggerLogin}
-                  className="h-10 rounded-2xl border border-slate-200 bg-white text-xs font-bold text-slate-700"
+                  onClick={() => {
+                    setLedgerFilter('mine');
+                    handleTabSwitch('transactions');
+                  }}
+                  className="liquid-glass-interactive w-full cursor-pointer rounded-3xl p-5 text-left"
                 >
-                  Log in
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-500">You Paid Out</span>
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                      <Wallet size={16} />
+                    </span>
+                  </div>
+                  <p className="mt-2 font-mono text-2xl font-extrabold tracking-tight text-slate-900">
+                    ₹{monthlySummary.iPaid.toFixed(2)}
+                  </p>
+                  <p className="mt-2 text-[11px] font-semibold text-slate-500">
+                    {activeGroups.length} active space{activeGroups.length === 1 ? '' : 's'}
+                  </p>
                 </button>
+
                 <button
                   type="button"
-                  onClick={triggerGetStarted}
-                  className="h-10 rounded-2xl bg-gradient-to-b from-[#3E7754] to-[#2C503A] text-xs font-bold text-white shadow-md shadow-[#3E7754]/20"
+                  onClick={() => handleTabSwitch('dues')}
+                  className="liquid-glass-interactive w-full cursor-pointer rounded-3xl p-5 text-left"
                 >
-                  Get Started
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-500">Pending Rent &amp; Settlements</span>
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+                      <CheckCircle2 size={16} />
+                    </span>
+                  </div>
+                  <p className="mt-2 font-mono text-2xl font-extrabold tracking-tight text-slate-900">
+                    {groupMetrics.myUnpaidRents.length + groupMetrics.allMySettlements.length}
+                  </p>
+                  <p className="mt-2 text-[11px] font-semibold text-slate-500">
+                    {groupMetrics.myUnpaidRents.length} rent share{groupMetrics.myUnpaidRents.length === 1 ? '' : 's'} · {groupMetrics.allMySettlements.length} settlement{groupMetrics.allMySettlements.length === 1 ? '' : 's'}
+                  </p>
                 </button>
+              </div>
+
+              {/* 3. Main 12-Column Desktop Bento Grid */}
+              <div className="grid grid-cols-12 gap-6 items-start">
+                {/* LEFT 8 COLUMNS: Recent Ledger (and Spaces Tab on Desktop) */}
+                <div
+                  className={
+                    activeTab === 'spaces' || activeTab === 'transactions'
+                      ? 'col-span-12'
+                      : 'col-span-12 xl:col-span-8 space-y-6'
+                  }
+                >
+                  {activeTab === 'spaces' && (
+                    <DesktopSpacesTab
+                      groups={visibleGroups}
+                      activeCount={activeGroups.length}
+                      pinnedCount={pinnedGroups.length}
+                      archivedCount={archivedGroups.length}
+                      spaceFilter={spaceFilter}
+                      onSpaceFilterChange={setSpaceFilter}
+                      groupMetrics={groupMetrics}
+                      rentRecords={rentRecords}
+                      unreadMessagesByGroup={unreadMessagesByGroup}
+                      unreadChatByGroup={unreadChatByGroup}
+                      showUnreadIndicators
+                      users={users}
+                      user={user}
+                      pinnedGroupIds={pinnedGroupIds}
+                      archivedGroupIds={archivedGroupIds}
+                      mutedGroupIds={mutedGroupIds}
+                      onOpenGroup={handleOpenGroup}
+                      onUpdateGroupPreference={updateGroupPreference}
+                      onQuickAdd={openQuickExpenseModal}
+                      onCopyInvite={handleCopyInvite}
+                      copiedCodeId={copiedCodeId}
+                    />
+                  )}
+
+                  {/* RECENT TRANSACTIONS LEDGER PANEL */}
+                  <section
+                    className={`rounded-3xl backdrop-blur-md ${
+                      activeTab === 'groups' ? 'liquid-glass p-5' : ''
+                    } ${
+                      activeTab === 'groups' || activeTab === 'transactions' ? '' : 'hidden'
+                    }`}
+                  >
+                    {activeTab !== 'transactions' && <>
+                    <div className={`mb-4 flex flex-wrap items-center justify-between gap-2.5 ${
+                      activeTab === 'transactions' ? '' : 'border-b border-slate-200/60 pb-3.5'
+                    }`}>
+                      {activeTab === 'transactions' ? (
+                        <>
+                          <div className="page-heading flex min-w-0 items-center gap-2.5 rounded-full p-0 pr-4">
+                            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-blue-600 to-blue-600 text-xs font-bold text-white shadow-sm">
+                              {user?.photoDataUrl ? (
+                                <img src={user.photoDataUrl} alt="" className="h-full w-full object-cover" />
+                              ) : (
+                                (user?.username || 'U').charAt(0).toUpperCase()
+                              )}
+                            </span>
+                            <h1 className="truncate text-sm font-extrabold tracking-tight text-slate-900">
+                              Transactions
+                            </h1>
+                          </div>
+                          <div className="flex items-center gap-2">
+                          <div className="page-heading-controls hidden items-center gap-0.5 rounded-full p-1 md:flex">
+                            {[
+                              { id: 'all', label: 'All' },
+                              { id: 'mine', label: 'Paid by Me' },
+                              { id: 'settlements', label: 'Settlements' },
+                            ].map((filter) => (
+                              <button
+                                key={filter.id}
+                                type="button"
+                                onClick={() => setLedgerFilter(filter.id)}
+                                aria-pressed={ledgerFilter === filter.id}
+                                className={`rounded-full px-3 py-2 text-xs font-semibold transition-colors ${
+                                  ledgerFilter === filter.id
+                                    ? 'bg-white text-slate-900 shadow-sm'
+                                    : 'text-slate-600 hover:text-slate-900'
+                                }`}
+                              >
+                                {filter.label}
+                              </button>
+                            ))}
+                          </div>
+                          <label className="page-heading-controls relative flex h-10 flex-shrink-0 items-center gap-2 rounded-full px-3 text-xs font-semibold text-slate-700 md:hidden">
+                            <span className="pointer-events-none">{ledgerFilter === 'mine' ? 'Paid by Me' : ledgerFilter === 'settlements' ? 'Settlements' : 'All'}</span>
+                            <ChevronDown size={14} className="pointer-events-none text-slate-400" />
+                            <select
+                              aria-label="Filter transactions"
+                              value={ledgerFilter}
+                              onChange={(event) => setLedgerFilter(event.target.value)}
+                              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                            >
+                              <option value="all">All</option>
+                              <option value="mine">Paid by Me</option>
+                              <option value="settlements">Settlements</option>
+                            </select>
+                          </label>
+                          <button type="button" onClick={() => setTransactionExportOpen(true)} aria-label="Export transactions" title="Export transactions" className="page-heading-controls flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-blue-600">
+                            <FileDown size={16} />
+                          </button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div>
+                            <h2 className="text-base font-extrabold tracking-tight text-slate-900">
+                              Recent Ledger Activity
+                            </h2>
+                            <p className="text-xs text-slate-500">
+                              Latest bills and settlements across all your rooms
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {activeTab === 'groups' && (
+                              <button
+                                type="button"
+                                onClick={() => handleTabSwitch('transactions')}
+                                className="rounded-xl px-3 py-1.5 text-xs font-semibold text-blue-600 transition-colors hover:bg-blue-50"
+                              >
+                                See all
+                                <span aria-hidden="true"> →</span>
+                              </button>
+                            )}
+                            <div className="flex items-center gap-1 rounded-2xl bg-slate-200/60 p-1">
+                              {[
+                                { id: 'all', label: 'All' },
+                                { id: 'mine', label: 'Paid by Me' },
+                                { id: 'settlements', label: 'Settlements' },
+                              ].map((tab) => (
+                                <button
+                                  key={tab.id}
+                                  type="button"
+                                  onClick={() => setLedgerFilter(tab.id)}
+                                  className={`rounded-xl px-3 py-1 text-xs font-semibold transition-all ${
+                                    ledgerFilter === tab.id
+                                      ? 'bg-white text-blue-600 shadow-sm'
+                                      : 'text-slate-600 hover:text-slate-900'
+                                  }`}
+                                >
+                                  {tab.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {recentTransactions.length === 0 ? (
+                      <div className="py-8 text-center">
+                        <Receipt size={22} className="mx-auto mb-2 text-slate-400" />
+                        <p className="text-sm font-bold text-slate-700">No transactions yet</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {(activeTab === 'groups'
+                          ? recentTransactions.slice(0, 4)
+                          : recentTransactions
+                        ).map((exp) => {
+                          const grp = myGroups.find((g) => g.id === exp.groupId);
+                          const iPaid = exp.paidBy === user?.id;
+                          const myShare = parseFloat(exp.splits?.[user?.id]) || 0;
+                          const total = parseFloat(exp.totalAmount) || 0;
+                          const myImpact = iPaid ? total - myShare : -myShare;
+                          const splitNames = Object.entries(exp.splits || {})
+                            .filter(([, amount]) => parseFloat(amount) > 0)
+                            .map(([memberId]) => (
+                              users.find((member) => member.id === memberId)?.username ||
+                              (memberId === user?.id ? user?.username : getUserName(memberId)) ||
+                              'Roommate'
+                            ));
+
+                          return (
+                            <ExpenseLongPressActions
+                              key={exp.id}
+                              expenseTitle={exp.title}
+                              canDelete={exp.createdBy === user?.id || exp.paidBy === user?.id}
+                              canDispute={Boolean(
+                                grp
+                                && grp.members?.includes(user?.id)
+                                && !exp.isSettlement
+                                && exp.category !== 'Settlement'
+                                && !exp.activeDisputeId
+                              )}
+                              canCancelDispute={Boolean(
+                                exp.activeDisputeId
+                                && (!exp.activeDisputeBy || exp.activeDisputeBy === user?.id)
+                              )}
+                              onDelete={() => onDeleteExpense?.(exp.id)}
+                              onRaiseDispute={(message) => onRaiseExpenseDispute?.(exp, message)}
+                              onCancelDispute={() => onCancelExpenseDispute?.(exp)}
+                              showToast={showToast}
+                            >
+                            <div
+                              onClick={() => handleOpenGroup(exp.groupId, 'expenses')}
+                              className="flex items-center justify-between gap-4 rounded-2xl border border-white/80 bg-white/60 px-3.5 py-3 hover:bg-white/95 transition-all cursor-pointer"
+                            >
+                              <div className="flex min-w-0 items-center gap-3">
+                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                                  <Receipt size={16} />
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <p className="truncate text-sm font-bold text-slate-900">
+                                      {exp.title}
+                                    </p>
+                                    <span className="rounded-lg bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                                      {grp?.name || 'Room'}
+                                    </span>
+                                    {exp.activeDisputeId && (
+                                      <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                                        <AlertTriangle size={11} />
+                                        Dispute open
+                                      </span>
+                                    )}
+                                    {exp.wasEdited && (
+                                      <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700">
+                                        Edited
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="mt-0.5 text-xs text-slate-500">
+                                    <span className="font-semibold text-slate-700">
+                                      {iPaid ? 'You' : getUserName(exp.paidBy)}
+                                    </span>{' '}
+                                    paid {formatCurrency(total, grp?.currency)} via {exp.paymentMethod || 'UPI'} ·{' '}
+                                    {exp.date}
+                                  </p>
+                                  <p className="mt-0.5 max-w-[min(65vw,28rem)] truncate text-[11px] text-slate-500">
+                                    <span className="font-semibold text-slate-600">Split: </span>
+                                    {splitNames.join(', ')}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-shrink-0 items-center gap-3 text-right">
+                                <div>
+                                  <span
+                                    className={`block font-mono text-xs font-extrabold ${
+                                      myImpact > 0.01
+                                        ? 'text-emerald-600'
+                                        : myImpact < -0.01
+                                          ? 'text-rose-600'
+                                          : 'text-slate-500'
+                                    }`}
+                                  >
+                                    {myImpact > 0.01
+                                      ? `+${formatCurrency(myImpact, grp?.currency)}`
+                                      : myImpact < -0.01
+                                        ? `-${formatCurrency(Math.abs(myImpact), grp?.currency)}`
+                                        : formatCurrency(total, grp?.currency)}
+                                  </span>
+                                  <span className="text-[10px] text-slate-400">
+                                    {myImpact > 0.01
+                                      ? 'you lent'
+                                      : myImpact < -0.01
+                                        ? 'your share'
+                                        : 'settled'}
+                                  </span>
+                                </div>
+                                <ChevronRight size={15} className="text-slate-300" />
+                              </div>
+                            </div>
+                            </ExpenseLongPressActions>
+                          );
+                        })}
+                      </div>
+                    )}
+                    </>}
+                    <div className={activeTab === 'transactions' ? 'hidden md:block' : 'hidden'}>
+                      <TransactionsTab
+                        transactions={recentTransactions}
+                        groups={myGroups}
+                        user={user}
+                        users={users}
+                        getUserName={getUserName}
+                        ledgerFilter={ledgerFilter}
+                        onLedgerFilterChange={setLedgerFilter}
+                        onOpenExport={() => setTransactionExportOpen(true)}
+                        onDeleteExpense={onDeleteExpense}
+                        onRaiseExpenseDispute={onRaiseExpenseDispute}
+                        onCancelExpenseDispute={onCancelExpenseDispute}
+                        showToast={showToast}
+                      />
+                    </div>
+                  </section>
+                </div>
+
+                {/* RIGHT 4 COLUMNS: Pinned Spaces + Live Settlements */}
+                <div
+                  className={`col-span-12 xl:col-span-4 space-y-6 ${
+                    activeTab === 'groups' ? '' : 'hidden'
+                  }`}
+                >
+                  {/* PINNED SPACES WIDGET (Desktop Right Column) */}
+                  <section className="liquid-glass rounded-3xl p-5">
+                    <div className="mb-3.5 flex items-center justify-between border-b border-slate-200/60 pb-3">
+                      <div>
+                        <h3 className="text-sm font-extrabold text-slate-900">
+                          Pinned Spaces
+                        </h3>
+                        <p className="text-[11px] text-slate-500">Quick access to your rooms</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {totalUnreadSpacesCount > 0 && (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 border border-rose-200 px-2 py-0.5 text-[10px] font-semibold text-rose-700">
+                            <span className="h-1.5 w-1.5 rounded-full bg-rose-600 animate-pulse" />
+                            {totalUnreadSpacesCount > 99 ? '99+' : totalUnreadSpacesCount} unread
+                          </span>
+                        )}
+                        <span className="rounded-lg bg-blue-50 px-2 py-0.5 font-mono text-xs font-bold text-blue-700">
+                          {pinnedGroups.length}
+                        </span>
+                      </div>
+                    </div>
+
+                    {pinnedGroups.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-slate-300 bg-white/40 px-4 py-8 text-center">
+                        <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                          <Pin size={18} />
+                        </div>
+                        <p className="text-xs font-bold text-slate-800">
+                          No pinned spaces
+                        </p>
+                        <p className="mx-auto mt-1 max-w-[200px] text-[10px] text-slate-500">
+                          Pin spaces from the directory to see them here.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-2.5">
+                        {pinnedGroups.map((group) => {
+                          const unreadCount = unreadMessagesByGroup[group.id] || 0;
+
+                          return (
+                            <div
+                              key={group.id}
+                              onClick={() => handleOpenGroup(group.id)}
+                              className="liquid-glass-interactive group flex items-center justify-between gap-3 rounded-2xl cursor-pointer px-3.5 py-3 shadow-sm"
+                            >
+                              <div className="flex min-w-0 items-center gap-3">
+                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-blue-600 to-blue-600 text-sm font-extrabold text-white shadow-sm">
+                                  {group.imageDataUrl ? (
+                                    <img
+                                      src={group.imageDataUrl}
+                                      alt=""
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    group.name.charAt(0).toUpperCase()
+                                  )}
+                                </div>
+
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <h3 className="truncate text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
+                                      {group.name}
+                                    </h3>
+                                    {unreadCount > 0 && (
+                                      <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[9px] font-extrabold text-white leading-none">
+                                        {unreadCount > 99 ? '99+' : unreadCount} new
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenGroup(group.id, 'chat');
+                                }}
+                                title="Open group chat"
+                                className={`relative flex h-8 w-8 items-center justify-center rounded-xl transition-colors ${
+                                  unreadCount > 0
+                                    ? 'bg-rose-50 text-rose-600'
+                                    : 'text-slate-400 hover:bg-white hover:text-blue-600'
+                                }`}
+                              >
+                                <MessageSquare size={16} />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </section>
+
+                  {/* BALANCES & SETTLEMENTS */}
+                  <section className="liquid-glass rounded-3xl p-5">
+                    <div className="mb-3.5 flex items-center justify-between border-b border-slate-200/60 pb-3">
+                      <div>
+                        <h3 className="text-sm font-extrabold text-slate-900">
+                          Rent & Settlements
+                        </h3>
+                        <p className="text-[11px] text-slate-500">
+                          Smart optimized dues across spaces
+                        </p>
+                      </div>
+                      <span className="rounded-lg bg-blue-50 px-2 py-0.5 font-mono text-xs font-bold text-blue-700">
+                        {groupMetrics.myUnpaidRents.length + groupMetrics.allMySettlements.length + activeDisputes.length}
+                      </span>
+                    </div>
+
+                    <ActiveDisputesPanel
+                      disputes={overviewDisputes}
+                      groups={myGroups}
+                      onOpenDispute={(expense) => handleOpenGroup(expense.groupId, 'chat')}
+                      inline
+                    />
+                    {groupMetrics.myUnpaidRents.length === 0
+                      && groupMetrics.allMySettlements.length === 0
+                      && activeDisputes.length === 0 ? (
+                      <div className="rounded-2xl bg-emerald-50/70 border border-emerald-200/70 p-4 text-center">
+                        <CheckCircle2 size={20} className="mx-auto mb-1 text-emerald-600" />
+                        <p className="text-xs font-bold text-emerald-950">All Settled Up</p>
+                      </div>
+                    ) : overviewRentPreview.length > 0 || overviewSettlementPreview.length > 0 ? (
+                      <div className="space-y-2.5">
+                        {overviewRentPreview.map((rent) => (
+                          <div
+                            key={`rent-${rent.id}`}
+                            onClick={() => handleOpenGroup(rent.groupId, 'members')}
+                            className="desktop-rent-row flex items-center justify-between gap-3 rounded-2xl border border-amber-200/80 bg-amber-50/70 p-3 transition-all hover:bg-amber-50 cursor-pointer shadow-sm"
+                          >
+                            <div className="min-w-0">
+                              <p className="truncate text-xs font-bold text-slate-900">
+                                {rent.groupName} · {new Date(`${rent.month}-01T00:00:00`).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} rent
+                              </p>
+                              <p className="truncate text-[11px] text-slate-500">Unpaid rent share</p>
+                            </div>
+                            <div className="flex flex-shrink-0 items-center gap-2">
+                              <span className="font-mono text-xs font-extrabold text-amber-800">
+                                {formatCurrency(rent.shares?.[user?.id], rent.currency)}
+                              </span>
+                              <span className="rounded-xl bg-amber-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
+                                Rent
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                        {overviewSettlementPreview.map((s, idx) => {
+                          const iOwe = s.from === user?.id;
+                          const counterparty = getUserName(iOwe ? s.to : s.from);
+                          return (
+                            <div
+                              key={`${s.groupId}-${idx}`}
+                              onClick={() => handleOpenGroup(s.groupId, 'balances')}
+                              className="desktop-settlement-row flex items-center justify-between gap-3 rounded-2xl border border-white/90 bg-white/70 p-3 hover:bg-white transition-all cursor-pointer shadow-sm"
+                            >
+                              <div className="min-w-0">
+                                <p className="truncate text-xs font-bold text-slate-900">
+                                  {iOwe ? `To pay ${counterparty}` : `To receive from ${counterparty}`}
+                                </p>
+                                <p className="truncate text-[11px] text-slate-500">
+                                  in {s.groupName}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <span
+                                  className={`font-mono text-xs font-extrabold ${
+                                    iOwe ? 'text-rose-600' : 'text-emerald-600'
+                                  }`}
+                                >
+                                  {iOwe ? '-' : '+'}{formatCurrency(
+                                    s.amount,
+                                    myGroups.find((group) => group.id === s.groupId)?.currency
+                                  )}
+                                </span>
+                                <span className="rounded-xl bg-gradient-to-b from-blue-600 to-blue-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
+                                  Settle
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                    {activeDisputes.length + groupMetrics.myUnpaidRents.length + groupMetrics.allMySettlements.length > 2 && (
+                      <div className="mt-3 border-t border-slate-200/60 pt-2">
+                        <button
+                          type="button"
+                          onClick={() => handleTabSwitch('dues')}
+                          className="overview-dues-more flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-xs font-bold text-blue-600 transition-colors hover:bg-blue-50"
+                        >
+                          <span>View more rent, dues &amp; disputes</span>
+                          <ChevronRight size={14} aria-hidden="true" />
+                        </button>
+                      </div>
+                    )}
+                  </section>
+                </div>
               </div>
             </div>
           </div>
         )}
-      </header>
 
-      {/* =================================================================== */}
-      {/* SECTION 1: HERO + SLIM IPHONE BEZEL WITH VISIBLE DYNAMIC ISLAND      */}
-      {/* =================================================================== */}
-      <section id="top" className="relative z-10 mx-auto max-w-[1340px] px-4 pb-16 pt-8 sm:px-6 md:pb-24 md:pt-12">
-        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12">
-          <div className="text-center lg:col-span-7 lg:text-left">
-            <RevealOnScroll delay={50}>
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/90 bg-white/85 px-3.5 py-1.5 shadow-sm backdrop-blur-md">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#3E7754]">
-                  Shared expenses, made simple
-                </span>
-              </div>
-            </RevealOnScroll>
-
-            <RevealOnScroll delay={150}>
-              <h1 className="mt-5 text-4xl font-extrabold leading-[1.06] tracking-tight text-slate-900 sm:text-5xl xl:text-6xl">
-                Split bills.{' '}
-                <span className="bg-gradient-to-r from-[#3E7754] via-[#2C503A] to-emerald-600 bg-clip-text text-transparent">
-                  Stay in sync.
-                </span>
-              </h1>
-            </RevealOnScroll>
-
-            <RevealOnScroll delay={250}>
-              <p className="mx-auto mt-4 max-w-xl text-sm font-medium leading-relaxed text-slate-600 sm:text-base lg:mx-0">
-                Sharebills is your shared expense command center. Track rent, electricity, Swiggy orders, and weekend trips in real time—complete with in-room chat, instant UPI settlements, and monthly category analytics.
-              </p>
-            </RevealOnScroll>
-
-            <RevealOnScroll delay={320}>
-              <div className="mt-5 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
-                {[
-                  { icon: Receipt, label: 'Split expenses' },
-                  { icon: Home, label: 'Track rent' },
-                  { icon: CheckCircle2, label: 'Settle with ease' },
-                ].map(({ icon: Icon, label }) => (
-                  <span
-                    key={label}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-white/90 bg-white/80 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-xs backdrop-blur-md"
-                  >
-                    <Icon size={13} className="text-[#3E7754]" />
-                    <span>{label}</span>
-                  </span>
-                ))}
-              </div>
-            </RevealOnScroll>
-
-            <RevealOnScroll delay={400}>
-              <div className="mt-7 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
-                <button
-                  type="button"
-                  onClick={triggerLogin}
-                  className="inline-flex h-12 items-center gap-2 rounded-2xl bg-gradient-to-b from-[#3E7754] to-[#2C503A] px-6 text-sm font-extrabold text-white shadow-lg shadow-[#3E7754]/30 transition-all hover:-translate-y-0.5 hover:from-[#588362] hover:to-[#3E7754]"
-                >
-                  <span>Login</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleInstallClick}
-                  className="inline-flex h-12 items-center gap-2 rounded-2xl border border-slate-200/90 bg-white/90 px-5 text-sm font-extrabold text-slate-800 shadow-sm backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:border-[#9AB99F] hover:text-[#3E7754]"
-                >
-                  <Download size={16} className="text-[#3E7754]" />
-                  <span>Download App</span>
-                </button>
-              </div>
-            </RevealOnScroll>
-          </div>
-
-          <div className="flex flex-col items-center justify-center lg:col-span-5">
-            <RevealOnScroll delay={300} className="relative w-full max-w-[370px]">
-              {/* Screen Tab & Theme Switcher Bar */}
-              <div className="mb-3 flex items-center justify-between gap-2 rounded-2xl border border-white/90 bg-white/85 p-1.5 shadow-md backdrop-blur-xl">
-                <div className="flex items-center gap-1">
-                  {[
-                    { id: 'overview', label: 'Overview' },
-                    { id: 'chat', label: 'Dispute Chat' },
-                    { id: 'dues', label: 'Rent & UPI' },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => setHeroPhoneTab(tab.id)}
-                      className={`rounded-xl px-2.5 py-1.5 text-[11px] font-extrabold transition-all ${
-                        heroPhoneTab === tab.id
-                          ? 'bg-[#3E7754] text-white shadow-xs'
-                          : 'text-slate-600 hover:bg-slate-100'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setHeroDarkPreview((prev) => !prev)}
-                  title="Toggle Light / AMOLED Dark Mode Preview"
-                  className={`inline-flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-[11px] font-bold transition-all ${
-                    heroDarkPreview
-                      ? 'border-slate-700 bg-slate-900 text-amber-300'
-                      : 'border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200'
-                  }`}
-                >
-                  {heroDarkPreview ? <Moon size={12} /> : <Sun size={12} />}
-                  <span>{heroDarkPreview ? 'AMOLED' : 'Light'}</span>
-                </button>
-              </div>
-
-              {/* SLIM IPHONE FRAME (Accurate 4px border + Dynamic Island inside Screen) */}
-              <div className="relative mx-auto rounded-[50px] border-[4px] border-slate-800/90 bg-slate-950 p-[6px] shadow-[0_25px_60px_-15px_rgba(20,41,29,0.35)] ring-1 ring-white/20 transition-all duration-300">
-                {/* Screen Viewport */}
-                <div
-                  className={`hero-phone-screen relative flex h-[580px] flex-col gap-2.5 overflow-hidden rounded-[42px] px-3 pb-2.5 pt-2 transition-colors duration-300 ${
-                    heroDarkPreview ? 'bg-black text-white' : 'bg-[#F4F7F3] text-slate-900'
-                  }`}
-                >
-                  {/* Dynamic Island Inside Viewport */}
-                  <div className="relative z-30 mx-auto flex h-[26px] w-[110px] items-center justify-between rounded-full bg-black px-2 shadow-sm ring-1 ring-white/10">
-                    <div className="h-2.5 w-2.5 rounded-full bg-slate-900/80 ring-1 ring-slate-800/60" />
-                    <div className="h-2 w-2 rounded-full bg-[#1c2c22]/90 ring-1 ring-emerald-500/30" />
-                  </div>
-
-                  {/* Header Bar */}
-                  <div className="flex items-center justify-between gap-2 px-1 pt-1">
-                    <div className="flex items-center gap-2">
-                      <img
-                        src={sharebillsIcon}
-                        alt=""
-                        className="h-8 w-8 rounded-full border border-white/80 object-cover shadow-xs"
-                      />
-                      <div>
-                        <span
-                          className={`block text-xs font-extrabold leading-tight ${
-                            heroDarkPreview ? 'text-white' : 'text-slate-900'
-                          }`}
-                        >
-                          Hi, Taranveer
-                        </span>
-                        <span className="block text-[10px] font-bold text-[#3E7754]">
-                          Good Evening
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => setHeroPhoneTab('chat')}
-                        className={`relative flex h-8 w-8 items-center justify-center rounded-full border shadow-xs ${
-                          heroDarkPreview
-                            ? 'border-white/20 bg-zinc-900 text-white'
-                            : 'border-white bg-white text-[#3E7754]'
-                        }`}
-                        aria-label="Notifications"
-                      >
-                        <Bell size={13} />
-                        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[8px] font-extrabold text-white">
-                          4
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {heroPhoneTab === 'overview' && (
-                    <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
-                      <div
-                        className={`rounded-[22px] border p-3.5 shadow-sm ${
-                          heroDarkPreview
-                            ? 'border-white/15 bg-zinc-900/95 text-white'
-                            : 'border-slate-200/80 bg-white text-slate-900'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
-                              Net Position
-                            </span>
-                            <div className="mt-0.5 flex items-baseline gap-1.5">
-                              <span className="font-mono text-xl font-extrabold text-emerald-500">
-                                +₹3,450
-                              </span>
-                              <span className="rounded-full border border-[#BDD2C1] bg-[#EEF4EF] px-2 py-0.5 text-[9px] font-bold text-[#356447]">
-                                To receive
-                              </span>
-                            </div>
-                          </div>
-                          <span className="inline-flex h-8 items-center gap-1 rounded-xl bg-[#3E7754] px-2.5 text-[10px] font-bold text-white shadow-xs">
-                            <Plus size={12} strokeWidth={2.5} /> Add Bill
-                          </span>
-                        </div>
-                        <div
-                          className={`mt-2.5 grid grid-cols-3 divide-x rounded-xl border p-1.5 text-center ${
-                            heroDarkPreview
-                              ? 'divide-white/10 border-white/10 bg-black/50'
-                              : 'divide-slate-200 border-slate-200/80 bg-slate-50/80'
-                          }`}
-                        >
-                          <div>
-                            <p className="text-[9px] text-slate-400">To Receive</p>
-                            <p className="font-mono text-[11px] font-extrabold text-emerald-500">
-                              +₹4,200
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-[9px] text-slate-400">To Pay</p>
-                            <p className="font-mono text-[11px] font-extrabold text-rose-500">
-                              -₹750
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-[9px] text-slate-400">Oct Share</p>
-                            <p className="font-mono text-[11px] font-extrabold">₹8,940</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div
-                        className={`grid grid-cols-3 gap-1 rounded-xl border p-1 text-center text-[10px] font-bold ${
-                          heroDarkPreview
-                            ? 'border-white/15 bg-zinc-900'
-                            : 'border-white/90 bg-white/85'
-                        }`}
-                      >
-                        <div className="rounded-lg bg-[#3E7754] py-1 text-white shadow-xs">
-                          Active (3)
-                        </div>
-                        <div className="py-1 text-slate-400">Archived (2)</div>
-                        <button
-                          type="button"
-                          onClick={() => setHeroPhoneTab('dues')}
-                          className="py-1 text-slate-400 hover:text-[#3E7754]"
-                        >
-                          Dues (3)
-                        </button>
-                      </div>
-
-                      {/* Rotating Mini Dispute (2400ms) */}
-                      <div
-                        className={`overflow-hidden rounded-2xl border ${
-                          heroDarkPreview
-                            ? 'border-amber-500/40 bg-amber-950/30'
-                            : 'border-amber-200 bg-amber-50/90'
-                        }`}
-                      >
-                        <div
-                          className="flex transition-transform duration-500 ease-in-out"
-                          style={{ transform: `translateX(-${activeHeroDisputeIndex * 100}%)` }}
-                        >
-                          {heroPreviewDisputes.map((dispute) => (
-                            <button
-                              key={dispute.title}
-                              type="button"
-                              onClick={() => setHeroPhoneTab('chat')}
-                              className={`flex w-full flex-none items-center justify-between gap-2 px-3 py-2 text-left ${
-                                heroDarkPreview ? 'text-amber-200' : 'text-slate-900'
-                              }`}
-                            >
-                              <div className="flex min-w-0 items-center gap-2">
-                                <AlertTriangle size={13} className="flex-shrink-0 text-amber-600" />
-                                <div className="min-w-0">
-                                  <p className="truncate text-[10px] font-extrabold">
-                                    {dispute.title} · Raised by {dispute.raisedBy}
-                                  </p>
-                                  <p className="truncate text-[9px] text-slate-500">{dispute.space}</p>
-                                </div>
-                              </div>
-                              <span className="flex-none rounded-lg bg-amber-600 px-2 py-0.5 text-[9px] font-bold text-white">
-                                Dispute
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        {[
-                          {
-                            name: 'Flat 402 · Mohali',
-                            members: '4 members · ₹28,400',
-                            net: '+₹2,150',
-                            positive: true,
-                            unread: 2,
-                            pinned: true,
-                          },
-                          {
-                            name: 'Kasol Weekend Trip',
-                            members: '5 members · ₹16,800',
-                            net: '+₹1,300',
-                            positive: true,
-                            unread: 0,
-                            pinned: true,
-                          },
-                          {
-                            name: 'Office Lunch Club',
-                            members: '6 members · ₹4,120',
-                            net: 'Settled',
-                            positive: null,
-                            unread: 1,
-                            pinned: false,
-                          },
-                        ].map((space) => (
-                          <div
-                            key={space.name}
-                            className={`flex items-center justify-between rounded-2xl border px-3 py-2 shadow-xs ${
-                              heroDarkPreview
-                                ? 'border-white/15 bg-zinc-900/90'
-                                : 'border-white/90 bg-white/90'
-                            }`}
-                          >
-                            <div className="flex min-w-0 items-center gap-2.5">
-                              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#3E7754] text-xs font-bold text-white">
-                                {space.name.charAt(0)}
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-1">
-                                  <p className="truncate text-[11px] font-bold">{space.name}</p>
-                                  {space.pinned && <Pin size={9} className="text-[#3E7754]" />}
-                                </div>
-                                <p className="text-[9px] text-slate-400">{space.members}</p>
-                              </div>
-                            </div>
-                            <span
-                              className={`rounded-lg border px-2 py-0.5 font-mono text-[10px] font-bold ${
-                                space.positive === true
-                                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                                  : space.positive === false
-                                  ? 'border-rose-200 bg-rose-50 text-rose-600'
-                                  : 'border-slate-200 bg-slate-100 text-slate-600'
-                              }`}
-                            >
-                              {space.net}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {heroPhoneTab === 'chat' && (
-                    <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
-                      <div
-                        className={`flex items-center justify-between rounded-2xl border px-3 py-2 ${
-                          heroDarkPreview ? 'border-white/15 bg-zinc-900' : 'border-white bg-white'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#3E7754] text-[11px] font-bold text-white">
-                            F
-                          </span>
-                          <div>
-                            <p className="text-[11px] font-extrabold">Flat 402 · Mohali</p>
-                            <p className="text-[9px] font-semibold text-emerald-500">
-                              4 roommates online
-                            </p>
-                          </div>
-                        </div>
-                        <span className="rounded-lg bg-[#EEF4EF] px-2 py-0.5 text-[9px] font-bold text-[#3E7754]">
-                          Live Chat
-                        </span>
-                      </div>
-
-                      <div className="rounded-2xl border border-amber-300 bg-amber-50 p-2.5 text-slate-900 shadow-xs">
-                        <div className="flex items-center justify-between text-[10px] font-extrabold text-amber-900">
-                          <span className="flex items-center gap-1">
-                            <AlertTriangle size={12} /> Expense dispute
-                          </span>
-                          <span className="rounded-full bg-amber-200 px-2 py-0.5 text-[8px] uppercase">
-                            Open
-                          </span>
-                        </div>
-                        <p className="mt-1 text-[11px] font-extrabold">WiFi + Fiber Bill · ₹1,800.00</p>
-                        <p className="mt-1 rounded-lg bg-white/85 px-2 py-1 text-[10px] text-slate-700">
-                          “I was in Delhi for 2 weeks, please adjust my share to ₹250.”
-                        </p>
-                      </div>
-
-                      <div className="ml-auto max-w-[82%] rounded-2xl bg-[#3E7754] p-2.5 text-[10px] text-white shadow-xs">
-                        <div className="flex items-center justify-between gap-2">
-                          <span>Confirmed! Updated the WiFi split too.</span>
-                          <CheckCheck size={12} className="text-emerald-200 flex-shrink-0" />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {heroPhoneTab === 'dues' && (
-                    <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto">
-                      <div
-                        className={`rounded-2xl border p-3 ${
-                          heroDarkPreview
-                            ? 'border-amber-500/40 bg-zinc-900'
-                            : 'border-amber-200 bg-amber-50/70'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="flex items-center gap-1 text-[10px] font-extrabold text-amber-800">
-                            <Home size={12} /> Oct 2026 Flat Rent
-                          </span>
-                          <span className="font-mono text-[10px] font-extrabold text-amber-900">
-                            ₹24,000 total
-                          </span>
-                        </div>
-                        <p className="mt-1 text-[10px] text-slate-600">
-                          Your share: <strong className="font-mono">₹6,000.00</strong> · 3/4 paid
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Bottom Navigation */}
-                  <div
-                    className={`mt-auto grid flex-none grid-cols-5 items-center rounded-[22px] border p-1.5 text-center shadow-md ${
-                      heroDarkPreview
-                        ? 'border-white/15 bg-zinc-900/95'
-                        : 'border-white/90 bg-white/95'
-                    }`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setHeroPhoneTab('overview')}
-                      className={`flex flex-col items-center py-1 text-[9px] font-extrabold ${
-                        heroPhoneTab === 'overview' ? 'text-[#3E7754]' : 'text-slate-400'
-                      }`}
-                    >
-                      <span>Overview</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setHeroPhoneTab('dues')}
-                      className={`flex flex-col items-center py-1 text-[9px] font-semibold ${
-                        heroPhoneTab === 'dues' ? 'text-[#3E7754] font-extrabold' : 'text-slate-400'
-                      }`}
-                    >
-                      <span>Txns</span>
-                    </button>
-                    <div className="flex justify-center">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-2xl bg-gradient-to-b from-emerald-500 to-[#3E7754] text-white shadow-sm">
-                        <Receipt size={14} />
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setHeroPhoneTab('chat')}
-                      className={`flex flex-col items-center py-1 text-[9px] font-semibold ${
-                        heroPhoneTab === 'chat' ? 'text-[#3E7754] font-extrabold' : 'text-slate-400'
-                      }`}
-                    >
-                      <span>Monthly</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setHeroDarkPreview((prev) => !prev)}
-                      className="flex flex-col items-center py-1 text-[9px] font-semibold text-slate-400"
-                    >
-                      <span>Profile</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="mx-auto mt-1 h-1 w-24 rounded-full bg-slate-500/40" />
-              </div>
-            </RevealOnScroll>
-          </div>
-        </div>
-      </section>
-
-      {/* =================================================================== */}
-      {/* SECTION 2: 3D CIRCULAR CAROUSEL (FASTER 2600ms SLIDE SPEED)         */}
-      {/* =================================================================== */}
-      <section
-        id="mobile-showcase"
-        className="relative z-10 mx-auto max-w-[1360px] px-4 py-16 sm:px-6 overflow-hidden"
-      >
-        <RevealOnScroll className="text-center">
-          <span className="rounded-full border border-[#BDD2C1] bg-[#EEF4EF]/80 px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-[#3E7754]">
-            Mobile-First Experience
-          </span>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl md:text-5xl">
-            Designed like a native iOS & Android app
-          </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-sm sm:text-base text-slate-600">
-            Swipe or explore the 3D mobile suite—from in-chat dispute resolution and monthly flat rent tracking
-            to camera QR scanning, GPay deep-links, and audit-ready CSV/PDF statements.
-          </p>
-        </RevealOnScroll>
-
-        {/* 3D PERSPECTIVE CAROUSEL STAGE */}
-        <div
-          className="relative mt-8 sm:mt-12 w-full select-none"
-          onMouseEnter={() => setIsCarouselHovered(true)}
-          onMouseLeave={() => setIsCarouselHovered(false)}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-        >
-          {/* Nav Buttons */}
-          <div className="pointer-events-none absolute inset-x-0 top-1/2 z-40 -translate-y-1/2 flex items-center justify-between px-2 sm:px-6">
-            <button
-              type="button"
-              onClick={handlePrevCarousel}
-              aria-label="Previous Screen"
-              className="pointer-events-auto flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-full border border-white/90 bg-white/85 text-slate-800 shadow-xl backdrop-blur-xl transition-all duration-300 hover:scale-110 hover:bg-white hover:text-[#3E7754] active:scale-95"
-            >
-              <ChevronLeft size={22} />
-            </button>
-            <button
-              type="button"
-              onClick={handleNextCarousel}
-              aria-label="Next Screen"
-              className="pointer-events-auto flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-full border border-white/90 bg-white/85 text-slate-800 shadow-xl backdrop-blur-xl transition-all duration-300 hover:scale-110 hover:bg-white hover:text-[#3E7754] active:scale-95"
-            >
-              <ChevronRight size={22} />
-            </button>
-          </div>
-
-          {/* 3D Preserved Perspective Container */}
-          <div
-            className="relative mx-auto h-[550px] sm:h-[620px] w-full max-w-[1100px]"
-            style={{ perspective: '1300px' }}
-          >
-            <div
-              className="relative h-full w-full"
-              style={{ transformStyle: 'preserve-3d' }}
-            >
-              {mobileSlides.map((slide, index) => {
-                const style = getSlideStyle(index);
-                const isActive = index === activeCarouselIndex;
-                const Icon = slide.icon;
-
-                return (
-                  <div
-                    key={slide.id}
-                    onClick={() => setActiveCarouselIndex(index)}
-                    style={style}
-                    className="absolute left-1/2 top-1/2 w-[280px] sm:w-[310px] cursor-pointer transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]"
-                  >
-                    {/* Floating Screen Header Pill */}
-                    <div
-                      className={`mx-auto mb-2.5 flex w-max items-center gap-1.5 rounded-full border px-3 py-1 shadow-md transition-all duration-500 ${
-                        isActive
-                          ? 'border-[#9AB99F] bg-white text-[#3E7754] scale-105'
-                          : 'border-white/80 bg-white/70 text-slate-600 scale-95'
-                      }`}
-                    >
-                      <Icon size={12} className={isActive ? 'text-[#3E7754]' : 'text-slate-400'} />
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider">
-                        {slide.tag}
-                      </span>
-                    </div>
-
-                    {/* Hardware Bezel & Mockup Glass Shell */}
-                    <div
-                      className={`group relative overflow-hidden rounded-[44px] border-[9px] border-slate-900 bg-[#F3F7F3] p-2.5 transition-all duration-500 ${
-                        isActive
-                          ? 'shadow-[0_25px_60px_-15px_rgba(20,41,29,0.35)] ring-4 ring-[#63B686]/30'
-                          : 'shadow-xl hover:shadow-2xl'
-                      }`}
-                    >
-                      <div className="mx-auto mb-2 h-4 w-20 rounded-full bg-slate-900" />
-
-                      <div className="relative min-h-[420px] sm:min-h-[460px] overflow-hidden rounded-[32px] bg-[#F3F7F3]">
-                        {slide.customImage ? (
-                          <img
-                            src={slide.customImage}
-                            alt={slide.title}
-                            className="h-full w-full object-cover rounded-[32px]"
-                          />
-                        ) : (
-                          slide.renderScreen()
-                        )}
-
-                        <div className="pointer-events-none absolute inset-0 rounded-[32px] bg-gradient-to-tr from-white/0 via-white/5 to-white/30" />
-                      </div>
-
-                      <div className="mx-auto mt-2 h-1 w-24 rounded-full bg-slate-300" />
-
-                      {!isActive && (
-                        <div className="pointer-events-none absolute inset-0 rounded-[35px] bg-slate-900/10 backdrop-blur-[0.5px] transition-opacity duration-500" />
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Active Screen Summary Text */}
-          <div className="mx-auto mt-6 max-w-xl text-center px-4">
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold ${
-                mobileSlides[activeCarouselIndex].badgeColor
-              }`}
-            >
-              <Sparkles size={12} />
-              {mobileSlides[activeCarouselIndex].tag}
-            </span>
-            <h3 className="mt-2 text-xl sm:text-2xl font-extrabold text-slate-900 transition-all">
-              {mobileSlides[activeCarouselIndex].title}
-            </h3>
-            <p className="mt-1 text-xs sm:text-sm text-slate-600 transition-all">
-              {mobileSlides[activeCarouselIndex].desc}
-            </p>
-          </div>
-
-          {/* Navigation Indicator Pills */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2 px-3">
-            {mobileSlides.map((slide, idx) => {
-              const isCurrent = idx === activeCarouselIndex;
-              return (
-                <button
-                  key={slide.id}
-                  type="button"
-                  onClick={() => setActiveCarouselIndex(idx)}
-                  className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition-all duration-300 ${
-                    isCurrent
-                      ? 'bg-gradient-to-b from-[#3E7754] to-[#3E7754] text-white shadow-md shadow-[#3E7754]/25 scale-105'
-                      : 'border border-white/80 bg-white/70 text-slate-600 hover:bg-white hover:text-slate-900'
-                  }`}
-                >
-                  <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      isCurrent ? 'bg-white animate-pulse' : 'bg-slate-300'
-                    }`}
+        {/* ============================== */}
+        {/* OTHER TABS                     */}
+        {/* ============================== */}
+        {activeTab !== 'groups' &&
+          activeTab !== 'spaces' &&
+          activeTab !== 'transactions' && (
+            <div className="h-full">
+              {activeTab === 'dues' && (
+                <div className="hidden md:block">
+                  <RentSettlementsTab
+                    rents={groupMetrics.myUnpaidRents}
+                    settlements={groupMetrics.allMySettlements}
+                    disputes={activeDisputes}
+                    groups={myGroups}
+                    user={user}
+                    getUserName={getUserName}
+                    onOpenGroup={handleOpenGroup}
+                    onOpenDispute={(expense) => handleOpenGroup(expense.groupId, 'chat')}
                   />
-                  <span>{slide.shortTitle}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 3: DESKTOP COMMAND CENTER */}
-      <section id="desktop-preview" className="relative z-10 mx-auto max-w-[1340px] px-4 py-16 sm:px-6">
-        <RevealOnScroll className="flex flex-col items-start justify-between gap-6 lg:flex-row lg:flex-nowrap lg:items-end lg:gap-8">
-          <div>
-            <span className="rounded-full border border-[#BDD2C1] bg-[#EEF4EF] px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-[#3E7754]">
-              Interactive Desktop Command Center
-            </span>
-            <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-              Explore all 5 desktop views live
-            </h2>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-600">
-              Click any tab below to inspect the redesigned widescreen workspace—including the new
-              Rent &amp; Disputes Hub, Monthly Analytics drilldowns, and AMOLED Dark Mode.
-            </p>
-          </div>
-
-          <div className="hidden shrink-0 items-center gap-2 xl:flex">
-            <div className="flex flex-nowrap rounded-2xl border border-white/90 bg-white/85 p-1 shadow-sm backdrop-blur-xl">
-              {[
-                { id: 'command', label: '1. Overview' },
-                { id: 'analytics', label: '2. Monthly Analytics' },
-                { id: 'rent', label: '3. Rent & Disputes' },
-                { id: 'transactions', label: '4. Transactions & Export' },
-                { id: 'spaces', label: '5. Shared Spaces' },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActivePreviewTab(tab.id)}
-                  className={`whitespace-nowrap rounded-xl px-2.5 py-2 text-[11px] font-bold transition-all ${
-                    activePreviewTab === tab.id
-                      ? 'bg-gradient-to-b from-[#3E7754] to-[#2C503A] text-white shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setDesktopDarkPreview((prev) => !prev)}
-              className={`inline-flex h-10 items-center gap-1.5 whitespace-nowrap rounded-2xl border px-3 text-xs font-bold shadow-xs transition-all ${
-                desktopDarkPreview
-                  ? 'border-slate-700 bg-slate-900 text-amber-300'
-                  : 'border-white/90 bg-white/90 text-slate-700 hover:bg-white'
-              }`}
-            >
-              {desktopDarkPreview ? <Moon size={14} /> : <Sun size={14} />}
-              <span>{desktopDarkPreview ? 'AMOLED Dark' : 'Light Glass'}</span>
-            </button>
-          </div>
-        </RevealOnScroll>
-
-        <RevealOnScroll
-          delay={150}
-          className="mt-7 hidden overflow-hidden rounded-[32px] border border-white/90 bg-white/60 shadow-2xl shadow-[#14291D]/10 backdrop-blur-2xl xl:block"
-        >
-          <div
-            className={`flex items-center justify-between border-b px-5 py-3 transition-colors ${
-              desktopDarkPreview
-                ? 'border-white/15 bg-zinc-950 text-white'
-                : 'border-slate-200/80 bg-white/90 text-slate-800'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-rose-400" />
-              <span className="h-3 w-3 rounded-full bg-amber-400" />
-              <span className="h-3 w-3 rounded-full bg-emerald-400" />
-            </div>
-            <div
-              className={`flex items-center gap-2 rounded-full border px-4 py-1 text-[11px] font-semibold ${
-                desktopDarkPreview
-                  ? 'border-white/15 bg-zinc-900 text-slate-300'
-                  : 'border-slate-200/90 bg-slate-100/80 text-slate-500'
-              }`}
-            >
-              <Lock size={11} className="text-emerald-500" />
-              <span>
-                sharebills.in/?tab=
-                {activePreviewTab === 'command' ? 'groups' : activePreviewTab}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={triggerGetStarted}
-              className="text-xs font-bold text-[#3E7754] hover:underline"
-            >
-              Open Live App →
-            </button>
-          </div>
-
-          <div
-            className={`grid grid-cols-1 lg:grid-cols-12 transition-colors duration-300 ${
-              desktopDarkPreview ? 'bg-black text-white' : 'bg-[#F3F7F3] text-slate-900'
-            }`}
-          >
-            <aside
-              className={`hidden border-r p-4 lg:col-span-3 lg:flex lg:flex-col lg:justify-between xl:col-span-2 ${
-                desktopDarkPreview
-                  ? 'border-white/10 bg-zinc-950/90'
-                  : 'border-white/80 bg-white/75'
-              }`}
-            >
-              <div className="space-y-4">
-                <div className="flex items-center gap-2.5 px-2">
-                  <img src={sharebillsIcon} alt="" className="h-8 w-8 rounded-xl object-cover" />
-                  <div>
-                    <p className="text-xs font-extrabold">Sharebills</p>
-                    <p className="text-[10px] font-semibold text-[#3E7754]">Desktop v2.5</p>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  {[
-                    { id: 'command', label: 'Overview', icon: Layers },
-                    { id: 'spaces', label: 'Spaces (3)', icon: Users },
-                    { id: 'transactions', label: 'Transactions', icon: ArrowLeftRight },
-                    { id: 'rent', label: 'Rent & Settlements', icon: CircleDollarSign, badge: '4' },
-                    { id: 'analytics', label: 'Analytics', icon: PieChart },
-                  ].map(({ id, label, icon: Icon, badge }) => (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => setActivePreviewTab(id)}
-                      className={`flex w-full items-center justify-between rounded-2xl px-3 py-2.5 text-left text-xs font-bold transition-all ${
-                        activePreviewTab === id
-                          ? 'bg-[#3E7754] text-white shadow-sm'
-                          : desktopDarkPreview
-                          ? 'text-slate-400 hover:bg-zinc-900 hover:text-white'
-                          : 'text-slate-600 hover:bg-white hover:text-slate-900'
-                      }`}
-                    >
-                      <span className="flex items-center gap-2">
-                        <Icon size={15} />
-                        <span>{label}</span>
-                      </span>
-                      {badge && (
-                        <span
-                          className={`rounded-full px-1.5 py-0.2 text-[10px] font-extrabold ${
-                            activePreviewTab === id
-                              ? 'bg-white/20 text-white'
-                              : 'bg-amber-100 text-amber-800'
-                          }`}
-                        >
-                          {badge}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div
-                className={`mt-6 rounded-2xl border p-3 text-[11px] ${
-                  desktopDarkPreview
-                    ? 'border-white/15 bg-zinc-900'
-                    : 'border-[#BDD2C1] bg-[#EEF4EF]/80'
-                }`}
-              >
-                <p className="font-extrabold text-[#3E7754]">UPI Linked</p>
-                <p className="mt-0.5 truncate font-mono text-[10px] opacity-80">
-                  taran@okhdfcbank
-                </p>
-              </div>
-            </aside>
-
-            <div className="p-4 sm:p-6 lg:col-span-9 xl:col-span-10">
-              <div
-                className={`flex flex-wrap items-center justify-between gap-4 rounded-3xl border p-4 shadow-sm ${
-                  desktopDarkPreview
-                    ? 'border-white/15 bg-zinc-900/90'
-                    : 'border-white/90 bg-white/85'
-                }`}
-              >
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#3E7754]">
-                    Command Center · Oct 2026
-                  </p>
-                  <h3 className="text-lg font-extrabold sm:text-xl">
-                    Good Evening, Taranveer
-                  </h3>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={triggerGetStarted}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 px-3 text-xs font-bold text-white shadow-sm"
-                  >
-                    <Receipt size={13} /> Quick Expense
-                  </button>
-                  <button
-                    type="button"
-                    onClick={triggerGetStarted}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-[#3E7754] px-3.5 text-xs font-bold text-white shadow-sm"
-                  >
-                    <Plus size={14} /> New Space
-                  </button>
-                </div>
-              </div>
-
-              {activePreviewTab === 'command' && (
-                <div className="mt-5 space-y-5">
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <div
-                      className={`rounded-3xl border p-4 shadow-xs ${
-                        desktopDarkPreview
-                          ? 'border-white/15 bg-zinc-900'
-                          : 'border-white/90 bg-white/85'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-400">Net Position</span>
-                        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                          <ArrowDownLeft size={16} />
-                        </span>
-                      </div>
-                      <p className="mt-2 font-mono text-2xl font-extrabold text-emerald-500">
-                        +₹3,450.00
-                      </p>
-                      <p className="mt-1.5 text-[11px] font-semibold text-slate-400">
-                        <span className="text-emerald-500">+₹4,200 to receive</span> ·{' '}
-                        <span className="text-rose-500">-₹750 to pay</span>
-                      </p>
-                    </div>
-
-                    <div
-                      onClick={() => setActivePreviewTab('analytics')}
-                      className={`cursor-pointer rounded-3xl border p-4 shadow-xs transition-transform hover:-translate-y-0.5 ${
-                        desktopDarkPreview
-                          ? 'border-white/15 bg-zinc-900'
-                          : 'border-white/90 bg-white/85'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-400">Oct 2026 Share</span>
-                        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#EEF4EF] text-[#3E7754]">
-                          <PieChart size={16} />
-                        </span>
-                      </div>
-                      <p className="mt-2 font-mono text-2xl font-extrabold">₹8,940.00</p>
-                      <div className="mt-2 space-y-1">
-                        <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
-                          <div className="h-full w-[45%] bg-[#3E7754]" />
-                          <div className="h-full w-[30%] bg-amber-500" />
-                          <div className="h-full w-[25%] bg-sky-500" />
-                        </div>
-                        <div className="flex justify-between text-[10px] font-semibold text-slate-400">
-                          <span>Rent 45% · Food 30%</span>
-                          <span className="font-bold text-[#3E7754]">Analytics →</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div
-                      onClick={() => setActivePreviewTab('transactions')}
-                      className={`cursor-pointer rounded-3xl border p-4 shadow-xs transition-transform hover:-translate-y-0.5 ${
-                        desktopDarkPreview
-                          ? 'border-white/15 bg-zinc-900'
-                          : 'border-white/90 bg-white/85'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-400">You Paid Out</span>
-                        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#EEF4EF] text-[#3E7754]">
-                          <Wallet size={16} />
-                        </span>
-                      </div>
-                      <p className="mt-2 font-mono text-2xl font-extrabold">₹12,390.00</p>
-                      <p className="mt-1.5 text-[11px] font-semibold text-slate-400">
-                        Across 14 bills · View Txns →
-                      </p>
-                    </div>
-
-                    <div
-                      onClick={() => setActivePreviewTab('rent')}
-                      className={`cursor-pointer rounded-3xl border p-4 shadow-xs transition-transform hover:-translate-y-0.5 ${
-                        desktopDarkPreview
-                          ? 'border-white/15 bg-zinc-900'
-                          : 'border-white/90 bg-white/85'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-400">
-                          Pending Rent &amp; Dues
-                        </span>
-                        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-                          <CircleDollarSign size={16} />
-                        </span>
-                      </div>
-                      <p className="mt-2 font-mono text-2xl font-extrabold">4</p>
-                      <p className="mt-1.5 text-[11px] font-semibold text-amber-600">
-                        1 rent share · 1 dispute · 2 dues →
-                      </p>
-                    </div>
-                  </div>
                 </div>
               )}
+              {activeTab === 'monthly' && (
+                <MonthlyAnalyticsTab
+                  user={user}
+                  expenses={expenses}
+                  groups={groups}
+                  rentRecords={rentRecords}
+                />
+              )}
+              {activeTab === 'profile' && (
+                <ProfileTabView
+                  key={[user?.id, user?.username, user?.email, user?.upiId, user?.photoDataUrl].join(':')}
+                  user={user}
+                  onUpdateUser={onUpdateUser}
+                  onLogout={() => setShowLogoutConfirmation(true)}
+                  theme={theme}
+                  onThemeChange={onThemeChange}
+                  showToast={showToast}
+                />
+              )}
             </div>
-          </div>
-        </RevealOnScroll>
-      </section>
-
-      {/* =================================================================== */}
-      {/* SECTION 4: REDESIGNED BENTO SHOWCASE GRID                           */}
-      {/* =================================================================== */}
-      <section id="features" className="relative z-10 mx-auto max-w-[1340px] px-4 py-20 sm:px-6">
-        <RevealOnScroll className="text-center">
-          <span className="rounded-full border border-[#BDD2C1] bg-[#EEF4EF] px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-[#3E7754]">
-            Comprehensive Suite
-          </span>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
-            Everything we built for effortless shared living
-          </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-sm sm:text-base text-slate-600">
-            A unified financial ecosystem built from the ground up for flatmates, trips, and hostels—cutting out spreadsheets, circular payments, and awkward bill reminders.
-          </p>
-
-          {/* Category Filter Pills */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
-            {[
-              { id: 'all', label: 'All 12 Features' },
-              { id: 'rent-disputes', label: 'Rent & Disputes' },
-              { id: 'core-splits', label: 'UPI & Smart Splits' },
-              { id: 'chat-media', label: 'Chat & Visuals' },
-              { id: 'global-exports', label: 'Global & Exports' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setFeatureCategory(tab.id)}
-                className={`rounded-full px-4 py-1.5 text-xs font-extrabold transition-all duration-200 ${
-                  featureCategory === tab.id
-                    ? 'bg-[#3E7754] text-white shadow-md shadow-[#3E7754]/25 scale-105'
-                    : 'border border-white/90 bg-white/80 text-slate-600 hover:bg-white hover:text-slate-900'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </RevealOnScroll>
-
-        {/* Bento Grid Layout */}
-        <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {(featureCategory === 'all' || featureCategory === 'rent-disputes') && (
-            <RevealOnScroll
-              delay={50}
-              className="lg:col-span-2 group relative overflow-hidden rounded-[32px] border border-white/90 bg-gradient-to-br from-white via-white/95 to-amber-50/50 p-7 shadow-lg shadow-[#14291D]/5 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
-            >
-              <div className="flex flex-col justify-between h-full gap-6 sm:flex-row">
-                <div className="max-w-md">
-                  <div className="flex items-center gap-2.5">
-                    <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-200 bg-amber-50 text-amber-600 shadow-sm">
-                      <AlertTriangle size={22} />
-                    </span>
-                    <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-amber-800">
-                      Flagship Feature
-                    </span>
-                  </div>
-                  <h3 className="mt-5 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
-                    In-Chat Expense Disputes
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                    Never argue about wrong splits or unfair additions again. Long-press any bill to flag it with a reason. An interactive dispute widget automatically posts to your room chat so the payer can adjust portions or mark it solved.
-                  </p>
-                  <div className="mt-6 flex flex-wrap items-center gap-2">
-                    <span className="rounded-xl border border-slate-200 bg-white/90 px-3 py-1 text-[11px] font-bold text-slate-700 shadow-2xs">
-                      ⚡ Instant Push Alerts
-                    </span>
-                    <span className="rounded-xl border border-slate-200 bg-white/90 px-3 py-1 text-[11px] font-bold text-slate-700 shadow-2xs">
-                      💬 Group Chat Threaded
-                    </span>
-                    <span className="rounded-xl border border-slate-200 bg-white/90 px-3 py-1 text-[11px] font-bold text-slate-700 shadow-2xs">
-                      ✏️ 1-Click Payer Edit
-                    </span>
-                  </div>
-                </div>
-
-                <div className="w-full sm:w-[260px] flex-shrink-0 self-center rounded-2xl border border-amber-200 bg-amber-50/90 p-3.5 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1 text-[10px] font-extrabold text-amber-900">
-                      <AlertTriangle size={12} /> Dispute Flagged
-                    </span>
-                    <span className="rounded-full bg-amber-200 px-2 py-0.5 text-[8px] font-bold uppercase text-amber-950">
-                      Open
-                    </span>
-                  </div>
-                  <p className="mt-2 text-xs font-black text-slate-900">
-                    Blinkit Essentials · ₹1,240
-                  </p>
-                  <p className="mt-1 text-[10px] text-slate-600 rounded-lg bg-white/80 p-1.5">
-                    “Detergent was only for room 2.”
-                  </p>
-                  <div className="mt-2 flex gap-1.5">
-                    <span className="flex-1 text-center rounded-lg bg-amber-700 py-1 text-[9px] font-bold text-white shadow-2xs">
-                      Update Bill
-                    </span>
-                    <span className="flex-1 text-center rounded-lg bg-emerald-600 py-1 text-[9px] font-bold text-white shadow-2xs">
-                      Solve
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </RevealOnScroll>
           )}
+      </main>
 
-          {(featureCategory === 'all' || featureCategory === 'rent-disputes') && (
-            <RevealOnScroll
-              delay={100}
-              className="group relative overflow-hidden rounded-[32px] border border-white/90 bg-gradient-to-br from-white via-white/95 to-emerald-50/40 p-7 shadow-lg shadow-[#14291D]/5 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
-            >
-              <div className="flex items-center justify-between">
-                <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[#BDD2C1] bg-[#EEF4EF] text-[#3E7754] shadow-sm">
-                  <Home size={22} />
-                </span>
-                <span className="rounded-full border border-[#BDD2C1] bg-[#EEF4EF] px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[#356447]">
-                  Automated
-                </span>
-              </div>
-              <h3 className="mt-5 text-xl font-black tracking-tight text-slate-900">
-                Monthly Flat Rent Tracker
-              </h3>
-              <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                Dedicated monthly rent ledger splitting total flat rent down to exact rupees across all flatmates with live paid timestamps and auto reminders.
-              </p>
-              <div className="mt-5 rounded-2xl border border-slate-100 bg-[#F3F7F3] p-3 text-xs">
-                <div className="flex justify-between font-bold text-slate-900">
-                  <span>Oct 2026 Rent</span>
-                  <span className="font-mono text-[#3E7754]">₹24,000</span>
+      {/* --- NOTIFICATION CENTER / ACTIVITY RIGHT POPUP FLYOUT DRAWER (Full Width on Mobile) --- */}
+      {isActivityOpen && (
+        <div
+          className="fixed inset-0 z-[80] flex justify-end bg-slate-900/30 backdrop-blur-sm transition-opacity"
+          onClick={() => setIsActivityOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="flex h-full w-full sm:max-w-md flex-col border-l border-white/80 bg-white/95 p-5 shadow-2xl backdrop-blur-2xl transition-transform animate-in slide-in-from-right"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-200/70 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                  <Bell size={18} />
                 </div>
-                <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
-                  <span>3 of 4 Flatmates Settled</span>
-                  <span className="font-bold text-emerald-600">75% Paid</span>
-                </div>
-                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
-                  <div className="h-full w-[75%] bg-[#3E7754]" />
-                </div>
-              </div>
-            </RevealOnScroll>
-          )}
-
-          {filteredFeatures
-            .filter((f) => f.title !== 'In-Chat Expense Disputes' && f.title !== 'Monthly Flat Rent Tracker')
-            .map((feat, idx) => {
-              const Icon = feat.icon;
-              return (
-                <RevealOnScroll key={feat.title} delay={idx * 60}>
-                  <div className="group h-full rounded-[30px] border border-white/90 bg-white/80 p-6 shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:bg-white hover:border-[#BDD2C1] hover:shadow-xl hover:shadow-[#3E7754]/10">
-                    <div className="flex items-center justify-between">
-                      <div
-                        className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl border transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 ${feat.color}`}
-                      >
-                        <Icon size={22} />
-                      </div>
-                      <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-slate-600">
-                        {feat.badge}
-                      </span>
-                    </div>
-                    <h3 className="mt-5 text-base font-extrabold text-slate-900 transition-colors group-hover:text-[#3E7754]">
-                      {feat.title}
-                    </h3>
-                    <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                      {feat.desc}
-                    </p>
-                  </div>
-                </RevealOnScroll>
-              );
-            })}
-        </div>
-      </section>
-
-      {/* SECTION 5: SMART DEBT SIMPLIFIER & SPLIT DEMO */}
-      <section
-        id="smart-split"
-        className="relative z-10 overflow-hidden border-y border-white/80 bg-white/40 px-4 py-20 sm:px-6"
-      >
-        <div className="mx-auto grid max-w-[1340px] items-center gap-12 lg:grid-cols-12">
-          <RevealOnScroll className="lg:col-span-5">
-            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5 text-xs font-bold text-[#326b4a] shadow-xs">
-              <Sparkles size={14} className="text-emerald-500" />
-              Greedy Graph Debt Simplification
-            </span>
-
-            <h2 className="mt-5 text-3xl font-black tracking-tight text-slate-950 sm:text-5xl leading-[1.1]">
-              Turn 12 messy IOUs into{' '}
-              <span className="text-[#3E7754]">2 instant UPI transfers.</span>
-            </h2>
-
-            <p className="mt-4 text-sm leading-relaxed text-slate-600 sm:text-base">
-              Sharebills continuously computes net balances across every bill, custom split, and
-              partial settlement—so your flat settles the entire month with the minimum possible
-              transfers.
-            </p>
-
-            <div className="mt-6 rounded-3xl border border-white/90 bg-white/85 p-4 shadow-md backdrop-blur-xl">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-extrabold text-slate-900">
-                  Try Split Mode: Dinner Bill (₹1,200)
-                </span>
-                <div className="flex rounded-xl bg-slate-100 p-1 text-[11px] font-bold">
-                  <button
-                    type="button"
-                    onClick={() => setSplitDemoMode('equal')}
-                    className={`rounded-lg px-2.5 py-1 transition-all ${
-                      splitDemoMode === 'equal'
-                        ? 'bg-[#3E7754] text-white shadow-2xs'
-                        : 'text-slate-600'
-                    }`}
-                  >
-                    Equal Split
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSplitDemoMode('custom')}
-                    className={`rounded-lg px-2.5 py-1 transition-all ${
-                      splitDemoMode === 'custom'
-                        ? 'bg-[#3E7754] text-white shadow-2xs'
-                        : 'text-slate-600'
-                    }`}
-                  >
-                    Custom Shares
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                {(splitDemoMode === 'equal'
-                  ? [
-                      { name: 'Taranveer', amt: '₹400.00', note: 'Equal 1/3' },
-                      { name: 'Sushant', amt: '₹400.00', note: 'Equal 1/3' },
-                      { name: 'Tanmay', amt: '₹400.00', note: 'Equal 1/3' },
-                    ]
-                  : [
-                      { name: 'Taranveer', amt: '₹550.00', note: 'Main + Drink' },
-                      { name: 'Sushant', amt: '₹650.00', note: 'Combo Meal' },
-                      { name: 'Tanmay', amt: '₹0.00', note: 'Excluded (Away)' },
-                    ]
-                ).map((m) => (
-                  <div
-                    key={m.name}
-                    className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-2.5"
-                  >
-                    <p className="text-[11px] font-bold text-slate-800">{m.name}</p>
-                    <p className="mt-0.5 font-mono text-sm font-extrabold text-[#3E7754]">
-                      {m.amt}
-                    </p>
-                    <p className="text-[9px] font-semibold text-slate-400">{m.note}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </RevealOnScroll>
-
-          <RevealOnScroll delay={200} className="lg:col-span-7">
-            <div className="rounded-[32px] border border-white/90 bg-white/85 p-6 shadow-xl backdrop-blur-2xl sm:p-8">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
                 <div>
-                  <h3 className="text-lg font-extrabold text-slate-900">
-                    Interactive Settlement Engine
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Same 14 room bills · Compare Pairwise vs. Smart Optimized
+                  <h2 className="text-base font-extrabold text-slate-900 leading-tight">
+                    Activity & Alerts
+                  </h2>
+                  <p className="text-[11px] text-slate-500">
+                    {userNotifications.length} notification{userNotifications.length === 1 ? '' : 's'}
+                    {unreadNotifications.length > 0 && ` · ${unreadNotifications.length} unread`}
                   </p>
-                </div>
-
-                <div className="flex rounded-2xl bg-slate-100 p-1">
-                  <button
-                    type="button"
-                    onClick={() => setSimplifyMode('smart')}
-                    className={`rounded-xl px-3.5 py-2 text-xs font-extrabold transition-all ${
-                      simplifyMode === 'smart'
-                        ? 'bg-[#3E7754] text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    Smart Optimized (2 Transfers)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSimplifyMode('raw')}
-                    className={`rounded-xl px-3.5 py-2 text-xs font-extrabold transition-all ${
-                      simplifyMode === 'raw'
-                        ? 'bg-rose-600 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    Pairwise Raw (6 Transfers)
-                  </button>
                 </div>
               </div>
 
-              {simplifyMode === 'smart' ? (
-                <div className="mt-5 space-y-3">
-                  <div className="flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-2.5 text-xs font-bold text-emerald-900">
-                    <span>✓ Minimized from 6 back-and-forth payments down to 2 transfers</span>
-                    <span className="font-mono">67% fewer txns</span>
-                  </div>
-                  {[
-                    {
-                      from: 'Tanmay Sharma',
-                      to: 'Taranveer Singh',
-                      amt: '₹2,150.00',
-                      upi: 'taran@okhdfcbank',
-                    },
-                    {
-                      from: 'Aarav Verma',
-                      to: 'Sushant Monga',
-                      amt: '₹1,300.00',
-                      upi: 'sushant@okicici',
-                    },
-                  ].map((item) => (
-                    <div
-                      key={item.from}
-                      className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs"
+              <div className="flex items-center gap-2">
+                {selectedActivityIds.size > 0 ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setActivityDeleteIds([...selectedActivityIds])}
+                      className="inline-flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-100 transition-colors shadow-sm"
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EEF4EF] font-extrabold text-[#3E7754]">
-                          {item.from.charAt(0)}
-                        </span>
-                        <div>
-                          <p className="text-sm font-extrabold text-slate-900">
-                            {item.from} <span className="text-[#3E7754]">→</span> {item.to}
-                          </p>
-                          <p className="font-mono text-[11px] text-slate-500">
-                            Direct GPay UPI: {item.upi}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2.5">
-                        <span className="font-mono text-base font-extrabold text-emerald-600">
-                          {item.amt}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={triggerGetStarted}
-                          className="rounded-xl bg-[#3E7754] px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#356447]"
-                        >
-                          Pay via GPay
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                      <Trash2 size={12} />
+                      <span>Delete ({selectedActivityIds.size})</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedActivityIds(new Set())}
+                      className="rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : userNotifications.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearAllActivity}
+                    className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors shadow-sm"
+                  >
+                    <Trash2 size={12} />
+                    <span>Clear all</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsActivityOpen(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Notification Stream */}
+            <div className="flex-1 overflow-y-auto py-3 space-y-2.5 scrollbar-hide">
+              {userNotifications.length === 0 ? (
+                <div className="flex h-full flex-col items-center justify-center py-16 text-center">
+                  <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 border border-blue-100">
+                    <CheckCircle2 size={26} />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-800">You're all caught up!</h3>
+                  <p className="mt-1 max-w-[220px] text-xs text-slate-500">
+                    No new activity or dues notifications right now.
+                  </p>
                 </div>
               ) : (
-                <div className="mt-5 space-y-2">
-                  <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-800">
-                    Unoptimized Pairwise Matrix: Roommates have to send 6 separate payments
-                  </div>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    {[
-                      'Tanmay → Taranveer: ₹1,400',
-                      'Taranveer → Sushant: ₹550',
-                      'Aarav → Taranveer: ₹1,300',
-                      'Tanmay → Sushant: ₹750',
-                      'Sushant → Aarav: ₹300',
-                      'Aarav → Tanmay: ₹300',
-                    ].map((raw) => (
-                      <div
-                        key={raw}
-                        className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 font-mono text-xs font-bold text-slate-600"
-                      >
-                        {raw}
+                userNotifications.map((n) => {
+                  const grp = myGroups.find((g) => g.id === n.groupId);
+                  const isDispute = /dispute/i.test(n.type || n.category || '');
+                  const isChat = /chat|message|dispute/i.test(n.type || n.category || '');
+                  const isSelected = selectedActivityIds.has(n.id);
+                  const isRent = /rent/i.test(n.type || n.category || '');
+                  const isUnread = !n.read && !optimisticallyReadNotificationIds.has(n.id);
+                  return (
+                    <div
+                      key={n.id}
+                      onTouchStart={(event) => startActivityLongPress(event, n)}
+                      onTouchEnd={stopActivityLongPress}
+                      onTouchCancel={stopActivityLongPress}
+                      onMouseDown={(event) => startActivityLongPress(event, n)}
+                      onMouseUp={stopActivityLongPress}
+                      onMouseLeave={stopActivityLongPress}
+                      onContextMenu={(event) => {
+                        event.preventDefault();
+                        stopActivityLongPress();
+                        activityLongPressRef.current = true;
+                        setActivityContextNotification(n);
+                      }}
+                      onClick={() => {
+                        if (activityLongPressRef.current) {
+                          activityLongPressRef.current = false;
+                          return;
+                        }
+                        if (selectedActivityIds.size > 0) {
+                          toggleActivitySelection(n.id);
+                          return;
+                        }
+                        if (isUnread) {
+                          markActivityNotificationsRead([n.id]);
+                        }
+                        if (n.groupId) {
+                          handleOpenGroup(n.groupId, isChat ? 'chat' : 'expenses');
+                          setIsActivityOpen(false);
+                        }
+                      }}
+                      className={`liquid-glass-interactive group relative flex items-start justify-between gap-3 rounded-2xl p-3 cursor-pointer border ${
+                        isSelected
+                          ? 'border-blue-400 bg-blue-50/70 ring-1 ring-blue-300'
+                          : isUnread
+                            ? 'border-blue-200/90 bg-blue-50/40'
+                            : 'border-slate-200/60 bg-white/80'
+                      }`}
+                    >
+                      <div className="flex items-start gap-2.5 min-w-0">
+                        <div className={`mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg ${
+                          isSelected
+                            ? 'bg-blue-600 text-white'
+                            : isChat
+                              ? 'bg-blue-50 text-blue-600'
+                              : 'bg-emerald-50 text-emerald-600'
+                        }`}>
+                          {isSelected ? <Check size={14} /> : isDispute ? <AlertTriangle size={13} /> : isChat ? <MessageSquare size={13} /> : isRent ? <Home size={13} /> : <Receipt size={13} />}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-slate-900 leading-snug">
+                            {n.message || 'New activity in your space'}
+                          </p>
+                          <div className="mt-1 flex items-center gap-2 text-[10px] text-slate-500">
+                            {grp && <span className="font-semibold text-blue-600">{grp.name}</span>}
+                            {grp && <span>·</span>}
+                            <span>
+                              {n.createdAt
+                                ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                : 'Just now'}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
+
+                      {isUnread && (
+                        <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-blue-600 ring-2 ring-white" />
+                      )}
+                    </div>
+                  );
+                })
               )}
             </div>
-          </RevealOnScroll>
-        </div>
-      </section>
 
-      {/* SECTION 6: HOW IT WORKS */}
-      <section id="how-it-works" className="relative z-10 mx-auto max-w-[1340px] px-4 py-16 sm:px-6">
-        <RevealOnScroll className="text-center">
-          <span className="rounded-full border border-[#BDD2C1] bg-[#EEF4EF] px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-[#3E7754]">
-            Zero Setup Friction
-          </span>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-            Get your flat sorted in under 60 seconds
-          </h2>
-        </RevealOnScroll>
-
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            {
-              step: '01',
-              icon: QrCode,
-              title: 'Create Space & Scan QR',
-              desc: 'Pick your room currency (INR, USD, EUR, etc.) and let flatmates join via the live camera QR scanner or 6-digit invite code.',
-            },
-            {
-              step: '02',
-              icon: Home,
-              title: 'Set Monthly Rent & Bills',
-              desc: 'Add monthly flat rent for automatic daily reminders, and log daily groceries, WiFi, or food orders with equal or custom splits.',
-            },
-            {
-              step: '03',
-              icon: MessageSquare,
-              title: 'Chat & Resolve Disputes',
-              desc: 'Discuss bills with GIFs, stickers, and media attachments—or long-press any expense to raise and resolve a dispute in chat.',
-            },
-            {
-              step: '04',
-              icon: CheckCircle2,
-              title: 'Settle via GPay & Export',
-              desc: 'Clear minimized dues in one tap with Google Pay / UPI deep-links and export monthly CSV or printable PDF statements anytime.',
-            },
-          ].map(({ step, icon: Icon, title, desc }, index) => (
-            <RevealOnScroll key={step} delay={index * 100}>
-              <article className="group h-full rounded-3xl border border-white/90 bg-white/80 p-6 shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-[#BDD2C1] hover:bg-white hover:shadow-xl">
-                <div className="flex items-center justify-between">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#3E7754] text-white shadow-sm">
-                    <Icon size={18} />
-                  </span>
-                  <span className="font-mono text-xs font-extrabold text-[#3E7754]">
-                    STEP {step}
-                  </span>
-                </div>
-                <h3 className="mt-4 text-base font-extrabold text-slate-900">{title}</h3>
-                <p className="mt-2 text-xs leading-relaxed text-slate-600">{desc}</p>
-              </article>
-            </RevealOnScroll>
-          ))}
-        </div>
-      </section>
-
-      {/* SECTION 7: DOWNLOAD PWA */}
-      <section id="download-section" className="relative z-10 mx-auto max-w-[1340px] px-4 py-10 sm:px-6">
-        <RevealOnScroll className="rounded-[32px] border border-white/90 bg-gradient-to-br from-[#173F2D] via-[#23533A] to-[#14291D] p-6 text-white shadow-2xl sm:p-10">
-          <div className="flex flex-col items-center justify-between gap-8 lg:flex-row">
-            <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:text-left">
-              <img
-                src={sharebillsIcon}
-                alt="Sharebills App Icon"
-                className="h-20 w-20 flex-shrink-0 rounded-3xl border-2 border-white/20 object-cover shadow-xl"
-              />
-              <div>
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-emerald-200">
-                  <ShieldCheck size={13} /> Native Android + Installable PWA
-                </div>
-                <h2 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">
-                  Install Sharebills on your Home Screen
-                </h2>
-                <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-white/80 sm:text-sm">
-                  Get instant background push notifications for bills, rent reminders, and chat
-                  messages—plus full-screen gesture navigation and AMOLED dark mode on Android, iOS,
-                  Windows, and macOS.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={handleInstallClick}
-                className="inline-flex h-12 items-center gap-2 rounded-2xl bg-white px-6 text-xs font-extrabold text-[#173F2D] shadow-lg transition-all hover:-translate-y-0.5 hover:bg-emerald-50 sm:text-sm"
+            {activityContextNotification && (
+              <div
+                className="fixed inset-0 z-[100] flex items-end justify-center bg-slate-950/35 p-3 backdrop-blur-sm sm:items-center"
+                onClick={() => {
+                  setActivityContextNotification(null);
+                  activityLongPressRef.current = false;
+                }}
               >
-                <Download size={16} />
-                <span>Install Sharebills App</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={triggerLogin}
-                className="inline-flex h-12 items-center gap-2 rounded-2xl border border-white/30 bg-white/10 px-5 text-xs font-bold text-white backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-white/20 sm:text-sm"
-              >
-                <span>Open Web Login</span>
-              </button>
-            </div>
-          </div>
-        </RevealOnScroll>
-      </section>
-
-      {/* SECTION 8: DEVELOPERS */}
-      <section id="developers" className="relative z-10 overflow-hidden px-4 py-16 sm:px-6">
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[28rem] w-[42rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#BDD2C1]/25 blur-3xl" />
-        <div className="relative mx-auto max-w-[1120px]">
-          <RevealOnScroll className="mx-auto max-w-2xl text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#BDD2C1] bg-white/80 px-3.5 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#356447] shadow-xs">
-              <Sparkles size={12} />
-              The people behind the product
-            </span>
-            <h2 className="mt-4 text-3xl font-black tracking-tight text-slate-950 sm:text-5xl">
-              Meet the <span className="text-[#43855F]">builders.</span>
-            </h2>
-            <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-slate-600 sm:text-base">
-              Curious minds, practical ideas, and a shared mission to make everyday shared living
-              effortless and transparent.
-            </p>
-          </RevealOnScroll>
-
-          <div className="mt-10 grid gap-5 md:grid-cols-2">
-            {[
-              {
-                name: 'Taranveer Singh',
-                initials: 'TS',
-                links: [
-                  { label: 'Portfolio', href: 'https://taranveer.in', icon: Globe },
-                  { label: 'GitHub', href: 'https://github.com/taranveer178', icon: CodeXml },
-                  {
-                    label: 'LinkedIn',
-                    href: 'https://www.linkedin.com/in/taranveer-singh-2445871b6/',
-                    icon: Link,
-                  },
-                  { label: 'Email', href: 'mailto:staranveer178@gmail.com', icon: Mail },
-                ],
-              },
-              {
-                name: 'Sushant Monga',
-                initials: 'SM',
-                links: [
-                  { label: 'Portfolio', href: 'https://sushantmonga.in', icon: Globe },
-                  { label: 'GitHub', href: 'https://github.com/Sushantmonga87', icon: CodeXml },
-                  {
-                    label: 'LinkedIn',
-                    href: 'https://www.linkedin.com/in/sushant-monga-8a757b227/',
-                    icon: Link,
-                  },
-                  { label: 'Email', href: 'mailto:sushantmonga87@gmail.com', icon: Mail },
-                ],
-              },
-            ].map((developer, idx) => (
-              <RevealOnScroll key={developer.name} delay={idx * 150}>
-                <article className="group relative isolate overflow-hidden rounded-[28px] border border-white/90 bg-white/80 p-6 shadow-md backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-[#9AB99F] hover:shadow-xl">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-[4.25rem] w-[4.25rem] flex-shrink-0 items-center justify-center rounded-[22px] bg-gradient-to-br from-[#63B686] to-[#326b4a] text-lg font-black tracking-tight text-white shadow-lg shadow-[#326b4a]/20 transition-transform duration-300 group-hover:rotate-[-5deg] group-hover:scale-105">
-                      {developer.initials}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#43855F]">
-                        {idx === 0 ? 'Lead Developer' : 'Developer'}
-                      </p>
-                      <h3 className="mt-1 text-2xl font-black leading-tight tracking-tight text-slate-950 sm:text-[1.7rem]">
-                        {developer.name}
-                      </h3>
-                    </div>
-                  </div>
-                  <div className="mt-6 flex flex-wrap gap-2">
-                    {developer.links.map(({ label, href, icon: Icon }) => (
-                      <a
-                        key={label}
-                        href={href}
-                        target={href.startsWith('mailto:') ? undefined : '_blank'}
-                        rel={href.startsWith('mailto:') ? undefined : 'noreferrer'}
-                        className="group/link inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200/90 bg-white/90 px-3.5 text-xs font-bold text-slate-600 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-[#63B686] hover:bg-[#eff8f2] hover:text-[#28583c] hover:shadow-sm"
-                      >
-                        <Icon size={14} />
-                        {label}
-                        <ArrowRight
-                          size={12}
-                          className="-translate-x-1 opacity-0 transition-all group-hover/link:translate-x-0 group-hover/link:opacity-70"
-                        />
-                      </a>
-                    ))}
-                  </div>
-                </article>
-              </RevealOnScroll>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 9: FAQ */}
-      <section id="faq" className="relative z-10 mx-auto max-w-[920px] px-4 py-16 sm:px-6">
-        <RevealOnScroll className="text-center">
-          <span className="rounded-full border border-[#BDD2C1] bg-[#EEF4EF] px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-[#3E7754]">
-            Got Questions?
-          </span>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">
-            Frequently Asked Questions
-          </h2>
-        </RevealOnScroll>
-
-        <div className="mt-8 space-y-3">
-          {faqs.map((item, idx) => {
-            const isOpen = openFaq === idx;
-            return (
-              <RevealOnScroll key={item.q} delay={idx * 70}>
-                <div className="rounded-2xl border border-white/90 bg-white/85 p-4 shadow-xs backdrop-blur-xl transition-all duration-300 hover:bg-white hover:shadow-md">
+                <div
+                  className="w-full max-w-sm overflow-hidden rounded-3xl border border-white/80 bg-white/95 p-2 shadow-2xl backdrop-blur-2xl"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <p className="line-clamp-2 px-3 py-2 text-xs font-medium text-slate-500">
+                    {activityContextNotification.message || 'Activity'}
+                  </p>
                   <button
                     type="button"
-                    onClick={() => setOpenFaq(isOpen ? -1 : idx)}
-                    className="flex w-full items-center justify-between gap-4 text-left outline-none"
+                    onClick={() => {
+                      setSelectedActivityIds((previous) => new Set([
+                        ...previous,
+                        activityContextNotification.id,
+                      ]));
+                      setActivityContextNotification(null);
+                      activityLongPressRef.current = false;
+                    }}
+                    className="flex w-full items-center justify-between border-t border-slate-100 px-3 py-3 text-sm font-semibold text-slate-800"
                   >
-                    <span className="text-sm font-extrabold text-slate-900">{item.q}</span>
-                    <ChevronDown
-                      size={18}
-                      className={`flex-shrink-0 text-slate-500 transition-transform duration-300 ${
-                        isOpen ? 'rotate-180 text-[#3E7754]' : ''
-                      }`}
-                    />
+                    <span>Select</span>
+                    <Check size={16} className="text-slate-400" />
                   </button>
-                  {isOpen && (
-                    <div className="mt-2.5 border-t border-slate-200/60 pt-2.5">
-                      <p className="text-xs leading-relaxed text-slate-600">{item.a}</p>
-                    </div>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActivityDeleteIds([activityContextNotification.id]);
+                      setActivityContextNotification(null);
+                      activityLongPressRef.current = false;
+                    }}
+                    className="flex w-full items-center justify-between border-t border-slate-100 px-3 py-3 text-sm font-semibold text-rose-600"
+                  >
+                    <span>Delete…</span>
+                    <Trash2 size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActivityContextNotification(null);
+                      activityLongPressRef.current = false;
+                    }}
+                    className="mt-1 w-full rounded-2xl bg-slate-100 px-3 py-3 text-sm font-bold text-slate-700"
+                  >
+                    Cancel
+                  </button>
                 </div>
-              </RevealOnScroll>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* SECTION 10: FOOTER */}
-      <footer className="relative z-10 border-t border-[#2F6746] bg-[#173F2D] text-white">
-        <div className="mx-auto max-w-[1340px] px-4 py-10 sm:px-6 sm:py-12">
-          <div className="flex flex-col gap-6 border-b border-white/15 pb-7 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <img
-                src={sharebillsIcon}
-                alt="Sharebills"
-                className="h-10 w-10 rounded-xl object-cover shadow-xs"
-              />
-              <div>
-                <p className="text-sm font-extrabold tracking-tight text-white">Sharebills</p>
-                <p className="mt-0.5 text-xs text-white/65">
-                  Shared expenses, rent tracking, live disputes &amp; UPI settlements.
-                </p>
               </div>
-            </div>
-            <nav
-              aria-label="Footer navigation"
-              className="flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold text-white/70"
-            >
-              <button type="button" onClick={triggerLogin} className="transition-colors hover:text-white">
-                Login
-              </button>
-              <button
-                type="button"
-                onClick={triggerGetStarted}
-                className="transition-colors hover:text-white"
-              >
-                Sign up
-              </button>
-              <button
-                type="button"
-                onClick={handleInstallClick}
-                className="transition-colors hover:text-white"
-              >
-                Download app
-              </button>
-            </nav>
-          </div>
-          <div className="flex flex-col gap-2 pt-5 text-[11px] text-white/50 sm:flex-row sm:items-center sm:justify-between">
-            <p>© {new Date().getFullYear()} Sharebills. All rights reserved.</p>
-            <p>Made for better shared living.</p>
+            )}
+
+            {activityDeleteIds && (
+              <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/35 p-4 backdrop-blur-sm">
+                <div className="w-full max-w-xs rounded-3xl border border-white/80 bg-white/95 p-5 text-center shadow-2xl backdrop-blur-2xl">
+                  <h3 className="text-sm font-extrabold text-slate-900">
+                    Delete {activityDeleteIds.length === 1 ? 'this activity' : `${activityDeleteIds.length} activities`}?
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500">This only removes the selected activity from your feed.</p>
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActivityDeleteIds(null)}
+                      disabled={isDeletingActivity}
+                      className="flex-1 rounded-xl bg-slate-100 px-3 py-2.5 text-xs font-bold text-slate-700 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={confirmActivityDeletion}
+                      disabled={isDeletingActivity}
+                      className="flex-1 rounded-xl bg-rose-600 px-3 py-2.5 text-xs font-bold text-white disabled:opacity-50"
+                    >
+                      {isDeletingActivity ? 'Deleting…' : 'Delete'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      </footer>
+      )}
 
-      {/* FALLBACK MODAL */}
-      {previewModal && (
+      {/* --- QUICK EXPENSE MODAL --- */}
+      {quickExpenseOpen && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm"
-          onClick={() => setPreviewModal(null)}
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-md"
+          onClick={() => !savingQuick && setQuickExpenseOpen(false)}
         >
           <div
-            role="dialog"
-            aria-modal="true"
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-[28px] border border-white/90 bg-white p-6 text-slate-900 shadow-2xl"
+            className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-[28px] border border-white/80 bg-white/95 p-5 shadow-2xl backdrop-blur-2xl sm:p-6"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2.5">
-                <img src={sharebillsIcon} alt="" className="h-9 w-9 rounded-xl object-cover" />
-                <div>
-                  <h3 className="text-base font-extrabold">
-                    {previewModal === 'install'
-                      ? 'Install Sharebills PWA'
-                      : previewModal === 'login'
-                      ? 'Sign in to Sharebills'
-                      : 'Create your Sharebills Account'}
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    {previewModal === 'install'
-                      ? 'Add to Home Screen for instant push alerts'
-                      : 'Google One-Tap or Email & Password'}
-                  </p>
-                </div>
+            <div className="flex items-center justify-between border-b border-slate-200/60 pb-3.5">
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900">Quick Log Expense</h3>
+                <p className="text-xs text-slate-500">
+                  Split equally across all members of the selected space
+                </p>
               </div>
               <button
                 type="button"
-                onClick={() => setPreviewModal(null)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-50 text-rose-600 hover:bg-rose-100"
+                onClick={() => setQuickExpenseOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"
               >
                 <X size={16} />
               </button>
             </div>
 
-            {previewModal === 'install' ? (
-              <div className="mt-4 space-y-3 text-xs text-slate-600">
-                <div className="rounded-2xl border border-[#BDD2C1] bg-[#EEF4EF]/70 p-3.5 text-[#2C503A]">
-                  <p className="font-extrabold">Android / Chrome / Desktop:</p>
-                  <p className="mt-1">
-                    Tap the browser menu (⋮) or address bar icon and choose{' '}
-                    <strong>“Install App”</strong> or <strong>“Add to Home Screen”</strong>.
-                  </p>
+            <form onSubmit={handleSaveQuickExpense} className="mt-4 space-y-3.5">
+              <div>
+                <label className="mb-1 block text-xs font-bold text-slate-700">Space</label>
+                <select
+                  value={quickGroupId}
+                  onChange={(e) => setQuickGroupId(e.target.value)}
+                  className="w-full rounded-2xl border border-slate-200/90 bg-white/80 px-3.5 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none"
+                >
+                  {myGroups.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.name} ({g.members?.length || 1} members)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-slate-700">
+                    Total Amount ({getCurrencySymbol(myGroups.find((group) => group.id === quickGroupId)?.currency)})
+                  </label>
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-blue-600">
+                      {getCurrencySymbol(myGroups.find((group) => group.id === quickGroupId)?.currency)}
+                    </span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="1"
+                      placeholder="0.00"
+                      value={quickAmount}
+                      onChange={(e) => setQuickAmount(e.target.value)}
+                      required
+                      className="w-full rounded-2xl border border-slate-200/90 bg-white/80 py-2.5 pl-8 pr-3 font-mono text-sm font-extrabold text-slate-900 focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
                 </div>
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
-                  <p className="font-extrabold text-slate-900">iOS Safari:</p>
-                  <p className="mt-1">
-                    Tap the <strong>Share</strong> button at the bottom of Safari and select{' '}
-                    <strong>“Add to Home Screen”</strong>.
-                  </p>
+
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-slate-700">Category</label>
+                  <select
+                    value={quickCategory}
+                    onChange={(e) => setQuickCategory(e.target.value)}
+                    className="w-full rounded-2xl border border-slate-200/90 bg-white/80 px-3.5 py-2.5 text-sm font-semibold text-slate-900 focus:border-blue-500 focus:outline-none"
+                  >
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
-            ) : (
-              <div className="mt-4 space-y-3">
-                <p className="text-xs leading-relaxed text-slate-600">
-                  In the full app (`App.jsx`), this button opens `AuthScreen` in{' '}
-                  <strong>{previewModal}</strong> mode with Google Sign-In and Email authentication.
-                </p>
-                <div className="rounded-2xl border border-[#BDD2C1] bg-[#EEF4EF]/60 p-3 text-xs font-semibold text-[#2C503A]">
-                  ✓ Props wired: <code>onLogin</code>, <code>onCreateAccount</code>,{' '}
-                  <code>onGetStarted</code>, <code>onInstallApp</code>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2">
+                  <label className="mb-1 block text-xs font-bold text-slate-700">
+                    Description
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Groceries, Electricity, Dinner"
+                    value={quickTitle}
+                    onChange={(e) => setQuickTitle(e.target.value)}
+                    required
+                    className="w-full rounded-2xl border border-slate-200/90 bg-white/80 px-3.5 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-slate-700">Method</label>
+                  <select
+                    value={quickMethod}
+                    onChange={(e) => setQuickMethod(e.target.value)}
+                    className="w-full rounded-2xl border border-slate-200/90 bg-white/80 px-2.5 py-2.5 text-sm font-semibold text-slate-900 focus:border-blue-500 focus:outline-none"
+                  >
+                    {PAYMENT_METHODS.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const gId = quickGroupId;
+                    setQuickExpenseOpen(false);
+                    if (gId) {
+                      handleOpenGroup(gId, 'add', {
+                        title: quickTitle,
+                        amount: quickAmount,
+                        category: quickCategory,
+                        paymentMethod: quickMethod,
+                      });
+                    }
+                  }}
+                  className="text-xs font-bold text-blue-600 hover:underline"
+                >
+                  Custom split →
+                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setQuickExpenseOpen(false)}
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingQuick}
+                    className="rounded-2xl bg-gradient-to-b from-blue-600 to-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/25 disabled:opacity-50"
+                  >
+                    {savingQuick ? 'Saving…' : 'Save Bill'}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- LIQUID GLASS NAVIGATION (Mobile Floating Dock + Desktop Left Sidebar) --- */}
+      <PrimaryNav
+        activeItem={activeTab}
+        onNavigate={handleTabSwitch}
+        onQuickAction={() => openQuickExpenseModal()}
+        onCreateGroup={onCreateGroup}
+        onJoinGroup={onJoinGroup}
+        unreadSpacesCount={totalUnreadSpacesCount}
+        onLogout={() => setShowLogoutConfirmation(true)}
+        onInstallApp={handleInstallClick}
+        isAppInstalled={isAppInstalled}
+        user={user}
+      />
+
+      {transactionExportOpen && (
+        <TransactionExportModal
+          transactions={exportTransactions}
+          groups={myGroups}
+          users={users}
+          user={user}
+          getUserName={getUserName}
+          onClose={() => setTransactionExportOpen(false)}
+        />
+      )}
+
+      {dailyRentReminderRecords.length > 0 &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[160] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-md"
+            onClick={() => setDailyRentReminderRecords([])}
+          >
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="daily-rent-reminder-title"
+              className="app-modal-surface max-h-[min(88dvh,42rem)] w-full max-w-md overflow-y-auto rounded-[28px] border border-white/80 bg-white/95 p-5 shadow-2xl backdrop-blur-2xl animate-in zoom-in-95 duration-200"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <header className="mb-4 flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+                    <Home size={19} />
+                  </span>
+                  <div>
+                    <h2 id="daily-rent-reminder-title" className="text-base font-bold text-slate-900">
+                      Rent payment reminder
+                    </h2>
+                    <p className="mt-0.5 text-xs text-slate-500">Your unpaid shares for today</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDailyRentReminderRecords([])}
+                  aria-label="Dismiss rent reminders for today"
+                  className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
+                >
+                  <X size={17} />
+                </button>
+              </header>
+              <div className="space-y-3">
+                {dailyRentReminderRecords.map((rent) => {
+                  const group = myGroups.find((item) => item.id === rent.groupId);
+                  const monthLabel = new Date(`${rent.month}-01T00:00:00`).toLocaleDateString(
+                    'en-US',
+                    { month: 'long', year: 'numeric' }
+                  );
+                  const share = Number(rent.shares?.[user.id]) || 0;
+
+                  return (
+                    <article key={rent.id} className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-bold text-slate-900">
+                            {group?.name || 'Shared space'} · {monthLabel}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-500">Your rent share</p>
+                        </div>
+                        <span className="flex-shrink-0 font-mono text-sm font-bold text-slate-900">
+                          {formatCurrency(share, rent.currency)}
+                        </span>
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await onMarkRentPaid?.(rent.id, user.id);
+                              setDailyRentReminderRecords((previous) => previous.filter((item) => item.id !== rent.id));
+                              showToast?.('Your rent share was marked as paid.');
+                            } catch (error) {
+                              showToast?.(error.message || 'Could not update rent payment.', 'error');
+                            }
+                          }}
+                          className="h-9 rounded-lg bg-emerald-600 px-2 text-xs font-bold text-white hover:bg-emerald-700"
+                        >
+                          Mark paid
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDailyRentReminderRecords([]);
+                            onOpenGroup?.(rent.groupId, 'members');
+                          }}
+                          className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                        >
+                          View rent
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={() => setDailyRentReminderRecords([])}
+                className="mt-4 h-10 w-full rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-100"
+              >
+                Remind me tomorrow
+              </button>
+            </section>
+          </div>,
+          document.body
+        )}
+
+      {installDialogOpen && !isAppInstalled && (
+        <div
+          className="fixed inset-0 z-[140] flex items-end justify-center bg-slate-950/40 p-0 backdrop-blur-md sm:items-center sm:p-4"
+          onClick={() => setInstallDialogOpen(false)}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="install-app-title"
+            className="w-full max-w-sm rounded-t-[32px] border border-white/80 bg-white/95 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.24)] backdrop-blur-2xl sm:rounded-[32px]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mx-auto mb-5 h-1.5 w-10 rounded-full bg-slate-300 sm:hidden" />
+            <div className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-[20px] border border-blue-100 bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 shadow-sm">
+              <img src={sharebillsIcon} alt="" className="h-full w-full scale-110 object-cover" />
+            </div>
+            <h2
+              id="install-app-title"
+              className="mt-4 text-center text-lg font-extrabold tracking-tight text-slate-900"
+            >
+              Take Sharebills with you
+            </h2>
+            <p className="mt-1.5 text-center text-sm leading-relaxed text-slate-500">
+              Install the app for quick access and a full-screen experience.
+            </p>
+            {!deferredPromptAvailable && (
+              <div className="mt-4 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-3.5">
+                <div className="flex items-start gap-2.5">
+                  <Smartphone size={17} className="mt-0.5 flex-shrink-0 text-blue-600" />
+                  <p className="text-xs leading-relaxed text-slate-600">
+                    {/iphone|ipad|ipod/i.test(navigator.userAgent)
+                      ? 'To install, tap Share in your browser, then choose “Add to Home Screen”.'
+                      : 'If your browser does not show an install prompt, open its menu and choose “Install app” or “Add to Home screen”.'}
+                  </p>
                 </div>
               </div>
             )}
+            <div className="mt-5 grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={() => setInstallDialogOpen(false)}
+                className="h-11 rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50"
+              >
+                Not now
+              </button>
+              <button
+                type="button"
+                onClick={deferredPromptAvailable ? handleInstallClick : () => setInstallDialogOpen(false)}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-b from-blue-600 to-blue-600 text-sm font-bold text-white shadow-md shadow-blue-600/20 transition-transform hover:brightness-105 active:scale-[0.98]"
+              >
+                <Download size={16} />
+                {deferredPromptAvailable ? 'Install app' : 'Got it'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
 
-            <button
-              type="button"
-              onClick={() => setPreviewModal(null)}
-              className="mt-5 w-full rounded-2xl bg-[#3E7754] py-2.5 text-xs font-extrabold text-white shadow-sm hover:bg-[#356447]"
+      {showLogoutConfirmation && (
+        <div
+          className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/40 p-5 backdrop-blur-sm"
+          onClick={() => !isSigningOut && setShowLogoutConfirmation(false)}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="logout-confirmation-title"
+            aria-describedby="logout-confirmation-description"
+            className="logout-confirmation-dialog relative z-[151] w-full max-w-[340px] rounded-[28px] border border-white/70 bg-white/95 p-6 text-center shadow-[0_24px_80px_rgba(15,23,42,0.24)] backdrop-blur-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-rose-100 bg-rose-50 text-rose-600">
+              <LogOut size={21} />
+            </div>
+            <h2
+              id="logout-confirmation-title"
+              className="mt-4 text-base font-bold tracking-tight text-slate-900"
             >
-              Got it
-            </button>
-          </div>
+              Sign out of Sharebills?
+            </h2>
+            <p
+              id="logout-confirmation-description"
+              className="mt-1.5 text-sm leading-relaxed text-slate-500"
+            >
+              You can sign back in anytime to manage your shared spaces.
+            </p>
+            <div className="mt-6 grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                disabled={isSigningOut}
+                onClick={() => setShowLogoutConfirmation(false)}
+                className="h-11 rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isSigningOut}
+                onClick={confirmLogout}
+                className="h-11 rounded-2xl bg-rose-600 text-sm font-semibold text-white shadow-md shadow-rose-600/20 transition-colors hover:bg-rose-700 disabled:opacity-60"
+              >
+                {isSigningOut ? 'Signing out…' : 'Sign out'}
+              </button>
+            </div>
+          </section>
         </div>
       )}
     </div>
