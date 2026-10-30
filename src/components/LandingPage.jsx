@@ -2479,7 +2479,7 @@ export default function LandingPage({
                 name: 'Taranveer Singh',
                 initials: 'TS',
                 role: 'Founder & Lead Developer',
-                contribution: 'Created Sharebills and leads product direction and development.',
+                contribution: 'Designed and  Developed ShareBills, core architecture and backend systems.',
                 links: [
                   { label: 'Portfolio', href: 'https://taranveer.in', icon: Globe },
                   { label: 'GitHub', href: 'https://github.com/taranveer178', icon: CodeXml },
@@ -2494,8 +2494,8 @@ export default function LandingPage({
               {
                 name: 'Sushant Monga',
                 initials: 'SM',
-                role: 'Co-Founder & Business Development',
-                contribution: 'Development, troubleshooting, and Domain Management.',
+                role: 'Co-Founder & Developer',
+                contribution: 'Development , technical operations and drives business growth',
                 links: [
                   { label: 'Portfolio', href: 'https://sushantmonga.in', icon: Globe },
                   { label: 'GitHub', href: 'https://github.com/Sushantmonga87', icon: CodeXml },
