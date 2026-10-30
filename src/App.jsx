@@ -673,8 +673,9 @@ export default function App() {
     setDataLoadStarted(false);
     setLoading(false);
     setActiveUserId(null);
-    authModeRef.current = null;
-    setAuthMode(null);
+    const shouldShowDesktopLogin = window.matchMedia('(min-width: 768px)').matches;
+    authModeRef.current = shouldShowDesktopLogin ? 'login' : null;
+    setAuthMode(shouldShowDesktopLogin ? 'login' : null);
     localStorage.removeItem('rs_active_user_id');
     navigateTo({ view: 'dashboard', dashboardTab: 'groups' }, { replace: true });
   };
