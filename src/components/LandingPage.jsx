@@ -1680,7 +1680,7 @@ export default function LandingPage({
                 <span className="h-1.5 w-1.5 rounded-full border border-[#30343a] bg-[#17191c]" />
               </div>
               <img
-                src="/dashboard.pnggit "
+                src="/dashboard.png"
                 alt="Sharebills desktop dashboard with workspace navigation, balances, recent activity, and rent settlements"
                 className="block h-auto w-full rounded-t-[9px] sm:rounded-t-[12px]"
               />
@@ -2474,6 +2474,7 @@ export default function LandingPage({
               {
                 name: 'Sushant Monga',
                 initials: 'SM',
+                image: '/sushantmonga.webp',
                 role: 'Co-Founder & Developer',
                 contribution: 'Development , technical operations and drives business growth',
                 links: [
