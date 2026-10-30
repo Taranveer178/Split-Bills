@@ -733,7 +733,7 @@ export default function AuthScreen({
             </p>
           </div>
 
-          <div className="flex items-center justify-center bg-[#fbfdfb] p-10 lg:p-14">
+          <div className="auth-desktop-form-panel flex items-center justify-center bg-[#fbfdfb] p-10 lg:p-14">
             <div className="w-full max-w-md">
               {!isStandalonePwa || isSheetOpen ? (
                 <>
