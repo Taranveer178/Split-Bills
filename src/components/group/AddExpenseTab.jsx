@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   AlertCircle,
   Calendar,
@@ -8,6 +8,7 @@ import {
   Users,
   Check,
   ArrowLeft,
+  LoaderCircle,
 } from 'lucide-react';
 import { CATEGORIES, PAYMENT_METHODS } from '../../utils/constants';
 import { triggerPushNotification } from '../../utils/notifications';
@@ -38,6 +39,8 @@ export default function AddExpenseTab({
   const [paymentMethod, setPaymentMethod] = useState(initialExpenseDraft?.paymentMethod || 'UPI');
   const [splitMode, setSplitMode] = useState('equal');
   const [error, setError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const isSavingRef = useRef(false);
   const [selectedParticipants, setSelectedParticipants] = useState(() =>
     Object.fromEntries(group.members.map((memberId) => [memberId, true]))
   );
@@ -47,6 +50,7 @@ export default function AddExpenseTab({
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (isSavingRef.current) return;
     setError('');
     const numericAmount = parseFloat(amount);
     if (!title.trim() || Number.isNaN(numericAmount) || numericAmount <= 0) {
@@ -111,6 +115,8 @@ export default function AddExpenseTab({
       createdAt: new Date().toISOString(),
     };
 
+    isSavingRef.current = true;
+    setIsSaving(true);
     try {
       await onSaveExpense(newExpense);
 
@@ -161,6 +167,9 @@ export default function AddExpenseTab({
     } catch (err) {
       console.error(err);
       setError('Failed to save expense. Please try again.');
+    } finally {
+      isSavingRef.current = false;
+      setIsSaving(false);
     }
   };
 
@@ -412,8 +421,15 @@ export default function AddExpenseTab({
           </div>
         </div>
 
-        <Button type="submit" className="w-full py-3">
-          Save & Notify Roommates
+        <Button type="submit" disabled={isSaving} className="w-full py-3">
+          {isSaving ? (
+            <>
+              <LoaderCircle size={16} className="animate-spin" />
+              Please wait…
+            </>
+          ) : (
+            'Save & Notify Roommates'
+          )}
         </Button>
       </form>
     </div>

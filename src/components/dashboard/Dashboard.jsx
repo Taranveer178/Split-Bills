@@ -27,6 +27,7 @@ import {
   Home,
   CircleDollarSign,
   Check,
+  LoaderCircle,
 } from 'lucide-react';
 import sharebillsIcon from '../../assets/sharebills-icon.webp';
 import PrimaryNav from '../common/PrimaryNav';
@@ -2470,7 +2471,12 @@ export default function Dashboard({
                     disabled={savingQuick}
                     className="rounded-2xl bg-gradient-to-b from-blue-600 to-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/25 disabled:opacity-50"
                   >
-                    {savingQuick ? 'Saving…' : 'Save Bill'}
+                    {savingQuick ? (
+                      <span className="inline-flex items-center gap-1.5">
+                        <LoaderCircle size={14} className="animate-spin" />
+                        Please wait…
+                      </span>
+                    ) : 'Save Bill'}
                   </button>
                 </div>
               </div>

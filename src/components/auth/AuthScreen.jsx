@@ -579,8 +579,8 @@ export default function AuthScreen({
       <div className={`${isStandalonePwa ? 'flex' : 'md:hidden'} fixed inset-0 flex-col w-full h-full overflow-hidden bg-[#3E7754]`}>
         <div className="flex-1 flex flex-col justify-between">
           <div className="mobile-auth-hero relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#173F2D] via-[#23533A] to-[#3E7754] px-7 pb-8 pt-8 text-center">
-            <div className="relative mb-4 flex h-[62px] w-[62px] items-center justify-center overflow-hidden rounded-[21px] border border-white/30 bg-white p-2 shadow-lg shadow-black/15">
-              <img src={sharebillsIcon} alt="Sharebills logo" className="h-full w-full rounded-[15px] object-cover" />
+            <div className="relative mb-4 flex h-[62px] w-[62px] items-center justify-center overflow-hidden rounded-[21px] border border-white/30 bg-white p-3 shadow-lg shadow-black/15">
+              <img src={sharebillsIcon} alt="Sharebills logo" className="h-full w-full object-contain" />
             </div>
             <span className="relative rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-100">
               Shared living, in sync
@@ -591,34 +591,36 @@ export default function AuthScreen({
             <p className="relative mt-3 max-w-xs text-sm leading-relaxed text-emerald-50/85">
               Shared expenses, clear balances, and no awkward money reminders.
             </p>
-            <div className="relative mt-5 w-full max-w-[310px] rounded-[22px] border border-white/20 bg-white/10 p-3.5 text-left shadow-xl shadow-black/10 backdrop-blur-md">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <img src={sharebillsIcon} alt="" className="h-9 w-9 rounded-xl border border-white/70 object-cover" />
-                  <div className="min-w-0">
-                    <p className="truncate text-xs font-extrabold text-white">Flat 402</p>
-                    <p className="text-[10px] font-medium text-emerald-100/80">October shared balance</p>
+            {!isStandalonePwa && (
+              <div className="relative mt-5 w-full max-w-[310px] rounded-[22px] border border-white/20 bg-white/10 p-3.5 text-left shadow-xl shadow-black/10 backdrop-blur-md">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <img src={sharebillsIcon} alt="" className="h-9 w-9 rounded-xl border border-white/70 object-cover" />
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-extrabold text-white">Flat 402</p>
+                      <p className="text-[10px] font-medium text-emerald-100/80">October shared balance</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-mono text-sm font-extrabold text-emerald-200">+₹3,450</p>
+                    <p className="text-[9px] font-bold uppercase text-emerald-100/75">to receive</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-mono text-sm font-extrabold text-emerald-200">+₹3,450</p>
-                  <p className="text-[9px] font-bold uppercase text-emerald-100/75">to receive</p>
+                <div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/15 pt-3">
+                  {[
+                    { label: 'Rent', value: '₹6,000', color: 'bg-amber-300' },
+                    { label: 'Groceries', value: '₹1,240', color: 'bg-sky-300' },
+                    { label: 'Settled', value: '3 of 4', color: 'bg-emerald-300' },
+                  ].map((item) => (
+                    <div key={item.label} className="min-w-0">
+                      <span className={`mb-1 block h-1 w-5 rounded-full ${item.color}`} />
+                      <p className="text-[9px] font-medium text-white/70">{item.label}</p>
+                      <p className="truncate text-[10px] font-extrabold text-white">{item.value}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/15 pt-3">
-                {[
-                  { label: 'Rent', value: '₹6,000', color: 'bg-amber-300' },
-                  { label: 'Groceries', value: '₹1,240', color: 'bg-sky-300' },
-                  { label: 'Settled', value: '3 of 4', color: 'bg-emerald-300' },
-                ].map((item) => (
-                  <div key={item.label} className="min-w-0">
-                    <span className={`mb-1 block h-1 w-5 rounded-full ${item.color}`} />
-                    <p className="text-[9px] font-medium text-white/70">{item.label}</p>
-                    <p className="truncate text-[10px] font-extrabold text-white">{item.value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
 
           <div className="mobile-auth-panel w-full rounded-t-[28px] border-t border-slate-200/80 bg-white px-6 pt-6 pb-[max(2rem,env(safe-area-inset-bottom))] flex flex-col gap-3">
@@ -653,7 +655,7 @@ export default function AuthScreen({
             isSheetOpen ? 'translate-y-0' : 'translate-y-full'
           }`}
         >
-          <div className="relative flex h-[65px] flex-shrink-0 items-center border-b border-[#dce6de] bg-white px-4 before:absolute before:inset-x-0 before:top-0 before:h-[3px] before:bg-[#3E7754]">
+          <div className="flex h-[65px] flex-shrink-0 items-center border-b border-[#dce6de] bg-white px-4">
             <button
               type="button"
               onClick={closeSheet}
