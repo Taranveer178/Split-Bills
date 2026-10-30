@@ -129,10 +129,6 @@ export default function LandingPage({
   const [heroPhoneTab, setHeroPhoneTab] = useState('overview');
   const [heroDarkPreview, setHeroDarkPreview] = useState(false);
   const [activeHeroDisputeIndex, setActiveHeroDisputeIndex] = useState(0);
-  const heroDisputePointerStart = useRef(null);
-  const heroDisputeTouchStart = useRef(null);
-  const heroDisputeWasSwiped = useRef(false);
-  const [heroDisputeInteractionAt, setHeroDisputeInteractionAt] = useState(0);
   const [activePreviewTab, setActivePreviewTab] = useState('command');
   const [desktopDarkPreview, setDesktopDarkPreview] = useState(false);
   const [simplifyMode, setSimplifyMode] = useState('smart');
@@ -167,73 +163,7 @@ export default function LandingPage({
       setActiveHeroDisputeIndex((index) => (index + 1) % heroPreviewDisputes.length);
     }, 2400);
     return () => window.clearInterval(intervalId);
-  }, [heroPhoneTab, heroDisputeInteractionAt]);
-
-  const navigateHeroDisputeBySwipe = (startX, startY, endX, endY) => {
-    const deltaX = startX - endX;
-    const deltaY = startY - endY;
-    if (Math.abs(deltaX) < 36 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
-
-    heroDisputeWasSwiped.current = true;
-    setHeroDisputeInteractionAt(Date.now());
-    setActiveHeroDisputeIndex((index) =>
-      (index + (deltaX > 0 ? 1 : -1) + heroPreviewDisputes.length) % heroPreviewDisputes.length
-    );
-    window.setTimeout(() => {
-      heroDisputeWasSwiped.current = false;
-    }, 500);
-  };
-
-  const handleHeroDisputeTouchStart = (event) => {
-    const touch = event.touches[0];
-    if (!touch) return;
-    heroDisputeTouchStart.current = { x: touch.clientX, y: touch.clientY };
-    heroDisputeWasSwiped.current = false;
-  };
-
-  const handleHeroDisputeTouchEnd = (event) => {
-    const start = heroDisputeTouchStart.current;
-    const touch = event.changedTouches[0];
-    heroDisputeTouchStart.current = null;
-    if (!start || !touch) return;
-    navigateHeroDisputeBySwipe(start.x, start.y, touch.clientX, touch.clientY);
-  };
-
-  const handleHeroDisputePointerDown = (event) => {
-    if (event.pointerType === 'touch' || event.pointerType === 'mouse') return;
-    heroDisputePointerStart.current = {
-      x: event.clientX,
-      y: event.clientY,
-      pointerId: event.pointerId,
-    };
-    heroDisputeWasSwiped.current = false;
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
-
-  const handleHeroDisputePointerUp = (event) => {
-    if (event.pointerType === 'mouse') return;
-    const start = heroDisputePointerStart.current;
-    heroDisputePointerStart.current = null;
-    if (!start || start.pointerId !== event.pointerId) return;
-    navigateHeroDisputeBySwipe(start.x, start.y, event.clientX, event.clientY);
-  };
-
-  const handleHeroDisputeMouseDown = (event) => {
-    if (event.button !== 0) return;
-    heroDisputePointerStart.current = {
-      x: event.clientX,
-      y: event.clientY,
-      pointerId: null,
-    };
-    heroDisputeWasSwiped.current = false;
-  };
-
-  const handleHeroDisputeMouseUp = (event) => {
-    const start = heroDisputePointerStart.current;
-    heroDisputePointerStart.current = null;
-    if (!start || start.pointerId !== null) return;
-    navigateHeroDisputeBySwipe(start.x, start.y, event.clientX, event.clientY);
-  };
+  }, [heroPhoneTab]);
 
   // ===================================================================
   // 3D CIRCULAR CAROUSEL STATES & HANDLERS (2600ms ROTATION)
@@ -1346,19 +1276,7 @@ export default function LandingPage({
 
                       {/* Rotating Mini Dispute (2400ms) */}
                       <div
-                        onTouchStart={handleHeroDisputeTouchStart}
-                        onTouchEnd={handleHeroDisputeTouchEnd}
-                        onTouchCancel={() => {
-                          heroDisputeTouchStart.current = null;
-                        }}
-                        onPointerDown={handleHeroDisputePointerDown}
-                        onPointerUp={handleHeroDisputePointerUp}
-                        onPointerCancel={() => {
-                          heroDisputePointerStart.current = null;
-                        }}
-                        onMouseDown={handleHeroDisputeMouseDown}
-                        onMouseUp={handleHeroDisputeMouseUp}
-                        className={`overflow-hidden rounded-2xl border touch-pan-y select-none ${
+                        className={`overflow-hidden rounded-2xl border ${
                           heroDarkPreview
                             ? 'border-amber-500/40 bg-amber-950/30'
                             : 'border-amber-200 bg-amber-50/90'
@@ -1372,13 +1290,7 @@ export default function LandingPage({
                             <button
                               key={dispute.title}
                               type="button"
-                              onClick={() => {
-                                if (heroDisputeWasSwiped.current) {
-                                  heroDisputeWasSwiped.current = false;
-                                  return;
-                                }
-                                setHeroPhoneTab('chat');
-                              }}
+                              onClick={() => setHeroPhoneTab('chat')}
                               className={`flex w-full flex-none items-center justify-between gap-2 px-3 py-2 text-left ${
                                 heroDarkPreview ? 'text-amber-200' : 'text-slate-900'
                               }`}

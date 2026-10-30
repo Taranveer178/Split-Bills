@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, ChevronRight } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
 
@@ -11,6 +11,9 @@ export default function ActiveDisputesPanel({
   carousel = false,
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [interactionAt, setInteractionAt] = useState(0);
+  const touchStart = useRef(null);
+  const didSwipe = useRef(false);
 
   useEffect(() => {
     if (!carousel || disputes.length < 2) return undefined;
@@ -18,7 +21,32 @@ export default function ActiveDisputesPanel({
       setActiveIndex((index) => (index + 1) % disputes.length);
     }, 4000);
     return () => window.clearInterval(intervalId);
-  }, [carousel, disputes.length]);
+  }, [carousel, disputes.length, interactionAt]);
+
+  const handleTouchStart = (event) => {
+    const touch = event.touches[0];
+    if (!touch) return;
+    touchStart.current = { x: touch.clientX, y: touch.clientY };
+    didSwipe.current = false;
+  };
+
+  const handleTouchEnd = (event) => {
+    const start = touchStart.current;
+    const touch = event.changedTouches[0];
+    touchStart.current = null;
+    if (!start || !touch) return;
+
+    const deltaX = start.x - touch.clientX;
+    const deltaY = start.y - touch.clientY;
+    if (Math.abs(deltaX) < 36 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+
+    didSwipe.current = true;
+    setInteractionAt(Date.now());
+    setActiveIndex((index) => (index + (deltaX > 0 ? 1 : -1) + disputes.length) % disputes.length);
+    window.setTimeout(() => {
+      didSwipe.current = false;
+    }, 500);
+  };
 
   if (!disputes.length) return null;
 
@@ -27,7 +55,12 @@ export default function ActiveDisputesPanel({
 
     return (
       <section
-        className="mobile-disputes-carousel overflow-hidden rounded-2xl border border-amber-200 bg-amber-50/90"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={() => {
+          touchStart.current = null;
+        }}
+        className="mobile-disputes-carousel touch-pan-y overflow-hidden rounded-2xl border border-amber-200 bg-amber-50/90"
         aria-label={`${disputes.length} active dispute${disputes.length === 1 ? '' : 's'}`}
         aria-live="polite"
       >
@@ -41,7 +74,13 @@ export default function ActiveDisputesPanel({
               <button
                 key={expense.id}
                 type="button"
-                onClick={() => onOpenDispute?.(expense)}
+                onClick={() => {
+                  if (didSwipe.current) {
+                    didSwipe.current = false;
+                    return;
+                  }
+                  onOpenDispute?.(expense);
+                }}
                 aria-label={`Open dispute: ${expense.title || 'Expense'}${expense.activeDisputeByName ? `, raised by ${expense.activeDisputeByName}` : ''}`}
                 aria-hidden={currentIndex !== index}
                 inert={currentIndex !== index}
