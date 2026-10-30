@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { ArrowUpRight, MessageCircle, X } from 'lucide-react';
 
-export default function IncomingChatAlert({ message, sender, group, onOpen, onClose }) {
+export default function IncomingChatAlert({ message, sender, group, onOpen, onClose, hidden = false }) {
   useEffect(() => {
     const timeout = window.setTimeout(onClose, 7000);
     return () => window.clearTimeout(timeout);
@@ -10,6 +10,8 @@ export default function IncomingChatAlert({ message, sender, group, onOpen, onCl
   const preview = message.text?.trim()
     || (message.attachmentName ? `Sent ${message.attachmentName}` : 'Sent an attachment');
   const senderName = message.senderName || sender?.username || 'Roommate';
+
+  if (hidden) return null;
 
   return (
     <aside

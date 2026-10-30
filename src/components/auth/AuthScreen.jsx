@@ -46,6 +46,7 @@ export default function AuthScreen({
   onSaveUser,
   onLogin,
   initialMode = null,
+  isStandalonePwa = false,
   onBackToLanding,
   theme = 'light',
   onThemeChange,
@@ -560,7 +561,7 @@ export default function AuthScreen({
       </button>
 
       {/* MOBILE LAYOUT */}
-      <div className="md:hidden fixed inset-0 flex flex-col w-full h-full overflow-hidden bg-[#173F2D]">
+      <div className={`${isStandalonePwa ? 'flex' : 'md:hidden'} fixed inset-0 flex-col w-full h-full overflow-hidden bg-[#173F2D]`}>
         <div className="flex-1 flex flex-col justify-between">
           <div className="mobile-auth-hero relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#173F2D] via-[#23533A] to-[#3E7754] px-7 pb-8 pt-8 text-center">
             <div className="relative mb-4 flex h-[62px] w-[62px] items-center justify-center overflow-hidden rounded-[21px] border border-white/30 bg-white p-2 shadow-lg shadow-black/15">
@@ -672,7 +673,7 @@ export default function AuthScreen({
       </div>
 
       {/* DESKTOP LAYOUT */}
-      <div className="hidden md:flex w-full max-w-[920px] min-h-[540px] bg-white rounded-2xl border border-slate-200 shadow-[0_20px_60px_rgba(15,23,42,0.08)] overflow-hidden">
+      <div className={`${isStandalonePwa ? 'hidden' : 'hidden md:flex'} w-full max-w-[920px] min-h-[540px] bg-white rounded-2xl border border-slate-200 shadow-[0_20px_60px_rgba(15,23,42,0.08)] overflow-hidden`}>
         <div className="w-[45%] border-r border-slate-200/80 bg-white p-10 flex flex-col justify-between text-slate-900">
           <div>
             <div className="flex items-center gap-3 mb-8">

@@ -174,6 +174,10 @@ if (!Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
 
 export default function App() {
   const [initialRoute] = useState(getRouteFromLocation);
+  const isStandalonePwa = !Capacitor.isNativePlatform() && (
+    window.matchMedia?.('(display-mode: standalone)').matches
+      || window.navigator.standalone === true
+  );
   const [activeUserId, setActiveUserId] = useState(
     () => {
       const storedUserId = localStorage.getItem('rs_active_user_id');
@@ -1478,6 +1482,7 @@ export default function App() {
           message={incomingChat}
           sender={users.find((user) => user.id === incomingChat.senderId)}
           group={groups.find((group) => group.id === incomingChat.groupId)}
+          hidden={currentView === 'group' && activeGroup?.id === incomingChat.groupId}
           onClose={() => setIncomingChat(null)}
           onOpen={() => {
             const incomingGroup = groups.find((group) => group.id === incomingChat.groupId);
@@ -1493,15 +1498,16 @@ export default function App() {
           }}
         />
       )}
-      {!activeUser && authMode ? (
+      {!activeUser && (authMode || isStandalonePwa) ? (
         <AuthScreen
           key={authMode}
           users={users}
           onLoadUsers={loadUsersForAuth}
           onSaveUser={saveUser}
           onLogin={handleLogin}
-          initialMode={authMode}
-          onBackToLanding={() => window.history.back()}
+          initialMode={authMode || 'signup'}
+          isStandalonePwa={isStandalonePwa}
+          onBackToLanding={isStandalonePwa ? undefined : () => window.history.back()}
           theme={theme}
           onThemeChange={setTheme}
         />
@@ -1512,7 +1518,7 @@ export default function App() {
           deferredPromptAvailable={Boolean(deferredInstallPrompt)}
           onInstallApp={handleInstallApp}
           isAppInstalled={isAppInstalled}
-          isStandaloneWebApp={!Capacitor.isNativePlatform() && isAppInstalled}
+          isStandaloneWebApp={isStandalonePwa}
         />
       ) : currentView === 'dashboard' ? (
         <Dashboard
@@ -1612,6 +1618,8 @@ export default function App() {
             }}
             onActiveChatChange={setActiveChatGroupId}
             unreadChatCount={currentGroupUnreadChatCount}
+            incomingChatMessage={incomingChat?.groupId === activeGroup.id ? incomingChat : null}
+            onDismissIncomingChat={() => setIncomingChat(null)}
             onMarkChatNotificationsRead={markGroupChatNotificationsRead}
             groups={groups}
             expenses={expenses.filter((expense) => expense.groupId === activeGroup.id)}
