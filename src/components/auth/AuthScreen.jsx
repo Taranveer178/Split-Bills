@@ -17,6 +17,29 @@ import sharebillsIcon from '../../assets/sharebills-icon.webp';
 import { Button } from '../common/UI';
 import { auth } from '../../firebase';
 
+function GoogleMark() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 48 48" className="h-[18px] w-[18px] flex-shrink-0">
+      <path
+        fill="#4285F4"
+        d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.7c3.9-3.6 6-8.8 6-15Z"
+      />
+      <path
+        fill="#34A853"
+        d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.7-5.1c-1.8 1.2-4.1 2-6.8 2-5.2 0-9.6-3.5-11.2-8.2H5.9v5.2A20 20 0 0 0 24 44Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M12.8 27.8a12 12 0 0 1 0-7.6V15H5.9a20 20 0 0 0 0 18l6.9-5.2Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M24 12c3 0 5.7 1 7.8 3.1l5.9-5.9C34.1 5.9 29.5 4 24 4A20 20 0 0 0 5.9 15l6.9 5.2C14.4 15.5 18.8 12 24 12Z"
+      />
+    </svg>
+  );
+}
+
 export default function AuthScreen({
   users = [],
   onLoadUsers,
@@ -27,7 +50,7 @@ export default function AuthScreen({
   theme = 'light',
   onThemeChange,
 }) {
-  const [isSheetOpen, setIsSheetOpen] = useState(Boolean(initialMode));
+  const [isSheetOpen, setIsSheetOpen] = useState(initialMode === 'login');
   const [isLogin, setIsLogin] = useState(initialMode !== 'signup');
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [identifier, setIdentifier] = useState('');
@@ -489,28 +512,7 @@ export default function AuthScreen({
             disabled={isSubmitting}
             className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 48 48"
-              className="h-[18px] w-[18px] flex-shrink-0"
-            >
-              <path
-                fill="#4285F4"
-                d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.7c3.9-3.6 6-8.8 6-15Z"
-              />
-              <path
-                fill="#34A853"
-                d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.7-5.1c-1.8 1.2-4.1 2-6.8 2-5.2 0-9.6-3.5-11.2-8.2H5.9v5.2A20 20 0 0 0 24 44Z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M12.8 27.8a12 12 0 0 1 0-7.6V15H5.9a20 20 0 0 0 0 18l6.9-5.2Z"
-              />
-              <path
-                fill="#EA4335"
-                d="M24 12c3 0 5.7 1 7.8 3.1l5.9-5.9C34.1 5.9 29.5 4 24 4A20 20 0 0 0 5.9 15l6.9 5.2C14.4 15.5 18.8 12 24 12Z"
-              />
-            </svg>
+            <GoogleMark />
             Continue with Google
           </button>
         </>
@@ -558,35 +560,72 @@ export default function AuthScreen({
       </button>
 
       {/* MOBILE LAYOUT */}
-      <div className="md:hidden fixed inset-0 flex flex-col w-full h-full overflow-hidden bg-blue-600">
+      <div className="md:hidden fixed inset-0 flex flex-col w-full h-full overflow-hidden bg-[#173F2D]">
         <div className="flex-1 flex flex-col justify-between">
-          <div className="mobile-auth-hero relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-blue-600 px-7 pb-8 text-center">
-            <div className="relative mb-6 flex h-[76px] w-[76px] items-center justify-center overflow-hidden rounded-[26px] border border-slate-200/80 bg-white p-2.5 shadow-[0_12px_30px_rgba(15,23,42,0.1)]">
-              <img src={sharebillsIcon} alt="Sharebills logo" className="h-full w-full rounded-[18px] object-cover" />
+          <div className="mobile-auth-hero relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#173F2D] via-[#23533A] to-[#3E7754] px-7 pb-8 pt-8 text-center">
+            <div className="relative mb-4 flex h-[62px] w-[62px] items-center justify-center overflow-hidden rounded-[21px] border border-white/30 bg-white p-2 shadow-lg shadow-black/15">
+              <img src={sharebillsIcon} alt="Sharebills logo" className="h-full w-full rounded-[15px] object-cover" />
             </div>
-            <span className="relative rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white">
-              Room Split
+            <span className="relative rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-100">
+              Shared living, in sync
             </span>
-            <h1 className="relative mt-4 max-w-sm text-[32px] font-bold leading-[1.08] tracking-[-0.045em] text-white">
-              Split bills. Stay balanced.
+            <h1 className="relative mt-4 max-w-sm text-[32px] font-extrabold leading-[1.08] text-white">
+              Split Bills, <span className="text-emerald-200">Not Friendships.</span>
             </h1>
-            <p className="relative mt-3 max-w-xs text-sm leading-relaxed text-blue-100">
-              Track shared apartment expenses, UPI reimbursements, and roommate balances without clutter.
+            <p className="relative mt-3 max-w-xs text-sm leading-relaxed text-emerald-50/85">
+              Shared expenses, clear balances, and no awkward money reminders.
             </p>
+            <div className="relative mt-5 w-full max-w-[310px] rounded-[22px] border border-white/20 bg-white/10 p-3.5 text-left shadow-xl shadow-black/10 backdrop-blur-md">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <img src={sharebillsIcon} alt="" className="h-9 w-9 rounded-xl border border-white/70 object-cover" />
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-extrabold text-white">Flat 402</p>
+                    <p className="text-[10px] font-medium text-emerald-100/80">October shared balance</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-mono text-sm font-extrabold text-emerald-200">+₹3,450</p>
+                  <p className="text-[9px] font-bold uppercase text-emerald-100/75">to receive</p>
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/15 pt-3">
+                {[
+                  { label: 'Rent', value: '₹6,000', color: 'bg-amber-300' },
+                  { label: 'Groceries', value: '₹1,240', color: 'bg-sky-300' },
+                  { label: 'Settled', value: '3 of 4', color: 'bg-emerald-300' },
+                ].map((item) => (
+                  <div key={item.label} className="min-w-0">
+                    <span className={`mb-1 block h-1 w-5 rounded-full ${item.color}`} />
+                    <p className="text-[9px] font-medium text-white/70">{item.label}</p>
+                    <p className="truncate text-[10px] font-extrabold text-white">{item.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className="mobile-auth-panel w-full rounded-t-[28px] border-t border-slate-200/80 bg-white px-6 pt-6 pb-[max(2rem,env(safe-area-inset-bottom))] flex flex-col gap-3">
-            <Button onClick={() => handleOpenSheet('login')} className="w-full h-11 text-sm">
-              Sign in to Sharebills
+            <Button onClick={() => handleOpenSheet('signup')} className="w-full h-11 text-sm">
+              Get Started
             </Button>
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={isSubmitting}
+              className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <GoogleMark />
+              Continue with Google
+            </button>
             <div className="text-center mt-1">
-              <span className="text-slate-500 text-xs">New to Sharebills? </span>
+              <span className="text-slate-500 text-xs">Already have an account? </span>
               <button
                 type="button"
-                onClick={() => handleOpenSheet('signup')}
+                onClick={() => handleOpenSheet('login')}
                 className="text-slate-900 font-bold text-xs hover:underline"
               >
-                Create an account
+                Sign in
               </button>
             </div>
           </div>
