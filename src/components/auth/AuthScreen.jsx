@@ -579,8 +579,8 @@ export default function AuthScreen({
       <div className={`${isStandalonePwa ? 'flex' : 'md:hidden'} fixed inset-0 flex-col w-full h-full overflow-hidden bg-[#3E7754]`}>
         <div className="flex-1 flex flex-col justify-between">
           <div className="mobile-auth-hero relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#173F2D] via-[#23533A] to-[#3E7754] px-7 pb-8 pt-8 text-center">
-            <div className="relative mb-4 flex h-[62px] w-[62px] items-center justify-center overflow-hidden rounded-[21px] border border-white/30 bg-white p-3 shadow-lg shadow-black/15">
-              <img src={sharebillsIcon} alt="Sharebills logo" className="h-full w-full object-contain" />
+            <div className="relative mb-4 flex h-[62px] w-[62px] items-center justify-center overflow-hidden rounded-[21px] border border-white/30 bg-white p-2 shadow-lg shadow-black/15">
+              <img src={sharebillsIcon} alt="Sharebills logo" className="h-full w-full rounded-[15px] object-cover" />
             </div>
             <span className="relative rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-100">
               Shared living, in sync
