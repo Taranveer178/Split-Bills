@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import DashboardBalanceCard from './common/DashboardBalanceCard';
 import {
   Plus,
   Download,
@@ -1211,56 +1212,16 @@ export default function LandingPage({
 
                   {heroPhoneTab === 'overview' && (
                     <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
-                      <div
-                        className={`rounded-[22px] border p-3.5 shadow-sm ${
-                          heroDarkPreview
-                            ? 'border-white/15 bg-zinc-900/95 text-white'
-                            : 'border-slate-200/80 bg-white text-slate-900'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
-                              Net Position
-                            </span>
-                            <div className="mt-0.5 flex items-baseline gap-1.5">
-                              <span className="font-mono text-xl font-extrabold text-emerald-500">
-                                +₹3,450
-                              </span>
-                              <span className="rounded-full border border-[#BDD2C1] bg-[#EEF4EF] px-2 py-0.5 text-[9px] font-bold text-[#356447]">
-                                To receive
-                              </span>
-                            </div>
-                          </div>
-                          <span className="inline-flex h-8 items-center gap-1 rounded-xl bg-[#3E7754] px-2.5 text-[10px] font-bold text-white shadow-xs">
-                            <Plus size={12} strokeWidth={2.5} /> Add Bill
-                          </span>
-                        </div>
-                        <div
-                          className={`mt-2.5 grid grid-cols-3 divide-x rounded-xl border p-1.5 text-center ${
-                            heroDarkPreview
-                              ? 'divide-white/10 border-white/10 bg-black/50'
-                              : 'divide-slate-200 border-slate-200/80 bg-slate-50/80'
-                          }`}
-                        >
-                          <div>
-                            <p className="text-[9px] text-slate-400">To Receive</p>
-                            <p className="font-mono text-[11px] font-extrabold text-emerald-500">
-                              +₹4,200
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-[9px] text-slate-400">To Pay</p>
-                            <p className="font-mono text-[11px] font-extrabold text-rose-500">
-                              -₹750
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-[9px] text-slate-400">Oct Share</p>
-                            <p className="font-mono text-[11px] font-extrabold">₹8,940</p>
-                          </div>
-                        </div>
-                      </div>
+                      <DashboardBalanceCard
+                        netBalance={3450}
+                        totalOwedToYou={4200}
+                        totalYouOwe={750}
+                        monthLabel="Oct"
+                        monthlyShare={8940}
+                        onAddBill={triggerGetStarted}
+                        onMonthlyShareClick={() => setHeroPhoneTab('monthly')}
+                        dark={heroDarkPreview}
+                      />
 
                       <div
                         className={`grid grid-cols-3 gap-1 rounded-xl border p-1 text-center text-[10px] font-bold ${
@@ -1719,7 +1680,7 @@ export default function LandingPage({
                 <span className="h-1.5 w-1.5 rounded-full border border-[#30343a] bg-[#17191c]" />
               </div>
               <img
-                src="/dashboard.png"
+                src="/dashboard.pnggit "
                 alt="Sharebills desktop dashboard with workspace navigation, balances, recent activity, and rent settlements"
                 className="block h-auto w-full rounded-t-[9px] sm:rounded-t-[12px]"
               />

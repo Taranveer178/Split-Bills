@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import DashboardBalanceCard from '../common/DashboardBalanceCard';
 import {
   Plus,
   UserPlus,
@@ -857,68 +858,15 @@ export default function Dashboard({
               }`}
             >
               {/* 1. Native Wallet Hero Card */}
-              <div className="relative overflow-hidden rounded-[26px] border border-slate-200/80 bg-white p-4 text-slate-900 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.16)]">
-                <div className="relative z-10 flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-bold uppercase tracking-widest text-slate-500">
-                      Net Position
-                    </span>
-                    <div className="mt-0.5 flex items-baseline gap-2">
-                      <span className="font-mono text-2xl font-extrabold tracking-tight text-slate-900">
-                        {groupMetrics.totalNetBalance > 0.01
-                          ? `+₹${groupMetrics.totalNetBalance.toFixed(0)}`
-                          : groupMetrics.totalNetBalance < -0.01
-                            ? `-₹${Math.abs(groupMetrics.totalNetBalance).toFixed(0)}`
-                            : '₹0'}
-                      </span>
-                      <span className="rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
-                        {groupMetrics.totalNetBalance > 0.01
-                          ? 'To receive'
-                          : groupMetrics.totalNetBalance < -0.01
-                            ? 'To pay'
-                            : 'Settled'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => openQuickExpenseModal()}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-2xl border border-blue-700 bg-blue-700 px-3 text-xs font-bold text-white active:scale-95 transition-transform shadow-sm"
-                  >
-                    <Plus size={14} strokeWidth={2.5} />
-                    <span>Add Bill</span>
-                  </button>
-                </div>
-
-                {/* Inner Frosted Glass Pill Strip */}
-                <div className="relative z-10 mt-3 grid grid-cols-3 divide-x divide-slate-200 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-2 text-center">
-                  <div>
-                    <p className="text-xs font-medium text-slate-500">To Receive</p>
-                    <p className="mt-0.5 font-mono text-xs font-extrabold text-emerald-700">
-                      +₹{groupMetrics.totalOwedToYou.toFixed(0)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-slate-500">To Pay</p>
-                    <p className="mt-0.5 font-mono text-xs font-extrabold text-rose-700">
-                      -₹{groupMetrics.totalYouOwe.toFixed(0)}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleTabSwitch('monthly')}
-                    className="text-center"
-                  >
-                    <p className="text-xs font-medium text-slate-500">
-                      {monthlySummary.monthLabel.split(' ')[0]} Share
-                    </p>
-                    <p className="mt-0.5 font-mono text-xs font-extrabold text-slate-900">
-                      ₹{monthlySummary.myShare.toFixed(0)}
-                    </p>
-                  </button>
-                </div>
-              </div>
+              <DashboardBalanceCard
+                netBalance={groupMetrics.totalNetBalance}
+                totalOwedToYou={groupMetrics.totalOwedToYou}
+                totalYouOwe={groupMetrics.totalYouOwe}
+                monthLabel={monthlySummary.monthLabel.split(' ')[0]}
+                monthlyShare={monthlySummary.myShare}
+                onAddBill={() => openQuickExpenseModal()}
+                onMonthlyShareClick={() => handleTabSwitch('monthly')}
+              />
 
               {/* 2. Native iOS Segmented Glass Control with Active / Archived Toggle */}
               <div className="liquid-glass grid grid-cols-3 gap-1 rounded-2xl p-1">
