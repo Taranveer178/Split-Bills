@@ -1,21 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import DashboardBalanceCard from './common/DashboardBalanceCard';
+import LandingDashboardPreview from './LandingDashboardPreview';
 import {
   Plus,
   Download,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Pin,
-  Bell,
   Receipt,
   ArrowDownLeft,
   ArrowLeftRight,
   Wallet,
   PieChart,
   CheckCircle2,
-  CheckCheck,
-  Check,
   MessageSquare,
   Sparkles,
   Zap,
@@ -25,11 +21,8 @@ import {
   Menu,
   X,
   QrCode,
-  ScanLine,
-  Camera,
   ArrowRight,
   Globe,
-  Send,
   Link,
   CodeXml,
   Mail,
@@ -38,21 +31,11 @@ import {
   Home,
   CircleDollarSign,
   FileDown,
-  FileText,
-  Smile,
-  ImagePlus,
-  CornerUpRight,
   Moon,
-  Sun,
-  Search,
-  Copy,
   ShieldCheck,
-  CalendarDays,
-  Utensils,
-  Car,
-  ShoppingBag,
   SlidersHorizontal,
-  UserPlus,
+  Pause,
+  Play,
 } from 'lucide-react';
 
 const sharebillsIcon = 'data:image/webp;base64,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';
@@ -122,10 +105,77 @@ const LandingSectionGraphic = () => (
   </svg>
 );
 
-const heroPreviewDisputes = [
-  { title: 'WiFi + OTT Bill', raisedBy: 'Sushant', space: 'Flat 402 · Tap to resolve in chat' },
-  { title: 'Groceries · ₹2,450', raisedBy: 'Aarav', space: 'Flat 402 · Your share was updated' },
-  { title: 'Weekend cab · ₹980', raisedBy: 'Tanmay', space: 'Kasol Trip · Review split in chat' },
+const dashboardSlides = [
+  {
+    id: 'overview',
+    image: '/mobile-dashboard-1.webp',
+    tag: 'Overview',
+    title: 'Your dashboard overview',
+    shortTitle: 'Overview',
+    desc: 'See your balances, spaces, and recent activity at a glance.',
+    icon: Layers,
+    badgeColor: 'bg-[#EEF4EF] text-[#356447] border-[#BDD2C1]',
+  },
+  {
+    id: 'spaces',
+    image: '/mobile-dashboard-2.webp',
+    tag: 'Shared Spaces',
+    title: 'Your shared spaces',
+    shortTitle: 'Spaces',
+    desc: 'Keep each household and group organized in one place.',
+    icon: Users,
+    badgeColor: 'bg-[#EEF4EF] text-[#356447] border-[#BDD2C1]',
+  },
+  {
+    id: 'transactions',
+    image: '/mobile-dashboard-3.webp',
+    tag: 'Transactions',
+    title: 'Track every transaction',
+    shortTitle: 'Transactions',
+    desc: 'Review shared expenses and payments in your ledger.',
+    icon: ArrowLeftRight,
+    badgeColor: 'bg-sky-50 text-sky-800 border-sky-200',
+  },
+  {
+    id: 'chat',
+    image: '/mobile-dashboard-4.webp',
+    tag: 'Chat',
+    title: 'Chat with your group',
+    shortTitle: 'Chat',
+    desc: 'Keep conversations and shared expenses together.',
+    icon: MessageSquare,
+    badgeColor: 'bg-[#EEF4EF] text-[#356447] border-[#BDD2C1]',
+  },
+  {
+    id: 'reactions',
+    image: '/mobile-dashboard-5.webp',
+    tag: 'Message Reactions',
+    title: 'React to messages',
+    shortTitle: 'Reactions',
+    desc: 'Make group conversations more expressive with quick reactions.',
+    icon: Sparkles,
+    badgeColor: 'bg-amber-50 text-amber-800 border-amber-200',
+  },
+  {
+    id: 'quick-expense',
+    image: '/mobile-dashboard-6.webp',
+    tag: 'Quick Expense',
+    title: 'Add an expense in seconds',
+    shortTitle: 'Quick Expense',
+    desc: 'Log a bill and split it with your group in just a few taps.',
+    icon: Plus,
+    badgeColor: 'bg-[#EEF4EF] text-[#356447] border-[#BDD2C1]',
+  },
+  {
+    id: 'settlements',
+    image: '/mobile-dashboard-7.webp',
+    tag: 'Settlements',
+    title: 'Settle up with ease',
+    shortTitle: 'Settlements',
+    desc: 'See who owes and settle shared balances clearly.',
+    icon: CircleDollarSign,
+    badgeColor: 'bg-amber-50 text-amber-800 border-amber-200',
+  },
 ];
 
 export default function LandingPage({
@@ -137,523 +187,43 @@ export default function LandingPage({
   deferredPromptAvailable = false,
   isAppInstalled = false,
   isStandaloneWebApp = false,
-  showcaseScreens = null,
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
 
   // Interactive preview states
-  const [heroPhoneTab, setHeroPhoneTab] = useState('overview');
-  const [heroDarkPreview, setHeroDarkPreview] = useState(false);
-  const [activeHeroDisputeIndex, setActiveHeroDisputeIndex] = useState(0);
   const [activePreviewTab, setActivePreviewTab] = useState('command');
-  const [desktopDarkPreview, setDesktopDarkPreview] = useState(false);
+  const desktopDarkPreview = false;
   const [simplifyMode, setSimplifyMode] = useState('smart');
   const [splitDemoMode, setSplitDemoMode] = useState('equal');
   const [openFaq, setOpenFaq] = useState(0);
   const [previewModal, setPreviewModal] = useState(null);
 
-  // States used inside the 6 interactive carousel screens
-  const [disputeDemoStatus, setDisputeDemoStatus] = useState('open');
-  const [rentDemoPaid, setRentDemoPaid] = useState(false);
-  const [selectedCurrency, setSelectedCurrency] = useState('INR');
-  const [exportScopeDemo, setExportScopeDemo] = useState('all');
-  const [copiedCode, setCopiedCode] = useState(false);
-
   // Filter state for redesigned features
   const [featureCategory, setFeatureCategory] = useState('all');
 
-  const currencySymbols = {
-    INR: '₹',
-    USD: '$',
-    EUR: '€',
-    GBP: '£',
-    CAD: 'CA$',
-    AUD: 'A$',
-  };
-  const sym = currencySymbols[selectedCurrency] || '₹';
-
-  // Fast dispute rotation in Hero screen (2400ms)
-  useEffect(() => {
-    if (heroPhoneTab !== 'overview' || heroPreviewDisputes.length < 2) return undefined;
-    const intervalId = window.setInterval(() => {
-      setActiveHeroDisputeIndex((index) => (index + 1) % heroPreviewDisputes.length);
-    }, 2400);
-    return () => window.clearInterval(intervalId);
-  }, [heroPhoneTab]);
-
   // ===================================================================
-  // 3D CIRCULAR CAROUSEL STATES & HANDLERS (2600ms ROTATION)
+  // Dashboard view carousel
   // ===================================================================
   const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
-  const [isCarouselHovered, setIsCarouselHovered] = useState(false);
+  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const touchStartX = useRef(0);
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 640);
-    };
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const handleCopyDemoCode = () => {
-    try {
-      if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText('FLT402');
-      }
-    } catch {
-      // Fallback
-    }
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
-  };
-
-  const mobileSlides = [
-    {
-      id: 'disputes',
-      tag: '1. In-Chat Expense Disputes',
-      title: 'Flag & Fix Wrong Bills Without Friction',
-      shortTitle: 'Disputes',
-      desc: 'Long-press any bill to raise a dispute with a note. Sharebills posts an interactive card in room chat so the payer can edit or solve it.',
-      icon: AlertTriangle,
-      badgeColor: 'bg-amber-50 text-amber-800 border-amber-200',
-      customImage: showcaseScreens?.[0] || null,
-      renderScreen: () => (
-        <div className="rounded-[24px] bg-[#F3F7F3] p-3.5 space-y-2.5 text-left">
-          <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
-            <div className="flex items-center gap-2">
-              <AlertTriangle size={14} className="text-amber-600" />
-              <div>
-                <p className="text-xs font-extrabold text-slate-900">Dispute Resolution</p>
-                <p className="text-[9px] font-semibold text-slate-500">
-                  Long-press any bill to flag
-                </p>
-              </div>
-            </div>
-            <span
-              className={`rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase ${
-                disputeDemoStatus === 'open'
-                  ? 'bg-amber-200 text-amber-900'
-                  : 'bg-emerald-100 text-emerald-700'
-              }`}
-            >
-              {disputeDemoStatus === 'open'
-                ? 'Open'
-                : disputeDemoStatus === 'updated'
-                ? 'Edited & Solved'
-                : 'Resolved'}
-            </span>
-          </div>
-
-          <div className="rounded-2xl border border-amber-200 bg-amber-50/90 p-3">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-extrabold text-slate-900">
-                Swiggy Dinner Order
-              </p>
-              <span className="font-mono text-xs font-extrabold text-amber-900">
-                {disputeDemoStatus === 'updated' ? '₹1,120.00' : '₹1,480.00'}
-              </span>
-            </div>
-            <p className="mt-0.5 text-[10px] text-slate-600">
-              Raised by <strong>Sushant</strong> in Flat 402
-            </p>
-            <p className="mt-2 rounded-xl bg-white/90 p-2 text-[10px] text-slate-700">
-              “Dessert was only for 2 people—please adjust custom split shares.”
-            </p>
-
-            <div className="mt-2.5 grid grid-cols-3 gap-1.5">
-              <button
-                type="button"
-                onClick={() => setDisputeDemoStatus('updated')}
-                className={`rounded-lg py-1.5 text-[9px] font-extrabold transition-all ${
-                  disputeDemoStatus === 'updated'
-                    ? 'bg-[#3E7754] text-white'
-                    : 'bg-white text-slate-800 border border-amber-200 hover:bg-amber-100'
-                }`}
-              >
-                Edit Bill
-              </button>
-              <button
-                type="button"
-                onClick={() => setDisputeDemoStatus('solved')}
-                className={`rounded-lg py-1.5 text-[9px] font-extrabold transition-all ${
-                  disputeDemoStatus === 'solved'
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-white text-slate-800 border border-amber-200 hover:bg-amber-100'
-                }`}
-              >
-                Mark Solved
-              </button>
-              <button
-                type="button"
-                onClick={() => setDisputeDemoStatus('open')}
-                className="rounded-lg border border-slate-200 bg-white py-1.5 text-[9px] font-bold text-slate-600 hover:bg-slate-100"
-              >
-                Reset
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between rounded-xl border border-white bg-white px-3 py-2 text-[10px]">
-            <span className="font-semibold text-slate-600">Auto-notifies all members</span>
-            <span className="font-extrabold text-[#3E7754]">Push + Chat ✓</span>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: 'rent',
-      tag: '2. Monthly Flat Rent Tracker',
-      title: 'Dedicated Monthly Rent Ledger',
-      shortTitle: 'Rent Tracker',
-      desc: 'Splits flat rent down to the exact cent across members, tracks individual Paid vs. Unpaid status, and sends automated daily reminders.',
-      icon: Home,
-      badgeColor: 'bg-[#EEF4EF] text-[#356447] border-[#BDD2C1]',
-      customImage: showcaseScreens?.[1] || null,
-      renderScreen: () => (
-        <div className="rounded-[24px] bg-white p-3.5 space-y-2.5 text-left">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
-                <Home size={14} />
-              </span>
-              <div>
-                <p className="text-xs font-extrabold text-slate-900">October 2026 Rent</p>
-                <p className="text-[9px] text-slate-500">Flat 402 · ₹24,000 total</p>
-              </div>
-            </div>
-            <span className="rounded-lg bg-amber-50 px-2 py-0.5 font-mono text-[10px] font-bold text-amber-800">
-              ₹6,000/ea
-            </span>
-          </div>
-
-          <div className="space-y-1.5">
-            {[
-              { name: 'Taranveer (You)', share: '₹6,000', paid: rentDemoPaid },
-              { name: 'Sushant Monga', share: '₹6,000', paid: true },
-              { name: 'Tanmay Sharma', share: '₹6,000', paid: true },
-              { name: 'Aarav Verma', share: '₹6,000', paid: false },
-            ].map((member) => (
-              <div
-                key={member.name}
-                className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/80 px-2.5 py-1.5 text-[10px]"
-              >
-                <span className="font-bold text-slate-800">{member.name}</span>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-mono font-semibold text-slate-600">
-                    {member.share}
-                  </span>
-                  <span
-                    className={`rounded-md px-1.5 py-0.5 text-[9px] font-extrabold ${
-                      member.paid
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-amber-100 text-amber-800'
-                    }`}
-                  >
-                    {member.paid ? 'Paid ✓' : 'Pending'}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setRentDemoPaid((prev) => !prev)}
-            className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-[11px] font-extrabold text-white shadow-xs transition-all ${
-              rentDemoPaid
-                ? 'bg-emerald-600 hover:bg-emerald-700'
-                : 'bg-[#3E7754] hover:bg-[#356447]'
-            }`}
-          >
-            <Check size={13} />
-            <span>
-              {rentDemoPaid ? 'Your Rent Share Marked Paid!' : 'Tap to Mark Your ₹6,000 Paid'}
-            </span>
-          </button>
-        </div>
-      ),
-    },
-    {
-      id: 'chat',
-      tag: '3. Rich Media, GIF & Reply Chat',
-      title: 'WhatsApp-Grade Chat Inside Every Room',
-      shortTitle: 'Rich Chat',
-      desc: 'Reply to messages, react with emojis, share GIFs, stickers, photos, videos, and PDFs, and preview links right next to the ledger.',
-      icon: MessageSquare,
-      badgeColor: 'bg-[#EEF4EF] text-[#356447] border-[#BDD2C1]',
-      customImage: showcaseScreens?.[2] || null,
-      renderScreen: () => (
-        <div className="rounded-[24px] bg-[#F3F7F3] p-3.5 space-y-2 text-left">
-          <div className="mx-auto flex w-fit items-center gap-1.5 rounded-full border border-white bg-white/95 px-3 py-1 text-xs shadow-md">
-            {['❤️', '👍', '😂', '😮', '😢', '🙏'].map((emoji) => (
-              <span key={emoji} className="cursor-pointer transition-transform hover:scale-125">
-                {emoji}
-              </span>
-            ))}
-          </div>
-
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-2.5 text-[10px] shadow-2xs">
-            <div className="flex items-center gap-1 text-[9px] font-semibold italic text-slate-400">
-              <CornerUpRight size={10} /> Forwarded from Kasol Trip
-            </div>
-            <p className="mt-0.5 font-bold text-[#3E7754]">Sushant</p>
-            <p className="text-slate-800">Booked our riverside camp! Check link:</p>
-            <div className="mt-1.5 rounded-lg border border-slate-200 bg-slate-50 p-1.5">
-              <p className="text-[8px] font-bold uppercase text-slate-400">booking.kasol.in</p>
-              <p className="text-[10px] font-bold text-slate-800">
-                Parvati Valley Riverside Cottages · 5 Guests
-              </p>
-            </div>
-          </div>
-
-          <div className="ml-auto max-w-[86%] rounded-2xl bg-[#3E7754] p-2.5 text-[10px] text-white shadow-xs">
-            <div className="mb-1 rounded border-l-2 border-white bg-white/15 px-2 py-0.5 text-[9px]">
-              <span className="font-bold">Sushant:</span> Booked our riverside camp!
-            </div>
-            <div className="flex items-center justify-between gap-2">
-              <span>Awesome! Uploading petrol receipt PDF 🧾</span>
-              <CheckCheck size={12} className="text-emerald-200" />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-[9px] font-bold text-slate-600">
-            <span>😊 Emoji</span>
-            <span className="rounded bg-[#EEF4EF] px-1.5 py-0.5 text-[#3E7754]">
-              GIPHY GIFs
-            </span>
-            <span>🐼 Stickers</span>
-            <span>📎 Media</span>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: 'payments',
-      tag: '4. 1-Tap GPay UPI & Breakdown',
-      title: 'Deep-Linked Google Pay & UPI Intents',
-      shortTitle: 'GPay & UPI',
-      desc: 'Launch Google Pay or UPI apps with your flatmate’s VPA and exact settlement amount pre-filled, or record custom partial payments.',
-      icon: Zap,
-      badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      customImage: showcaseScreens?.[3] || null,
-      renderScreen: () => (
-        <div className="rounded-[24px] bg-[#F3F7F3] p-3.5 space-y-2.5 text-left">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold text-slate-900">Smart Balances</span>
-            <div className="flex rounded-lg bg-slate-200/80 p-0.5 text-[9px] font-bold">
-              <span className="rounded-md bg-white px-2 py-0.5 text-[#3E7754] shadow-2xs">
-                Optimized
-              </span>
-              <span className="px-2 py-0.5 text-slate-500">Pairwise</span>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-white bg-white p-3 shadow-xs">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-extrabold text-slate-900">You owe Sushant</p>
-                <p className="font-mono text-[9px] text-slate-500">
-                  UPI: sushant@okicici
-                </p>
-              </div>
-              <span className="font-mono text-sm font-extrabold text-rose-600">
-                -₹1,240
-              </span>
-            </div>
-
-            <div className="mt-2.5 grid grid-cols-2 gap-1.5">
-              <span className="flex items-center justify-center gap-1 rounded-xl bg-[#3E7754] py-1.5 text-[10px] font-bold text-white shadow-xs">
-                <Zap size={11} /> Pay via GPay
-              </span>
-              <span className="flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-50 py-1.5 text-[10px] font-bold text-slate-700">
-                View 4 Bills
-              </span>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-2.5">
-            <p className="text-[10px] font-extrabold text-emerald-950">
-              Custom Quick Pay &amp; Confirmations
-            </p>
-            <p className="mt-0.5 text-[9px] text-emerald-800">
-              Record partial payments or confirm received settlements with instant push alerts.
-            </p>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: 'spaces',
-      tag: '5. Camera QR Scan & 6 Currencies',
-      title: 'Instant QR Onboarding & Global Currencies',
-      shortTitle: 'QR & Currencies',
-      desc: 'Point your camera at a room QR code or share 6-character codes. Set spaces in INR (₹), USD ($), EUR (€), GBP (£), CAD, or AUD.',
-      icon: QrCode,
-      badgeColor: 'bg-[#EEF4EF] text-[#356447] border-[#BDD2C1]',
-      customImage: showcaseScreens?.[4] || null,
-      renderScreen: () => (
-        <div className="rounded-[24px] bg-white p-3.5 space-y-2.5 text-left">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <QrCode size={14} className="text-[#3E7754]" />
-              <span className="text-xs font-extrabold text-slate-900">
-                Scan or Share Invite
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={handleCopyDemoCode}
-              className="inline-flex items-center gap-1 rounded-lg border border-[#BDD2C1] bg-[#EEF4EF] px-2 py-0.5 font-mono text-[10px] font-extrabold text-[#3E7754]"
-            >
-              <Copy size={10} />
-              <span>{copiedCode ? 'Copied!' : 'FLT402'}</span>
-            </button>
-          </div>
-
-          <div className="relative flex flex-col items-center justify-center rounded-2xl bg-slate-950 p-3.5 text-white">
-            <div className="flex h-20 w-20 items-center justify-center rounded-2xl border-2 border-dashed border-emerald-400 bg-white/10">
-              <ScanLine size={34} className="text-emerald-400 animate-pulse" />
-            </div>
-            <p className="mt-2 flex items-center gap-1 text-[9px] font-semibold text-emerald-300">
-              <Camera size={11} /> Point camera at roommate’s QR code
-            </p>
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between text-[10px] font-bold text-slate-600">
-              <span>Room Currency</span>
-              <span className="font-mono text-[#3E7754]">
-                Example: {sym}1,250.00
-              </span>
-            </div>
-            <div className="mt-1.5 grid grid-cols-6 gap-1">
-              {['INR', 'USD', 'EUR', 'GBP', 'CAD', 'AUD'].map((cur) => (
-                <button
-                  key={cur}
-                  type="button"
-                  onClick={() => setSelectedCurrency(cur)}
-                  className={`rounded-lg py-1 text-[9px] font-extrabold transition-all ${
-                    selectedCurrency === cur
-                      ? 'bg-[#3E7754] text-white shadow-2xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {cur}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: 'exports',
-      tag: '6. CSV & Printable PDF Exports',
-      title: 'One-Click CSV & PDF Ledger Statements',
-      shortTitle: 'Exports',
-      desc: 'Download clean, audit-ready spreadsheets or printable PDF statements filtered by payer, settlement type, and date window.',
-      icon: FileDown,
-      badgeColor: 'bg-[#EEF4EF] text-[#356447] border-[#BDD2C1]',
-      customImage: showcaseScreens?.[5] || null,
-      renderScreen: () => (
-        <div className="rounded-[24px] bg-white p-3.5 space-y-2.5 text-left">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EEF4EF] text-[#3E7754]">
-                <FileText size={14} />
-              </span>
-              <div>
-                <p className="text-xs font-extrabold text-slate-900">Export Transactions</p>
-                <p className="text-[9px] text-slate-500">28 records matched</p>
-              </div>
-            </div>
-            <FileDown size={14} className="text-[#3E7754]" />
-          </div>
-
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
-              Filter Scope
-            </p>
-            <div className="mt-1 grid grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1">
-              {[
-                { id: 'all', label: 'All' },
-                { id: 'mine', label: 'Paid by me' },
-                { id: 'settlements', label: 'Settlements' },
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setExportScopeDemo(item.id)}
-                  className={`rounded-lg py-1 text-[9px] font-bold transition-all ${
-                    exportScopeDemo === item.id
-                      ? 'bg-white text-[#3E7754] shadow-2xs'
-                      : 'text-slate-600'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
-              Date Window
-            </p>
-            <div className="mt-1 grid grid-cols-3 gap-1 text-center text-[9px] font-bold">
-              <span className="rounded-lg border border-[#3E7754] bg-[#EEF4EF] py-1 text-[#3E7754]">
-                This Month
-              </span>
-              <span className="rounded-lg border border-slate-200 py-1 text-slate-600">
-                Last 90d
-              </span>
-              <span className="rounded-lg border border-slate-200 py-1 text-slate-600">
-                All Time
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            <button
-              type="button"
-              onClick={triggerGetStarted}
-              className="flex items-center justify-center gap-1 rounded-xl bg-[#3E7754] py-2 text-[10px] font-bold text-white shadow-xs"
-            >
-              <Download size={11} /> CSV File
-            </button>
-            <button
-              type="button"
-              onClick={triggerGetStarted}
-              className="flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-50 py-2 text-[10px] font-bold text-slate-700"
-            >
-              <FileText size={11} /> Print PDF
-            </button>
-          </div>
-        </div>
-      ),
-    },
-  ];
-
   const handleNextCarousel = useCallback(() => {
-    setActiveCarouselIndex((prev) => (prev + 1) % mobileSlides.length);
-  }, [mobileSlides.length]);
+    setActiveCarouselIndex((prev) => (prev + 1) % dashboardSlides.length);
+  }, []);
 
   const handlePrevCarousel = useCallback(() => {
-    setActiveCarouselIndex((prev) => (prev - 1 + mobileSlides.length) % mobileSlides.length);
-  }, [mobileSlides.length]);
-
-  // Faster 2600ms slide transition
-  useEffect(() => {
-    if (isCarouselHovered) return undefined;
-    const interval = setInterval(() => {
-      handleNextCarousel();
-    }, 2600);
-    return () => clearInterval(interval);
-  }, [isCarouselHovered, handleNextCarousel]);
+    setActiveCarouselIndex((prev) => (prev - 1 + dashboardSlides.length) % dashboardSlides.length);
+  }, []);
 
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
@@ -679,30 +249,27 @@ export default function LandingPage({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handlePrevCarousel, handleNextCarousel]);
 
-  const getSlideStyle = (index) => {
-    const total = mobileSlides.length;
+  useEffect(() => {
+    if (isCarouselPaused) return undefined;
+    const interval = window.setInterval(handleNextCarousel, 2600);
+    return () => window.clearInterval(interval);
+  }, [handleNextCarousel, isCarouselPaused]);
+
+  const getCarouselSlideStyle = (index) => {
+    const total = dashboardSlides.length;
     let diff = (((index - activeCarouselIndex) % total) + total) % total;
     if (diff > total / 2) diff -= total;
 
     const absDiff = Math.abs(diff);
-
     const spacing = isMobile ? 135 : 240;
     const depth = isMobile ? 110 : 160;
     const angle = isMobile ? 22 : 28;
 
-    const translateX = diff * spacing;
-    const translateZ = -absDiff * depth - (absDiff > 1 ? 55 : 0);
-    const rotateY = -diff * angle;
-    const scale = Math.max(0.72, 1 - absDiff * 0.12);
-    const opacity = absDiff > 2 ? 0 : Math.max(0, 1 - absDiff * 0.28);
-    const zIndex = 30 - absDiff * 10;
-    const pointerEvents = absDiff > 1 ? 'none' : 'auto';
-
     return {
-      transform: `translate(-50%, -50%) translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
-      zIndex,
-      opacity,
-      pointerEvents,
+      transform: `translate(-50%, -50%) translateX(${diff * spacing}px) translateZ(${-absDiff * depth - (absDiff > 1 ? 55 : 0)}px) rotateY(${-diff * angle}deg) scale(${Math.max(0.72, 1 - absDiff * 0.12)})`,
+      zIndex: 30 - absDiff * 10,
+      opacity: absDiff > 2 ? 0 : Math.max(0, 1 - absDiff * 0.28),
+      pointerEvents: absDiff > 1 ? 'none' : 'auto',
     };
   };
 
@@ -917,9 +484,7 @@ export default function LandingPage({
                 <span className="block text-base font-extrabold leading-none tracking-tight text-slate-900">
                   ShareBills
                 </span>
-                <span className="rounded-full bg-[#EEF4EF] px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-[#3E7754] border border-[#BDD2C1]">
-                  v2.5
-                </span>
+                
               </div>
               <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-widest text-[#3E7754]">
                 Shared Ledger
@@ -1119,354 +684,28 @@ export default function LandingPage({
 
           <div className="flex flex-col items-center justify-center lg:col-span-5">
             <RevealOnScroll delay={300} className="relative w-full max-w-[370px]">
-              {/* Screen Tab & Theme Switcher Bar */}
-              <div className="mb-3 flex items-center justify-between gap-2 rounded-2xl border border-white/90 bg-white/85 p-1.5 shadow-md backdrop-blur-xl">
-                <div className="flex items-center gap-1">
-                  {[
-                    { id: 'overview', label: 'Overview' },
-                    { id: 'chat', label: 'Dispute Chat' },
-                    { id: 'dues', label: 'Rent & UPI' },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => setHeroPhoneTab(tab.id)}
-                      className={`rounded-xl px-2.5 py-1.5 text-[11px] font-extrabold transition-all ${
-                        heroPhoneTab === tab.id
-                          ? 'bg-[#3E7754] text-white shadow-xs'
-                          : 'text-slate-600 hover:bg-slate-100'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
+              <div className="mx-auto flex h-[620px] w-full max-w-[350px] flex-col overflow-hidden rounded-[44px] border-[8px] border-slate-900 bg-white shadow-[0_25px_60px_-15px_rgba(20,41,29,0.35)] [transform:translateZ(0)]">
+                <div className="relative z-20 flex h-11 shrink-0 items-center justify-between bg-white px-6 pt-1 text-slate-950">
+                  <span className="text-[12px] font-bold tracking-tight">9:41</span>
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-1/2 top-1.5 h-6 w-[82px] -translate-x-1/2 rounded-full bg-slate-950"
+                  />
+                  <span className="flex items-center gap-1.5" aria-label="Wi-Fi connected, battery full">
+                    <svg aria-hidden="true" viewBox="0 0 16 12" className="h-3 w-4 fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round">
+                      <path d="M1 3.5a11 11 0 0 1 14 0M3.5 6a7 7 0 0 1 9 0M6 8.5a3 3 0 0 1 4 0" />
+                      <circle cx="8" cy="10.5" r=".8" className="fill-current stroke-none" />
+                    </svg>
+                    <svg aria-hidden="true" viewBox="0 0 22 12" className="h-3 w-[22px]">
+                      <rect x=".75" y=".75" width="18" height="10.5" rx="2.25" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                      <path d="M20.25 4v4a2 2 0 0 0 0-4Z" fill="currentColor" />
+                      <rect x="2.5" y="2.5" width="15" height="7" rx="1" fill="currentColor" />
+                    </svg>
+                  </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setHeroDarkPreview((prev) => !prev)}
-                  title="Toggle Light / AMOLED Dark Mode Preview"
-                  className={`inline-flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-[11px] font-bold transition-all ${
-                    heroDarkPreview
-                      ? 'border-slate-700 bg-slate-900 text-amber-300'
-                      : 'border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200'
-                  }`}
-                >
-                  {heroDarkPreview ? <Moon size={12} /> : <Sun size={12} />}
-                  <span>{heroDarkPreview ? 'AMOLED' : 'Light'}</span>
-                </button>
-              </div>
-
-              {/* SLIM IPHONE FRAME */}
-              <div className="relative mx-auto rounded-[50px] border-[4px] border-slate-800/90 bg-slate-950 p-[6px] shadow-[0_25px_60px_-15px_rgba(20,41,29,0.35)] ring-1 ring-white/20 transition-all duration-300">
-                {/* Screen Viewport */}
-                <div
-                  className={`hero-phone-screen relative flex h-[580px] flex-col gap-2.5 overflow-hidden rounded-[42px] px-3 pb-2.5 pt-2 transition-colors duration-300 ${
-                    heroDarkPreview ? 'bg-black text-white' : 'bg-[#F4F7F3] text-slate-900'
-                  }`}
-                >
-                  {/* Dynamic Island Inside Viewport */}
-                  <div className="relative z-30 mx-auto flex h-[26px] w-[110px] items-center justify-between rounded-full bg-black px-2 shadow-sm ring-1 ring-white/10">
-                    <div className="h-2.5 w-2.5 rounded-full bg-slate-900/80 ring-1 ring-slate-800/60" />
-                    <div className="h-2 w-2 rounded-full bg-[#1c2c22]/90 ring-1 ring-emerald-500/30" />
-                  </div>
-
-                  {/* Header Bar */}
-                  <div className="flex items-center justify-between gap-2 px-1 pt-1">
-                    <div className="flex items-center gap-2">
-                      <img
-                        src={sharebillsIcon}
-                        alt=""
-                        className="h-8 w-8 rounded-full border border-white/80 object-cover shadow-xs"
-                      />
-                      <div>
-                        <span
-                          className={`block text-xs font-extrabold leading-tight ${
-                            heroDarkPreview ? 'text-white' : 'text-slate-900'
-                          }`}
-                        >
-                          Hi, Taranveer
-                        </span>
-                        <span className="block text-[10px] font-bold text-[#3E7754]">
-                          Good Evening
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => setHeroPhoneTab('chat')}
-                        className={`relative flex h-8 w-8 items-center justify-center rounded-full border shadow-xs ${
-                          heroDarkPreview
-                            ? 'border-white/20 bg-zinc-900 text-white'
-                            : 'border-white bg-white text-[#3E7754]'
-                        }`}
-                        aria-label="Notifications"
-                      >
-                        <Bell size={13} />
-                        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[8px] font-extrabold text-white">
-                          4
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {heroPhoneTab === 'overview' && (
-                    <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
-                      <DashboardBalanceCard
-                        netBalance={3450}
-                        totalOwedToYou={4200}
-                        totalYouOwe={750}
-                        monthLabel="Oct"
-                        monthlyShare={8940}
-                        onAddBill={triggerGetStarted}
-                        onMonthlyShareClick={() => setHeroPhoneTab('monthly')}
-                        dark={heroDarkPreview}
-                      />
-
-                      <div
-                        className={`grid grid-cols-3 gap-1 rounded-xl border p-1 text-center text-[10px] font-bold ${
-                          heroDarkPreview
-                            ? 'border-white/15 bg-zinc-900'
-                            : 'border-white/90 bg-white/85'
-                        }`}
-                      >
-                        <div className="rounded-lg bg-[#3E7754] py-1 text-white shadow-xs">
-                          Active (3)
-                        </div>
-                        <div className="py-1 text-slate-400">Archived (2)</div>
-                        <button
-                          type="button"
-                          onClick={() => setHeroPhoneTab('dues')}
-                          className="py-1 text-slate-400 hover:text-[#3E7754]"
-                        >
-                          Dues (3)
-                        </button>
-                      </div>
-
-                      {/* Rotating Mini Dispute (2400ms) */}
-                      <div
-                        className={`overflow-hidden rounded-2xl border ${
-                          heroDarkPreview
-                            ? 'border-amber-500/40 bg-amber-950/30'
-                            : 'border-amber-200 bg-amber-50/90'
-                        }`}
-                      >
-                        <div
-                          className="flex transition-transform duration-500 ease-in-out"
-                          style={{ transform: `translateX(-${activeHeroDisputeIndex * 100}%)` }}
-                        >
-                          {heroPreviewDisputes.map((dispute) => (
-                            <button
-                              key={dispute.title}
-                              type="button"
-                              onClick={() => setHeroPhoneTab('chat')}
-                              className={`flex w-full flex-none items-center justify-between gap-2 px-3 py-2 text-left ${
-                                heroDarkPreview ? 'text-amber-200' : 'text-slate-900'
-                              }`}
-                            >
-                              <div className="flex min-w-0 items-center gap-2">
-                                <AlertTriangle size={13} className="flex-shrink-0 text-amber-600" />
-                                <div className="min-w-0">
-                                  <p className="truncate text-[10px] font-extrabold">
-                                    {dispute.title} · Raised by {dispute.raisedBy}
-                                  </p>
-                                  <p className="truncate text-[9px] text-slate-500">{dispute.space}</p>
-                                </div>
-                              </div>
-                              <span className="flex-none rounded-lg bg-amber-600 px-2 py-0.5 text-[9px] font-bold text-white">
-                                Dispute
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        {[
-                          {
-                            name: 'Flat 402 · Mohali',
-                            members: '4 members · ₹28,400',
-                            net: '+₹2,150',
-                            positive: true,
-                            unread: 2,
-                            pinned: true,
-                          },
-                          {
-                            name: 'Kasol Weekend Trip',
-                            members: '5 members · ₹16,800',
-                            net: '+₹1,300',
-                            positive: true,
-                            unread: 0,
-                            pinned: true,
-                          },
-                          {
-                            name: 'Office Lunch Club',
-                            members: '6 members · ₹4,120',
-                            net: 'Settled',
-                            positive: null,
-                            unread: 1,
-                            pinned: false,
-                          },
-                        ].map((space) => (
-                          <div
-                            key={space.name}
-                            className={`flex items-center justify-between rounded-2xl border px-3 py-2 shadow-xs ${
-                              heroDarkPreview
-                                ? 'border-white/15 bg-zinc-900/90'
-                                : 'border-white/90 bg-white/90'
-                            }`}
-                          >
-                            <div className="flex min-w-0 items-center gap-2.5">
-                              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#3E7754] text-xs font-bold text-white">
-                                {space.name.charAt(0)}
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-1">
-                                  <p className="truncate text-[11px] font-bold">{space.name}</p>
-                                  {space.pinned && <Pin size={9} className="text-[#3E7754]" />}
-                                </div>
-                                <p className="text-[9px] text-slate-400">{space.members}</p>
-                              </div>
-                            </div>
-                            <span
-                              className={`rounded-lg border px-2 py-0.5 font-mono text-[10px] font-bold ${
-                                space.positive === true
-                                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                                  : space.positive === false
-                                  ? 'border-rose-200 bg-rose-50 text-rose-600'
-                                  : 'border-slate-200 bg-slate-100 text-slate-600'
-                              }`}
-                            >
-                              {space.net}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {heroPhoneTab === 'chat' && (
-                    <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
-                      <div
-                        className={`flex items-center justify-between rounded-2xl border px-3 py-2 ${
-                          heroDarkPreview ? 'border-white/15 bg-zinc-900' : 'border-white bg-white'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#3E7754] text-[11px] font-bold text-white">
-                            F
-                          </span>
-                          <div>
-                            <p className="text-[11px] font-extrabold">Flat 402 · Mohali</p>
-                            <p className="text-[9px] font-semibold text-emerald-500">
-                              4 roommates online
-                            </p>
-                          </div>
-                        </div>
-                        <span className="rounded-lg bg-[#EEF4EF] px-2 py-0.5 text-[9px] font-bold text-[#3E7754]">
-                          Live Chat
-                        </span>
-                      </div>
-
-                      <div className="rounded-2xl border border-amber-300 bg-amber-50 p-2.5 text-slate-900 shadow-xs">
-                        <div className="flex items-center justify-between text-[10px] font-extrabold text-amber-900">
-                          <span className="flex items-center gap-1">
-                            <AlertTriangle size={12} /> Expense dispute
-                          </span>
-                          <span className="rounded-full bg-amber-200 px-2 py-0.5 text-[8px] uppercase">
-                            Open
-                          </span>
-                        </div>
-                        <p className="mt-1 text-[11px] font-extrabold">WiFi + Fiber Bill · ₹1,800.00</p>
-                        <p className="mt-1 rounded-lg bg-white/85 px-2 py-1 text-[10px] text-slate-700">
-                          “I was in Delhi for 2 weeks, please adjust my share to ₹250.”
-                        </p>
-                      </div>
-
-                      <div className="ml-auto max-w-[82%] rounded-2xl bg-[#3E7754] p-2.5 text-[10px] text-white shadow-xs">
-                        <div className="flex items-center justify-between gap-2">
-                          <span>Confirmed! Updated the WiFi split too.</span>
-                          <CheckCheck size={12} className="text-emerald-200 flex-shrink-0" />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {heroPhoneTab === 'dues' && (
-                    <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto">
-                      <div
-                        className={`rounded-2xl border p-3 ${
-                          heroDarkPreview
-                            ? 'border-amber-500/40 bg-zinc-900'
-                            : 'border-amber-200 bg-amber-50/70'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="flex items-center gap-1 text-[10px] font-extrabold text-amber-800">
-                            <Home size={12} /> Oct 2026 Flat Rent
-                          </span>
-                          <span className="font-mono text-[10px] font-extrabold text-amber-900">
-                            ₹24,000 total
-                          </span>
-                        </div>
-                        <p className="mt-1 text-[10px] text-slate-600">
-                          Your share: <strong className="font-mono">₹6,000.00</strong> · 3/4 paid
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Bottom Navigation */}
-                  <div
-                    className={`mt-auto grid flex-none grid-cols-5 items-center rounded-[22px] border p-1.5 text-center shadow-md ${
-                      heroDarkPreview
-                        ? 'border-white/15 bg-zinc-900/95'
-                        : 'border-white/90 bg-white/95'
-                    }`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setHeroPhoneTab('overview')}
-                      className={`flex flex-col items-center py-1 text-[9px] font-extrabold ${
-                        heroPhoneTab === 'overview' ? 'text-[#3E7754]' : 'text-slate-400'
-                      }`}
-                    >
-                      <span>Overview</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setHeroPhoneTab('dues')}
-                      className={`flex flex-col items-center py-1 text-[9px] font-semibold ${
-                        heroPhoneTab === 'dues' ? 'text-[#3E7754] font-extrabold' : 'text-slate-400'
-                      }`}
-                    >
-                      <span>Txns</span>
-                    </button>
-                    <div className="flex justify-center">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-2xl bg-gradient-to-b from-emerald-500 to-[#3E7754] text-white shadow-sm">
-                        <Receipt size={14} />
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setHeroPhoneTab('chat')}
-                      className={`flex flex-col items-center py-1 text-[9px] font-semibold ${
-                        heroPhoneTab === 'chat' ? 'text-[#3E7754] font-extrabold' : 'text-slate-400'
-                      }`}
-                    >
-                      <span>Monthly</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setHeroDarkPreview((prev) => !prev)}
-                      className="flex flex-col items-center py-1 text-[9px] font-semibold text-slate-400"
-                    >
-                      <span>Profile</span>
-                    </button>
-                  </div>
+                <div className="relative min-h-0 flex-1">
+                  <LandingDashboardPreview />
                 </div>
-
-                <div className="mx-auto mt-1 h-1 w-24 rounded-full bg-slate-500/40" />
               </div>
             </RevealOnScroll>
           </div>
@@ -1489,42 +728,37 @@ export default function LandingPage({
               Designed like a native iOS & Android app
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-sm sm:text-base text-slate-600">
-              Swipe or explore the 3D mobile suite—from in-chat dispute resolution and monthly flat rent tracking
-              to camera QR scanning, GPay deep-links, and audit-ready CSV/PDF statements.
+              Explore the Sharebills mobile experience, from your Overview and Spaces to group Chat,
+              Quick Expense, and Settlements.
             </p>
           </RevealOnScroll>
 
-          {/* 3D PERSPECTIVE CAROUSEL STAGE */}
           <div
-            className="relative mt-8 sm:mt-12 w-full select-none"
-            onMouseEnter={() => setIsCarouselHovered(true)}
-            onMouseLeave={() => setIsCarouselHovered(false)}
+            className="relative mx-auto mt-8 w-full select-none sm:mt-12"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
-            {/* Nav Buttons */}
-            <div className="pointer-events-none absolute inset-x-0 top-1/2 z-40 -translate-y-1/2 flex items-center justify-between px-2 sm:px-6">
+            <div className="pointer-events-none absolute inset-x-0 top-1/2 z-40 flex -translate-y-1/2 items-center justify-between px-2 sm:px-6">
               <button
                 type="button"
                 onClick={handlePrevCarousel}
-                aria-label="Previous Screen"
-                className="pointer-events-auto flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-full border border-white/90 bg-white/85 text-slate-800 shadow-xl backdrop-blur-xl transition-all duration-300 hover:scale-110 hover:bg-white hover:text-[#3E7754] active:scale-95"
+                aria-label="Previous screen"
+                className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full border border-white/90 bg-white/85 text-slate-800 shadow-xl backdrop-blur-xl transition-all duration-300 hover:scale-110 hover:bg-white hover:text-[#3E7754] active:scale-95"
               >
                 <ChevronLeft size={22} />
               </button>
               <button
                 type="button"
                 onClick={handleNextCarousel}
-                aria-label="Next Screen"
-                className="pointer-events-auto flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-full border border-white/90 bg-white/85 text-slate-800 shadow-xl backdrop-blur-xl transition-all duration-300 hover:scale-110 hover:bg-white hover:text-[#3E7754] active:scale-95"
+                aria-label="Next screen"
+                className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full border border-white/90 bg-white/85 text-slate-800 shadow-xl backdrop-blur-xl transition-all duration-300 hover:scale-110 hover:bg-white hover:text-[#3E7754] active:scale-95"
               >
                 <ChevronRight size={22} />
               </button>
             </div>
 
-            {/* 3D Preserved Perspective Container */}
             <div
-              className="relative mx-auto h-[550px] sm:h-[620px] w-full max-w-[1100px]"
+              className="relative mx-auto h-[650px] w-full max-w-[1100px] sm:h-[700px]"
               style={{ perspective: '1300px' }}
               onClick={(event) => {
                 if (window.innerWidth < 640 || event.target.closest('[data-carousel-slide], button')) return;
@@ -1534,12 +768,9 @@ export default function LandingPage({
                 if (event.clientX > right - sideWidth) handleNextCarousel();
               }}
             >
-              <div
-                className="relative h-full w-full"
-                style={{ transformStyle: 'preserve-3d' }}
-              >
-                {mobileSlides.map((slide, index) => {
-                  const style = getSlideStyle(index);
+              <div className="relative h-full w-full" style={{ transformStyle: 'preserve-3d' }}>
+                {dashboardSlides.map((slide, index) => {
+                  const style = getCarouselSlideStyle(index);
                   const isActive = index === activeCarouselIndex;
                   const Icon = slide.icon;
 
@@ -1549,14 +780,13 @@ export default function LandingPage({
                       data-carousel-slide={slide.id}
                       onClick={() => setActiveCarouselIndex(index)}
                       style={style}
-                      className="absolute left-1/2 top-1/2 w-[280px] sm:w-[310px] cursor-pointer transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]"
+                      className="absolute left-1/2 top-1/2 w-[280px] cursor-pointer transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] sm:w-[310px]"
                     >
-                      {/* Floating Screen Header Pill */}
                       <div
                         className={`mx-auto mb-2.5 flex w-max items-center gap-1.5 rounded-full border px-3 py-1 shadow-md transition-all duration-500 ${
                           isActive
-                            ? 'border-[#9AB99F] bg-white text-[#3E7754] scale-105'
-                            : 'border-white/80 bg-white/70 text-slate-600 scale-95'
+                            ? 'scale-105 border-[#9AB99F] bg-white text-[#3E7754]'
+                            : 'scale-95 border-white/80 bg-white/70 text-slate-600'
                         }`}
                       >
                         <Icon size={12} className={isActive ? 'text-[#3E7754]' : 'text-slate-400'} />
@@ -1565,32 +795,24 @@ export default function LandingPage({
                         </span>
                       </div>
 
-                      {/* Hardware Bezel & Mockup Glass Shell */}
                       <div
-                        className={`group relative overflow-hidden rounded-[44px] border-[9px] border-slate-900 bg-[#F3F7F3] p-2.5 transition-all duration-500 ${
+                        className={`group relative overflow-hidden rounded-[44px] border-[9px] border-slate-900 bg-white transition-all duration-500 ${
                           isActive
                             ? 'shadow-[0_25px_60px_-15px_rgba(20,41,29,0.35)] ring-4 ring-[#63B686]/30'
                             : 'shadow-xl hover:shadow-2xl'
                         }`}
                       >
-                        <div className="mx-auto mb-2 h-4 w-20 rounded-full bg-slate-900" />
-
-                        <div className="relative min-h-[420px] sm:min-h-[460px] overflow-hidden rounded-[32px] bg-[#F3F7F3]">
-                          {slide.customImage ? (
-                            <img
-                              src={slide.customImage}
-                              alt={slide.title}
-                              className="h-full w-full object-cover rounded-[32px]"
-                            />
-                          ) : (
-                            slide.renderScreen()
-                          )}
-
-                          <div className="pointer-events-none absolute inset-0 rounded-[32px] bg-gradient-to-tr from-white/0 via-white/5 to-white/30" />
+                        <div
+                          aria-hidden="true"
+                          className="pointer-events-none absolute left-1/2 top-2 z-30 h-6 w-[76px] -translate-x-1/2 rounded-full bg-slate-950"
+                        />
+                        <div className="relative h-[568px] overflow-hidden bg-white sm:h-[634px]">
+                          <img
+                            src={slide.image}
+                            alt={`${slide.tag} mobile dashboard screen`}
+                            className="block h-full w-full object-cover object-top"
+                          />
                         </div>
-
-                        <div className="mx-auto mt-2 h-1 w-24 rounded-full bg-slate-300" />
-
                         {!isActive && (
                           <div className="pointer-events-none absolute inset-0 rounded-[35px] bg-slate-900/10 backdrop-blur-[0.5px] transition-opacity duration-500" />
                         )}
@@ -1601,49 +823,50 @@ export default function LandingPage({
               </div>
             </div>
 
-            {/* Active Screen Summary Text */}
-            <div className="mx-auto mt-6 max-w-xl text-center px-4">
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold ${
-                  mobileSlides[activeCarouselIndex].badgeColor
-                }`}
-              >
+            <div className="mx-auto mt-6 w-full max-w-xl px-4 text-center">
+              <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold ${dashboardSlides[activeCarouselIndex].badgeColor}`}>
                 <Sparkles size={12} />
-                {mobileSlides[activeCarouselIndex].tag}
+                {dashboardSlides[activeCarouselIndex].tag}
               </span>
-              <h3 className="mt-2 text-xl sm:text-2xl font-extrabold text-slate-900 transition-all">
-                {mobileSlides[activeCarouselIndex].title}
+              <h3 className="mt-2 text-xl font-extrabold text-slate-900 sm:text-2xl">
+                {dashboardSlides[activeCarouselIndex].title}
               </h3>
-              <p className="mt-1 text-xs sm:text-sm text-slate-600 transition-all">
-                {mobileSlides[activeCarouselIndex].desc}
+              <p className="mt-1 text-xs text-slate-600 sm:text-sm">
+                {dashboardSlides[activeCarouselIndex].desc}
               </p>
             </div>
 
-            {/* Navigation Indicator Pills */}
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-2 px-3">
-              {mobileSlides.map((slide, idx) => {
-                const isCurrent = idx === activeCarouselIndex;
+            <div className="mt-5 flex flex-wrap justify-center gap-2 px-3">
+              {dashboardSlides.map((slide, index) => {
+                const Icon = slide.icon;
                 return (
                   <button
                     key={slide.id}
                     type="button"
-                    onClick={() => setActiveCarouselIndex(idx)}
-                    className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition-all duration-300 ${
-                      isCurrent
-                        ? 'bg-gradient-to-b from-[#3E7754] to-[#3E7754] text-white shadow-md shadow-[#3E7754]/25 scale-105'
-                        : 'border border-white/80 bg-white/70 text-slate-600 hover:bg-white hover:text-slate-900'
+                    onClick={() => setActiveCarouselIndex(index)}
+                    aria-pressed={index === activeCarouselIndex}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
+                      index === activeCarouselIndex
+                        ? 'bg-[#3E7754] text-white shadow-md shadow-[#3E7754]/25'
+                        : 'border border-slate-200 bg-white text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${
-                        isCurrent ? 'bg-white animate-pulse' : 'bg-slate-300'
-                      }`}
-                    />
-                    <span>{slide.shortTitle}</span>
+                    <Icon size={13} />
+                    {slide.shortTitle}
                   </button>
                 );
               })}
             </div>
+            <button
+              type="button"
+              onClick={() => setIsCarouselPaused((paused) => !paused)}
+              aria-label={isCarouselPaused ? 'Resume carousel autoplay' : 'Pause carousel autoplay'}
+              aria-pressed={isCarouselPaused}
+              className="mx-auto mt-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-[#9AB99F] hover:text-[#3E7754]"
+            >
+              {isCarouselPaused ? <Play size={14} /> : <Pause size={14} />}
+              {isCarouselPaused ? 'Resume slideshow' : 'Pause slideshow'}
+            </button>
           </div>
         </div>
       </section>
@@ -1671,7 +894,7 @@ export default function LandingPage({
           className="mt-7"
         >
           <div className="mx-auto max-w-[1180px] px-1 sm:px-4">
-            <div className="relative rounded-t-[18px] border-[8px] border-b-0 border-[#242629] bg-[#242629] shadow-[0_24px_50px_-22px_rgba(15,23,42,0.5)] sm:rounded-t-[24px] sm:border-[12px] sm:border-b-0">
+            <div className="relative rounded-t-[18px] border-[10px] border-b-0 border-[#101113] bg-[#101113] shadow-[0_24px_50px_-22px_rgba(15,23,42,0.5)] sm:rounded-t-[24px] sm:border-[14px] sm:border-b-0">
               <div
                 aria-hidden="true"
                 className="absolute left-1/2 top-[-1px] z-10 flex h-4 w-28 -translate-x-1/2 items-center justify-center gap-2 rounded-b-xl border-x border-b border-[#34373b] bg-[#101113] sm:h-5 sm:w-40"
@@ -1682,14 +905,14 @@ export default function LandingPage({
               <img
                 src="/dashboard.png"
                 alt="Sharebills desktop dashboard with workspace navigation, balances, recent activity, and rent settlements"
-                className="block h-auto w-full rounded-t-[9px] sm:rounded-t-[12px]"
+                className="block h-auto w-full rounded-t-[6px] sm:rounded-t-[10px]"
               />
             </div>
             <div
               aria-hidden="true"
-              className="relative mx-auto -mt-px h-3 w-[104%] rounded-b-[10px] border-x border-b border-[#aeb4bb] bg-[#d9dde1] shadow-[0_14px_18px_-12px_rgba(15,23,42,0.45)] sm:h-4"
+              className="relative mx-auto -mt-px flex h-5 w-full items-center justify-center rounded-b-[5px] bg-[#101113] text-[8px] font-medium tracking-wide text-slate-400 sm:h-6 sm:text-[10px]"
             >
-              <div className="mx-auto h-1 w-20 rounded-b-md bg-[#b8bec5] sm:w-28" />
+              MacBook Air
             </div>
           </div>
         </RevealOnScroll>
@@ -1992,7 +1215,7 @@ export default function LandingPage({
           {(featureCategory === 'all' || featureCategory === 'rent-disputes') && (
             <RevealOnScroll
               delay={50}
-              className="lg:col-span-2 group relative overflow-hidden rounded-[32px] border border-white/90 bg-gradient-to-br from-white via-white/95 to-amber-50/50 p-7 shadow-lg shadow-[#14291D]/5 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
+              className="lg:col-span-2 group relative overflow-hidden rounded-[32px] border border-[#D9E5DC] bg-gradient-to-br from-white via-white/95 to-amber-50/50 p-7 shadow-lg shadow-[#14291D]/[0.08] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-[#A9C6AE] hover:shadow-2xl"
             >
               <div className="flex flex-col justify-between h-full gap-6 sm:flex-row">
                 <div className="max-w-md">
@@ -2054,7 +1277,7 @@ export default function LandingPage({
           {(featureCategory === 'all' || featureCategory === 'rent-disputes') && (
             <RevealOnScroll
               delay={100}
-              className="group relative overflow-hidden rounded-[32px] border border-white/90 bg-gradient-to-br from-white via-white/95 to-emerald-50/40 p-7 shadow-lg shadow-[#14291D]/5 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
+              className="group relative overflow-hidden rounded-[32px] border border-[#D9E5DC] bg-gradient-to-br from-white via-white/95 to-emerald-50/40 p-7 shadow-lg shadow-[#14291D]/[0.08] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-[#A9C6AE] hover:shadow-2xl"
             >
               <div className="flex items-center justify-between">
                 <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[#BDD2C1] bg-[#EEF4EF] text-[#3E7754] shadow-sm">
@@ -2092,7 +1315,7 @@ export default function LandingPage({
               const Icon = feat.icon;
               return (
                 <RevealOnScroll key={feat.title} delay={idx * 60}>
-                  <div className="group h-full rounded-[30px] border border-white/90 bg-white/80 p-6 shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:bg-white hover:border-[#BDD2C1] hover:shadow-xl hover:shadow-[#3E7754]/10">
+                  <div className="group h-full rounded-[30px] border border-[#D9E5DC] bg-white/90 p-6 shadow-md shadow-[#14291D]/[0.06] backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:border-[#A9C6AE] hover:bg-white hover:shadow-xl hover:shadow-[#3E7754]/10">
                     <div className="flex items-center justify-between">
                       <div
                         className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl border transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 ${feat.color}`}
@@ -2365,7 +1588,7 @@ export default function LandingPage({
             },
           ].map(({ step, icon: Icon, title, desc }, index) => (
             <RevealOnScroll key={step} delay={index * 100}>
-              <article className="group h-full rounded-3xl border border-white/90 bg-white/80 p-6 shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-[#BDD2C1] hover:bg-white hover:shadow-xl">
+              <article className="group h-full rounded-3xl border border-[#D9E5DC] bg-white/90 p-6 shadow-md shadow-[#14291D]/[0.06] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-[#A9C6AE] hover:bg-white hover:shadow-xl">
                 <div className="flex items-center justify-between">
                   <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#3E7754] text-white shadow-sm">
                     <Icon size={18} />
@@ -2494,7 +1717,7 @@ export default function LandingPage({
                 delay={idx * 150}
                 className="w-full"
               >
-                <article className="group relative isolate flex h-full flex-col justify-between overflow-hidden rounded-[28px] border border-white/90 bg-white/80 p-6 shadow-md backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-[#BDD2C1] hover:bg-white hover:shadow-xl md:p-8">
+                <article className="group relative isolate flex h-full flex-col justify-between overflow-hidden rounded-[28px] border border-[#D9E5DC] bg-white/90 p-6 shadow-lg shadow-[#14291D]/[0.08] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-[#A9C6AE] hover:bg-white hover:shadow-xl md:p-8">
                   <div className="flex items-center gap-4">
                     {developer.image ? (
                       <img

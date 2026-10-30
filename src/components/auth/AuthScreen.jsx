@@ -363,8 +363,14 @@ export default function AuthScreen({
     }
   };
 
-  const renderAuthForm = (inputRef, passwordRef, idPrefix) => (
-    <div className="flex flex-col gap-4 w-full max-w-sm mx-auto">
+  const renderAuthForm = (inputRef, passwordRef, idPrefix) => {
+    const isMobileForm = idPrefix === 'mobile';
+    const inputClassName = isMobileForm
+      ? 'w-full rounded-xl border border-[#d6e2d8] bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-[#3E7754] focus:outline-none focus:ring-2 focus:ring-[#3E7754]/15'
+      : 'w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all placeholder:text-slate-400';
+
+    return (
+      <div className="mx-auto flex w-full max-w-sm flex-col gap-4">
       {error && (
         <div className="bg-rose-50 text-rose-600 p-3 rounded-xl text-xs font-medium flex items-start gap-2 border border-rose-200">
           <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
@@ -396,7 +402,7 @@ export default function AuthScreen({
             autoCorrect="off"
             autoComplete={isForgotPassword ? 'email' : 'username'}
             enterKeyHint="next"
-            className="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all placeholder:text-slate-400"
+            className={inputClassName}
             required
           />
         </div>
@@ -417,7 +423,7 @@ export default function AuthScreen({
               autoCorrect="off"
               autoComplete="username"
               enterKeyHint="next"
-              className="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all placeholder:text-slate-400"
+              className={inputClassName}
               required
             />
           </div>
@@ -435,7 +441,7 @@ export default function AuthScreen({
               autoCorrect="off"
               autoComplete="email"
               enterKeyHint="next"
-              className="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all placeholder:text-slate-400"
+              className={inputClassName}
               required
             />
           </div>
@@ -474,7 +480,7 @@ export default function AuthScreen({
               autoComplete={isLogin ? 'current-password' : 'new-password'}
               enterKeyHint="done"
               minLength={!isLogin && !isForgotPassword ? 6 : undefined}
-              className="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all placeholder:text-slate-400 pr-10"
+              className={`${inputClassName} pr-10`}
               required
             />
             <button
@@ -490,7 +496,11 @@ export default function AuthScreen({
         </div>
       )}
 
-      <Button type="submit" disabled={isSubmitting} className="w-full mt-1 h-11 text-sm">
+      <Button
+        type="submit"
+        disabled={isSubmitting}
+        className={`${isMobileForm ? 'auth-mobile-submit' : ''} w-full mt-1 h-11 text-sm`}
+      >
         {isSubmitting
           ? 'Please wait...'
           : isForgotPassword
@@ -511,7 +521,11 @@ export default function AuthScreen({
             type="button"
             onClick={handleGoogleSignIn}
             disabled={isSubmitting}
-            className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className={`flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border bg-white text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+              isMobileForm
+                ? 'border-[#d6e2d8] text-slate-700 shadow-sm hover:bg-[#f8fbf8]'
+                : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+            }`}
           >
             <GoogleMark />
             Continue with Google
@@ -545,8 +559,9 @@ export default function AuthScreen({
           </span>
         </button>
       </div>
-    </div>
-  );
+      </div>
+    );
+  };
 
   return (
     <main className="auth-page-shell min-h-[100dvh] w-full font-sans flex items-center justify-center md:p-6 relative overflow-hidden">
@@ -634,20 +649,21 @@ export default function AuthScreen({
 
         {/* Mobile Slide-Up Sheet */}
         <div
-          className={`fixed inset-0 z-50 bg-white flex flex-col transition-transform duration-200 ease-out ${
+          className={`auth-mobile-sheet fixed inset-0 z-50 flex flex-col overflow-hidden bg-[#f5f8f5] transition-transform duration-200 ease-out ${
             isSheetOpen ? 'translate-y-0' : 'translate-y-full'
           }`}
         >
-          <div className="flex items-center px-4 py-3.5 border-b border-slate-200 bg-white">
+          <div className="relative flex h-[65px] flex-shrink-0 items-center border-b border-[#dce6de] bg-white px-4 before:absolute before:inset-x-0 before:top-0 before:h-[3px] before:bg-[#3E7754]">
             <button
               type="button"
               onClick={closeSheet}
-              className="p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+              className="mr-2 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50"
               aria-label="Back to sign in options"
             >
               <ArrowLeft size={20} />
             </button>
-            <h2 className="ml-2 text-base font-bold text-slate-900">
+            <img src={sharebillsIcon} alt="" className="mr-2 h-7 w-7 rounded-lg object-cover" />
+            <h2 className="text-sm font-extrabold tracking-tight text-slate-900">
               {isForgotPassword
                 ? 'Reset password'
                 : isLogin
@@ -659,7 +675,7 @@ export default function AuthScreen({
               onClick={() => onThemeChange?.(theme === 'dark' ? 'light' : 'dark')}
               aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
               title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-              className="ml-auto flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+              className="ml-auto flex h-9 w-9 items-center justify-center rounded-xl border border-[#dce6de] bg-[#f5f8f5] text-slate-700 transition-colors hover:bg-[#edf3ee]"
             >
               {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
             </button>

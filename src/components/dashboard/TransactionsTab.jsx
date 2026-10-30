@@ -49,6 +49,7 @@ export default function TransactionsTab({
   onRaiseExpenseDispute,
   onCancelExpenseDispute,
   showToast,
+  mobilePreview = false,
 }) {
   const [detailExpense, setDetailExpense] = useState(null);
   const visibleTransactions = preview ? transactions.slice(0, 4) : transactions;
@@ -95,7 +96,7 @@ export default function TransactionsTab({
             </h1>
           </div>
           <div className="flex items-center gap-2">
-          <div className="page-heading-controls hidden items-center gap-0.5 rounded-full p-1 md:flex">
+          <div className={`page-heading-controls hidden items-center gap-0.5 rounded-full p-1 ${mobilePreview ? '' : 'md:flex'}`}>
             {[
               { id: 'all', label: 'All' },
               { id: 'mine', label: 'Paid by Me' },
@@ -116,7 +117,7 @@ export default function TransactionsTab({
               </button>
             ))}
           </div>
-          <label className="page-heading-controls relative flex h-10 flex-shrink-0 items-center gap-2 rounded-full px-3 text-xs font-semibold text-slate-700 md:hidden">
+          <label className={`page-heading-controls relative flex h-10 flex-shrink-0 items-center gap-2 rounded-full px-3 text-xs font-semibold text-slate-700 ${mobilePreview ? '' : 'md:hidden'}`}>
             <span className="pointer-events-none">{ledgerFilter === 'mine' ? 'Paid by Me' : ledgerFilter === 'settlements' ? 'Settlements' : 'All'}</span>
             <ChevronDown size={14} className="pointer-events-none text-slate-400" />
             <select

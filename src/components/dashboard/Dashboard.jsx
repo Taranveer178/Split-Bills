@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import DashboardBalanceCard from '../common/DashboardBalanceCard';
 import {
@@ -65,6 +65,7 @@ export default function Dashboard({
   onClearNotifications,
   onTabChange,
   initialTab = 'groups',
+  mobilePreview = false,
   deferredPromptAvailable = false,
   onInstallApp,
   isAppInstalled = false,
@@ -83,6 +84,7 @@ export default function Dashboard({
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [dailyRentReminderRecords, setDailyRentReminderRecords] = useState([]);
+  const dashboardRootRef = useRef(null);
 
   // Activity Drawer / Notification Center Popup State
   const [isActivityOpen, setIsActivityOpen] = useState(false);
@@ -190,6 +192,38 @@ export default function Dashboard({
     }, 0);
     return () => window.clearTimeout(timeout);
   }, [activeTab, rentRecords, user?.id]);
+
+  useLayoutEffect(() => {
+    if (!mobilePreview) return undefined;
+
+    const root = dashboardRootRef.current;
+    const main = root?.querySelector('main');
+    const content = main?.firstElementChild;
+    if (!root || !main || !content) return undefined;
+
+    const fitContent = () => {
+      const nav = root.querySelector('nav[aria-label="Mobile navigation"]');
+      const availableHeight = Math.max(0, main.clientHeight - (nav?.offsetHeight || 0) - 8);
+      const contentHeight = content.scrollHeight;
+      const scale = contentHeight > 0
+        ? Math.min(1, availableHeight / contentHeight)
+        : 1;
+      const verticalOnly = ['groups', 'monthly', 'profile'].includes(activeTab);
+      const width = verticalOnly ? '100%' : `${100 / scale}%`;
+      const transform = verticalOnly ? 'none' : `scale(${scale})`;
+
+      if (content.style.width !== width) content.style.width = width;
+      if (content.style.transformOrigin !== 'top center') {
+        content.style.transformOrigin = 'top center';
+      }
+      if (content.style.transform !== transform) content.style.transform = transform;
+    };
+
+    fitContent();
+    const resizeObserver = new ResizeObserver(fitContent);
+    resizeObserver.observe(main);
+    return () => resizeObserver.disconnect();
+  }, [activeTab, initialTab, mobilePreview]);
 
   const confirmLogout = async () => {
     if (!onLogout || isSigningOut) return;
@@ -772,11 +806,13 @@ export default function Dashboard({
   };
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-white font-sans md:flex-row">
+    <div ref={dashboardRootRef} className={`relative flex h-full min-h-0 flex-col overflow-hidden bg-white font-sans ${mobilePreview ? '' : 'md:flex-row'}`}>
 
       {/* --- NATIVE MOBILE APP TOP BAR (< md) --- */}
       <header
-        className={`relative z-30 flex h-14 flex-shrink-0 items-center justify-between gap-2 bg-transparent px-3.5 md:hidden ${
+        className={`relative z-30 flex h-14 flex-shrink-0 items-center justify-between gap-2 bg-transparent px-3.5 ${
+          mobilePreview ? '' : 'md:hidden'
+        } ${
           ['profile', 'transactions', 'monthly'].includes(activeTab) ? 'hidden' : ''
         }`}
       >
@@ -840,20 +876,20 @@ export default function Dashboard({
       </header>
 
       {/* --- MAIN CONTENT AREA --- */}
-      <main className="relative z-10 min-w-0 flex-1 overscroll-y-contain overflow-y-auto pb-24 scrollbar-hide md:order-2 md:pb-8">
+      <main className={`relative z-10 min-w-0 flex-1 scrollbar-hide ${mobilePreview ? 'overflow-hidden pb-0' : 'overscroll-y-contain overflow-y-auto pb-24 md:order-2 md:pb-8'}`}>
         {(activeTab === 'groups' || activeTab === 'spaces' || activeTab === 'transactions') && (
           <div
-            className={`mx-auto max-w-[1360px] p-3.5 sm:p-5 md:px-6 md:pb-6 lg:px-8 lg:pb-8 ${
+            className={`mx-auto max-w-[1360px] ${mobilePreview ? 'p-3.5' : 'p-3.5 sm:p-5 md:px-6 md:pb-6 lg:px-8 lg:pb-8'} ${
               activeTab === 'spaces' || activeTab === 'transactions'
-                ? 'md:pt-0 lg:pt-0'
-                : 'md:pt-6 lg:pt-8'
+                ? mobilePreview ? '' : 'md:pt-0 lg:pt-0'
+                : mobilePreview ? '' : 'md:pt-6 lg:pt-8'
             }`}
           >
             {/* ===================================================================== */}
             {/* NATIVE MOBILE APP DASHBOARD (< md)                                    */}
             {/* ===================================================================== */}
             <div
-              className={`space-y-4 md:hidden ${
+              className={`space-y-4 ${mobilePreview ? '' : 'md:hidden'} ${
                 activeTab !== 'groups' ? 'hidden' : ''
               }`}
             >
@@ -1125,7 +1161,7 @@ export default function Dashboard({
 
             {/* Mobile View: Render Transactions Tab */}
             {activeTab === 'transactions' && (
-              <div className="md:hidden">
+              <div className={mobilePreview ? '' : 'md:hidden'}>
                 <TransactionsTab
                   transactions={recentTransactions}
                   groups={myGroups}
@@ -1140,13 +1176,14 @@ export default function Dashboard({
                   onRaiseExpenseDispute={onRaiseExpenseDispute}
                   onCancelExpenseDispute={onCancelExpenseDispute}
                   showToast={showToast}
+                  mobilePreview={mobilePreview}
                 />
               </div>
             )}
 
             {/* Mobile View: Render Spaces Tab */}
             {activeTab === 'spaces' && (
-              <div className="md:hidden">
+              <div className={mobilePreview ? '' : 'md:hidden'}>
                 <DesktopSpacesTab
                   groups={visibleGroups}
                   activeCount={activeGroups.length}
@@ -1163,6 +1200,7 @@ export default function Dashboard({
                   pinnedGroupIds={pinnedGroupIds}
                   archivedGroupIds={archivedGroupIds}
                   mutedGroupIds={mutedGroupIds}
+                  mobilePreview={mobilePreview}
                   onOpenGroup={handleOpenGroup}
                   onUpdateGroupPreference={updateGroupPreference}
                   onQuickAdd={openQuickExpenseModal}
@@ -1175,7 +1213,7 @@ export default function Dashboard({
             {/* ===================================================================== */}
             {/* DESKTOP LIQUID GLASS COMMAND CENTER (md+)                             */}
             {/* ===================================================================== */}
-            <div className="hidden md:block space-y-6">
+            <div className={mobilePreview ? 'hidden space-y-6' : 'hidden md:block space-y-6'}>
               {/* 1. Desktop Top Command Bar with Activity on Top Right */}
               <div
                 className={`liquid-glass relative flex flex-col gap-3 rounded-3xl p-4 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between lg:px-5 ${
@@ -1517,6 +1555,7 @@ export default function Dashboard({
                       pinnedGroupIds={pinnedGroupIds}
                       archivedGroupIds={archivedGroupIds}
                       mutedGroupIds={mutedGroupIds}
+                      mobilePreview={mobilePreview}
                       onOpenGroup={handleOpenGroup}
                       onUpdateGroupPreference={updateGroupPreference}
                       onQuickAdd={openQuickExpenseModal}
@@ -1552,7 +1591,7 @@ export default function Dashboard({
                             </h1>
                           </div>
                           <div className="flex items-center gap-2">
-                          <div className="page-heading-controls hidden items-center gap-0.5 rounded-full p-1 md:flex">
+                          <div className={`page-heading-controls hidden items-center gap-0.5 rounded-full p-1 ${mobilePreview ? '' : 'md:flex'}`}>
                             {[
                               { id: 'all', label: 'All' },
                               { id: 'mine', label: 'Paid by Me' },
@@ -1573,7 +1612,7 @@ export default function Dashboard({
                               </button>
                             ))}
                           </div>
-                          <label className="page-heading-controls relative flex h-10 flex-shrink-0 items-center gap-2 rounded-full px-3 text-xs font-semibold text-slate-700 md:hidden">
+                          <label className={`page-heading-controls relative flex h-10 flex-shrink-0 items-center gap-2 rounded-full px-3 text-xs font-semibold text-slate-700 ${mobilePreview ? '' : 'md:hidden'}`}>
                             <span className="pointer-events-none">{ledgerFilter === 'mine' ? 'Paid by Me' : ledgerFilter === 'settlements' ? 'Settlements' : 'All'}</span>
                             <ChevronDown size={14} className="pointer-events-none text-slate-400" />
                             <select
@@ -1761,7 +1800,7 @@ export default function Dashboard({
                       </div>
                     )}
                     </>}
-                    <div className={activeTab === 'transactions' ? 'hidden md:block' : 'hidden'}>
+                    <div className={activeTab === 'transactions' && !mobilePreview ? 'hidden md:block' : 'hidden'}>
                       <TransactionsTab
                         transactions={recentTransactions}
                         groups={myGroups}
@@ -1997,7 +2036,7 @@ export default function Dashboard({
           activeTab !== 'transactions' && (
             <div className="h-full">
               {activeTab === 'dues' && (
-                <div className="hidden md:block">
+                <div className={mobilePreview ? '' : 'hidden md:block'}>
                   <RentSettlementsTab
                     rents={groupMetrics.myUnpaidRents}
                     settlements={groupMetrics.allMySettlements}
@@ -2007,6 +2046,7 @@ export default function Dashboard({
                     getUserName={getUserName}
                     onOpenGroup={handleOpenGroup}
                     onOpenDispute={(expense) => handleOpenGroup(expense.groupId, 'chat')}
+                    mobilePreview={mobilePreview}
                   />
                 </div>
               )}
@@ -2016,6 +2056,7 @@ export default function Dashboard({
                   expenses={expenses}
                   groups={groups}
                   rentRecords={rentRecords}
+                  mobilePreview={mobilePreview}
                 />
               )}
               {activeTab === 'profile' && (
@@ -2027,6 +2068,7 @@ export default function Dashboard({
                   theme={theme}
                   onThemeChange={onThemeChange}
                   showToast={showToast}
+                  mobilePreview={mobilePreview}
                 />
               )}
             </div>
@@ -2440,6 +2482,7 @@ export default function Dashboard({
       {/* --- LIQUID GLASS NAVIGATION (Mobile Floating Dock + Desktop Left Sidebar) --- */}
       <PrimaryNav
         activeItem={activeTab}
+        mobilePreview={mobilePreview}
         onNavigate={handleTabSwitch}
         onQuickAction={() => openQuickExpenseModal()}
         onCreateGroup={onCreateGroup}

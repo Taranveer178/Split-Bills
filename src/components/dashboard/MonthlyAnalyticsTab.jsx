@@ -55,7 +55,13 @@ const CATEGORY_META = {
 
 const getCategoryMeta = (name = 'Other') => CATEGORY_META[name] || CATEGORY_META.Other;
 
-export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [], rentRecords = [] }) {
+export default function MonthlyAnalyticsTab({
+  user,
+  expenses = [],
+  groups = [],
+  rentRecords = [],
+  mobilePreview = false,
+}) {
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedBreakdown, setSelectedBreakdown] = useState(null);
   const monthPickerInputRef = useRef(null);
@@ -170,7 +176,7 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [], 
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5 p-4 sm:p-6 lg:p-8 pb-20">
+    <div className={`mx-auto max-w-5xl space-y-5 p-4 pb-20 ${mobilePreview ? '' : 'sm:p-6 lg:p-8'}`}>
       {/* Header & Month Switcher */}
       <div className="flex items-center justify-between gap-2.5">
         <div className="page-heading flex min-w-0 items-center gap-2.5 rounded-full p-0 pr-4">
@@ -235,7 +241,7 @@ export default function MonthlyAnalyticsTab({ user, expenses = [], groups = [], 
       </div>
 
       {/* 3-Card Summary Row */}
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
+      <div className={`grid grid-cols-1 gap-3.5 ${mobilePreview ? '' : 'sm:grid-cols-3'}`}>
         <button
           type="button"
           onClick={() => openBreakdown('paid', 'You Paid Out')}

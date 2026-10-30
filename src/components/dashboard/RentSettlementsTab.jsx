@@ -10,6 +10,7 @@ export default function RentSettlementsTab({
   getUserName,
   onOpenGroup,
   onOpenDispute,
+  mobilePreview = false,
 }) {
   const getMonthLabel = (month) => {
     const date = new Date(`${month}-01T00:00:00`);
@@ -19,7 +20,7 @@ export default function RentSettlementsTab({
   };
 
   return (
-    <section className="mx-auto max-w-[1320px] space-y-5 p-4 pb-20 sm:p-6 lg:p-8">
+    <section className={`mx-auto max-w-[1320px] space-y-5 p-4 pb-20 ${mobilePreview ? '' : 'sm:p-6 lg:p-8'}`}>
       <header className="page-heading flex min-w-0 items-center gap-2.5 rounded-full p-0 pr-4">
         <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-blue-600 to-blue-600 text-xs font-bold text-white shadow-sm">
           {user?.photoDataUrl ? (
@@ -41,8 +42,8 @@ export default function RentSettlementsTab({
           <p className="mt-1 text-xs text-slate-500">No pending rent, disputes, or settlements across your spaces.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-12">
-          <div className="order-2 space-y-5 xl:order-1 xl:col-span-8">
+        <div className={`grid grid-cols-1 items-start gap-6 ${mobilePreview ? '' : 'xl:grid-cols-12'}`}>
+          <div className={`space-y-5 ${mobilePreview ? 'order-2' : 'order-2 xl:order-1 xl:col-span-8'}`}>
             {rents.length > 0 && (
             <section className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">
               <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-3">
@@ -120,7 +121,7 @@ export default function RentSettlementsTab({
           </div>
 
           {disputes.length > 0 && (
-            <aside className="order-1 xl:sticky xl:top-4 xl:order-2 xl:col-span-4">
+            <aside className={mobilePreview ? 'order-1' : 'order-1 xl:sticky xl:top-4 xl:order-2 xl:col-span-4'}>
               <section className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">
                 <div className="mb-3 flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
                   <div>

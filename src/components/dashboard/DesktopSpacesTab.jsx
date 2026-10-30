@@ -33,6 +33,7 @@ export default function DesktopSpacesTab({
   pinnedGroupIds,
   mutedGroupIds,
   archivedGroupIds,
+  mobilePreview = false,
   onOpenGroup,
   onUpdateGroupPreference,
   onQuickAdd,
@@ -54,7 +55,7 @@ export default function DesktopSpacesTab({
             Shared Spaces
           </h1>
         </div>
-        <div className="page-heading-controls hidden items-center gap-1 rounded-full p-1.5 md:flex">
+        <div className={`page-heading-controls hidden items-center gap-1 rounded-full p-1.5 ${mobilePreview ? '' : 'md:flex'}`}>
           {[
             { id: 'active', label: `Active (${activeCount})` },
             { id: 'pinned', label: `Pinned (${pinnedCount})` },
@@ -75,7 +76,7 @@ export default function DesktopSpacesTab({
             </button>
           ))}
         </div>
-        <label className="page-heading-controls relative flex h-10 max-w-[58%] flex-shrink items-center gap-2 rounded-full px-3 text-xs font-semibold text-slate-700 md:hidden">
+        <label className={`page-heading-controls relative flex h-10 max-w-[58%] flex-shrink items-center gap-2 rounded-full px-3 text-xs font-semibold text-slate-700 ${mobilePreview ? '' : 'md:hidden'}`}>
           <span className="truncate">
             {spaceFilter === 'pinned' ? `Pinned (${pinnedCount})` : spaceFilter === 'archived' ? `Archived (${archivedCount})` : `Active (${activeCount})`}
           </span>
@@ -110,7 +111,7 @@ export default function DesktopSpacesTab({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className={`grid grid-cols-1 gap-4 ${mobilePreview ? '' : 'md:grid-cols-2'}`}>
           {groups.map((group) => {
             const metrics = groupMetrics.byGroup[group.id] || {
               myNet: 0,
@@ -163,7 +164,7 @@ export default function DesktopSpacesTab({
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <h2 className="truncate text-base font-extrabold text-slate-900 transition-colors group-hover:text-blue-600 md:text-sm">
+                          <h2 className={`truncate text-base font-extrabold text-slate-900 transition-colors group-hover:text-blue-600 ${mobilePreview ? '' : 'md:text-sm'}`}>
                             {group.name}
                           </h2>
                           {isPinned && (
@@ -193,7 +194,7 @@ export default function DesktopSpacesTab({
                           )}
                           {isMuted && <BellOff size={12} className="flex-shrink-0 text-amber-500" />}
                         </div>
-                        <p className="truncate text-sm text-slate-500 md:text-xs">
+                        <p className={`truncate text-sm text-slate-500 ${mobilePreview ? '' : 'md:text-xs'}`}>
                           {group.description || `${group.members?.length || 1} members`}
                         </p>
                       </div>
@@ -217,7 +218,7 @@ export default function DesktopSpacesTab({
 
                   <div className="mt-3.5 grid grid-cols-2 gap-2 rounded-xl border border-white/80 bg-white/60 px-3 py-2 text-xs">
                     <div>
-                      <span className="block text-xs font-bold uppercase tracking-wider text-slate-400 md:text-[10px]">
+                      <span className={`block text-xs font-bold uppercase tracking-wider text-slate-400 ${mobilePreview ? '' : 'md:text-[10px]'}`}>
                         Room Spend
                       </span>
                       <span className="font-mono font-extrabold text-slate-800">
@@ -225,7 +226,7 @@ export default function DesktopSpacesTab({
                       </span>
                     </div>
                     <div className="min-w-0">
-                      <span className="block text-xs font-bold uppercase tracking-wider text-slate-400 md:text-[10px]">
+                      <span className={`block text-xs font-bold uppercase tracking-wider text-slate-400 ${mobilePreview ? '' : 'md:text-[10px]'}`}>
                         Latest Bill
                       </span>
                       <span className="block truncate font-semibold text-slate-700">
@@ -259,7 +260,7 @@ export default function DesktopSpacesTab({
                         type="button"
                         onClick={(event) => onCopyInvite(event, group)}
                         title="Copy invite code"
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200/80 bg-white/80 px-2 py-0.5 font-mono text-xs font-bold text-slate-600 hover:bg-white md:text-[10px]"
+                        className={`inline-flex items-center gap-1 rounded-lg border border-slate-200/80 bg-white/80 px-2 py-0.5 font-mono text-xs font-bold text-slate-600 hover:bg-white ${mobilePreview ? '' : 'md:text-[10px]'}`}
                       >
                         {copiedCodeId === group.id ? (
                           <Check size={10} className="text-emerald-600" />
@@ -280,7 +281,7 @@ export default function DesktopSpacesTab({
                       }}
                       title={isPinned ? 'Unpin space' : 'Pin space'}
                       aria-label={isPinned ? `Unpin ${group.name}` : `Pin ${group.name}`}
-                      className={`hidden h-7 w-7 items-center justify-center rounded-xl md:flex ${
+                      className={`${mobilePreview ? 'hidden' : 'hidden md:flex'} h-7 w-7 items-center justify-center rounded-xl ${
                         isPinned
                           ? 'bg-blue-50 text-blue-600'
                           : 'text-slate-400 hover:bg-white hover:text-blue-600'
@@ -296,7 +297,7 @@ export default function DesktopSpacesTab({
                       }}
                       title={isArchived ? 'Restore space' : 'Archive space'}
                       aria-label={isArchived ? `Restore ${group.name}` : `Archive ${group.name}`}
-                      className={`hidden h-7 w-7 items-center justify-center rounded-xl md:flex ${
+                      className={`${mobilePreview ? 'hidden' : 'hidden md:flex'} h-7 w-7 items-center justify-center rounded-xl ${
                         isArchived
                           ? 'bg-blue-50 text-blue-600'
                           : 'text-slate-400 hover:bg-white hover:text-blue-600'

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import {
   FieldPath,
@@ -255,13 +255,15 @@ export default function App() {
   const navigateToRef = useRef(null);
   const lastExitedGroupIdRef = useRef(null);
   const activeUser = users.find((user) => user.id === activeUserId);
+  const isLandingPageVisible = !activeUser && !authMode && !isStandalonePwa;
 
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
+  useLayoutEffect(() => {
+    const isDarkMode = theme === 'dark' && !isLandingPageVisible;
+    document.documentElement.classList.toggle('dark', isDarkMode);
     localStorage.setItem('rs_theme', theme);
     document.querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', theme === 'dark' ? '#000000' : '#3E7754');
-  }, [theme]);
+      ?.setAttribute('content', isDarkMode ? '#000000' : '#3E7754');
+  }, [isLandingPageVisible, theme]);
 
   const mutedGroupIds = useMemo(
     () => (Array.isArray(activeUser?.mutedGroupIds) ? activeUser.mutedGroupIds : []),

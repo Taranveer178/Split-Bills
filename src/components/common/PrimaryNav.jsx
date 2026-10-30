@@ -37,6 +37,7 @@ export default function PrimaryNav({
   onInstallApp,
   isAppInstalled = false,
   desktopOnly = false,
+  mobilePreview = false,
 }) {
   const [isSpaceActionsOpen, setIsSpaceActionsOpen] = useState(false);
 
@@ -48,7 +49,7 @@ export default function PrimaryNav({
       {!desktopOnly && (
         <>
           {activeItem === 'groups' && (onCreateGroup || onJoinGroup) && (
-            <div className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-4 z-[51] md:hidden">
+            <div className={`fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-4 z-[51] ${mobilePreview ? '' : 'md:hidden'}`}>
               {isSpaceActionsOpen && (
                 <div
                   id="mobile-space-actions"
@@ -97,7 +98,7 @@ export default function PrimaryNav({
 
           <nav
             aria-label="Mobile navigation"
-            className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 pointer-events-none md:hidden"
+            className={`fixed inset-x-0 bottom-0 z-50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 pointer-events-none ${mobilePreview ? '' : 'md:hidden'}`}
           >
             <div className="liquid-nav-dock pointer-events-auto mx-auto grid h-16 w-full max-w-[25rem] grid-cols-5 items-center gap-0 rounded-[28px] p-1.5 shadow-xl bg-white/80 backdrop-blur-xl border border-white/40">
             {/* Left 2 items: Overview & Transactions */}
@@ -193,7 +194,7 @@ export default function PrimaryNav({
       {/* ===================================================================== */}
       <aside
         aria-label="Desktop navigation"
-        className="hidden md:flex md:order-first md:h-full md:w-60 lg:w-64 md:flex-shrink-0 md:flex-col md:justify-between bg-white/95 backdrop-blur-xl border-r border-slate-200/80 shadow-[4px_0_24px_rgba(15,23,42,0.03)] px-4 py-6 z-30"
+        className={mobilePreview ? 'hidden' : 'hidden md:flex md:order-first md:h-full md:w-60 lg:w-64 md:flex-shrink-0 md:flex-col md:justify-between bg-white/95 backdrop-blur-xl border-r border-slate-200/80 shadow-[4px_0_24px_rgba(15,23,42,0.03)] px-4 py-6 z-30'}
       >
         <div>
           {/* Brand Header */}

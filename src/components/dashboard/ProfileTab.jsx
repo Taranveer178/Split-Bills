@@ -38,6 +38,7 @@ export default function ProfileTab({
   theme = 'light',
   onThemeChange,
   showToast,
+  mobilePreview = false,
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(user?.username || '');
@@ -302,7 +303,7 @@ export default function ProfileTab({
   const getInitials = () => (user?.username || 'U').charAt(0).toUpperCase();
 
   return (
-    <div className="mx-auto w-full max-w-4xl p-4 sm:p-6 lg:p-8 pb-20">
+    <div className={`mx-auto w-full max-w-4xl p-4 pb-20 ${mobilePreview ? '' : 'sm:p-6 lg:p-8'}`}>
       <div className="mb-5 flex items-center justify-between gap-2.5">
         <div className="page-heading flex min-w-0 items-center gap-2.5 rounded-full p-0 pr-4">
           <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-tr from-blue-600 to-blue-600 text-xs font-bold text-white shadow-sm">
@@ -347,8 +348,8 @@ export default function ProfileTab({
 
       {!isEditing ? (
         <div className="space-y-4">
-          <div className="rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className={`rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs ${mobilePreview ? '' : 'sm:p-6'}`}>
+            <div className={`flex flex-col gap-4 ${mobilePreview ? '' : 'sm:flex-row sm:items-center'}`}>
               <div className="relative inline-block">
                 {photoDataUrl ? (
                   <img
@@ -378,7 +379,7 @@ export default function ProfileTab({
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-1 gap-3.5 md:grid-cols-2">
+            <div className={`mt-6 grid grid-cols-1 gap-3.5 ${mobilePreview ? '' : 'md:grid-cols-2'}`}>
               <div className="flex items-center gap-3.5 rounded-xl border border-slate-200/80 bg-slate-50/70 p-4">
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-700">
                   <QrCode size={18} />
@@ -517,7 +518,7 @@ export default function ProfileTab({
           )}
 
           <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs space-y-5">
-            <div className="flex flex-col sm:flex-row items-center gap-4 border-b border-slate-100 pb-5">
+            <div className={`flex flex-col items-center gap-4 border-b border-slate-100 pb-5 ${mobilePreview ? '' : 'sm:flex-row'}`}>
               {photoDataUrl ? (
                 <img
                   src={photoDataUrl}
@@ -555,7 +556,7 @@ export default function ProfileTab({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className={`grid grid-cols-1 gap-4 ${mobilePreview ? '' : 'md:grid-cols-2'}`}>
               <div>
                 <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
                   <UserCircle size={14} />

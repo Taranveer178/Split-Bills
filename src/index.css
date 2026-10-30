@@ -887,6 +887,18 @@ html.dark .group-view-tabbar button[class*="bg-white"] {
   background: #fff;
 }
 
+.auth-mobile-submit {
+  border: 1px solid #356447 !important;
+  background: #3e7754 !important;
+  background-image: none !important;
+  box-shadow: 0 8px 18px rgba(62, 119, 84, 0.2) !important;
+}
+
+.auth-mobile-submit:hover {
+  background: #356447 !important;
+  background-image: none !important;
+}
+
 .auth-page-shell {
   background:
     radial-gradient(ellipse at 12% 8%, rgba(119, 158, 128, 0.18), transparent 38%),
