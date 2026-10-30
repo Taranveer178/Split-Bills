@@ -814,10 +814,10 @@ export default function Dashboard({
             title="Activity notifications"
             aria-label="Activity notifications"
             aria-expanded={isActivityOpen}
-            className={`relative flex h-9 w-9 items-center justify-center rounded-full border shadow-sm transition-all active:scale-95 ${
+            className={`relative flex h-10 w-10 items-center justify-center rounded-full border shadow-[0_2px_8px_rgba(15,23,42,0.12)] ring-1 transition-all active:scale-95 ${
               isActivityOpen
-                ? 'border-blue-500 bg-blue-50 text-blue-600'
-                : 'border-white/80 bg-white/80 text-slate-600 hover:text-blue-600'
+                ? 'border-blue-500 bg-blue-50 text-blue-600 ring-blue-200'
+                : 'border-slate-300 bg-white text-slate-400 ring-slate-200 hover:border-blue-300 hover:text-blue-600'
             }`}
           >
             <Bell
@@ -827,7 +827,7 @@ export default function Dashboard({
                   ? 'fill-blue-600/20 text-blue-600'
                   : unreadNotifications.length > 0
                     ? 'text-blue-600'
-                    : 'text-slate-600'
+                    : 'text-slate-400'
               }
             />
             {unreadNotifications.length > 0 && (
@@ -1666,7 +1666,7 @@ export default function Dashboard({
                             <ExpenseLongPressActions
                               key={exp.id}
                               expenseTitle={exp.title}
-                              canDelete={exp.createdBy === user?.id || exp.paidBy === user?.id}
+                              canDelete={!exp.activeDisputeId && (exp.createdBy === user?.id || exp.paidBy === user?.id)}
                               canDispute={Boolean(
                                 grp
                                 && grp.members?.includes(user?.id)
@@ -1674,13 +1674,15 @@ export default function Dashboard({
                                 && exp.category !== 'Settlement'
                                 && !exp.activeDisputeId
                               )}
+                              hasActiveDispute={Boolean(exp.activeDisputeId)}
                               canCancelDispute={Boolean(
                                 exp.activeDisputeId
-                                && (!exp.activeDisputeBy || exp.activeDisputeBy === user?.id)
+                                && exp.activeDisputeBy === user?.id
                               )}
                               onDelete={() => onDeleteExpense?.(exp.id)}
                               onRaiseDispute={(message) => onRaiseExpenseDispute?.(exp, message)}
                               onCancelDispute={() => onCancelExpenseDispute?.(exp)}
+                              onViewDispute={() => handleOpenGroup(exp.groupId, 'chat')}
                               showToast={showToast}
                             >
                             <div
@@ -2101,7 +2103,7 @@ export default function Dashboard({
             <div className="flex-1 overflow-y-auto py-3 space-y-2.5 scrollbar-hide">
               {userNotifications.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center py-16 text-center">
-                  <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 border border-blue-100">
+                  <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-200 bg-blue-50 text-blue-700 shadow-sm shadow-blue-900/10">
                     <CheckCircle2 size={26} />
                   </div>
                   <h3 className="text-sm font-bold text-slate-800">You're all caught up!</h3>
@@ -2158,12 +2160,16 @@ export default function Dashboard({
                       }`}
                     >
                       <div className="flex items-start gap-2.5 min-w-0">
-                        <div className={`mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg ${
+                        <div className={`mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border shadow-sm ${
                           isSelected
-                            ? 'bg-blue-600 text-white'
+                            ? 'border-blue-700 bg-blue-600 text-white shadow-blue-900/20'
                             : isChat
-                              ? 'bg-blue-50 text-blue-600'
-                              : 'bg-emerald-50 text-emerald-600'
+                              ? 'border-blue-200 bg-blue-50 text-blue-700 shadow-blue-900/10'
+                              : isRent
+                                ? 'border-amber-200 bg-amber-50 text-amber-700 shadow-amber-900/10'
+                                : isDispute
+                                  ? 'border-rose-200 bg-rose-50 text-rose-700 shadow-rose-900/10'
+                                  : 'border-emerald-200 bg-emerald-50 text-emerald-700 shadow-emerald-900/10'
                         }`}>
                           {isSelected ? <Check size={14} /> : isDispute ? <AlertTriangle size={13} /> : isChat ? <MessageSquare size={13} /> : isRent ? <Home size={13} /> : <Receipt size={13} />}
                         </div>
