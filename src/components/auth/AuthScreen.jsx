@@ -70,8 +70,11 @@ export default function AuthScreen({
   useEffect(() => {
     if (isSheetOpen) {
       const timer = setTimeout(() => {
-        if (mobileIdentifierRef.current) {
-          mobileIdentifierRef.current.focus();
+        const identifierInput = window.innerWidth >= 768
+          ? desktopIdentifierRef.current
+          : mobileIdentifierRef.current;
+        if (identifierInput) {
+          identifierInput.focus();
         }
       }, 300);
       return () => clearTimeout(timer);
@@ -565,18 +568,20 @@ export default function AuthScreen({
 
   return (
     <main className="auth-page-shell min-h-[100dvh] w-full font-sans flex items-center justify-center md:p-6 relative overflow-hidden">
-      <button
-        type="button"
-        onClick={() => onThemeChange?.(theme === 'dark' ? 'light' : 'dark')}
-        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-        className="fixed right-4 top-4 z-[60] hidden h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/90 text-slate-700 shadow-md backdrop-blur transition-colors hover:bg-white md:flex"
-      >
-        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-      </button>
+      {!isStandalonePwa && (
+        <button
+          type="button"
+          onClick={() => onThemeChange?.(theme === 'dark' ? 'light' : 'dark')}
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          className="fixed right-4 top-4 z-[60] hidden h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/90 text-slate-700 shadow-md backdrop-blur transition-colors hover:bg-white md:flex"
+        >
+          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
+      )}
 
       {/* MOBILE LAYOUT */}
-      <div className={`${isStandalonePwa ? 'flex' : 'md:hidden'} fixed inset-0 flex-col w-full h-full overflow-hidden bg-[#3E7754]`}>
+      <div className="fixed inset-0 flex h-full w-full flex-col overflow-hidden bg-[#3E7754] md:hidden">
         <div className="flex-1 flex flex-col justify-between">
           <div className="mobile-auth-hero relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#173F2D] via-[#23533A] to-[#3E7754] px-7 pb-8 pt-8 text-center">
             <div className="relative mb-4 flex h-[62px] w-[62px] items-center justify-center overflow-hidden rounded-[21px] border border-white/30 bg-white p-2 shadow-lg shadow-black/15">
@@ -672,15 +677,17 @@ export default function AuthScreen({
                   ? 'Sign in'
                   : 'Create account'}
             </h2>
-            <button
-              type="button"
-              onClick={() => onThemeChange?.(theme === 'dark' ? 'light' : 'dark')}
-              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-              className="ml-auto flex h-9 w-9 items-center justify-center rounded-xl border border-[#dce6de] bg-[#f5f8f5] text-slate-700 transition-colors hover:bg-[#edf3ee]"
-            >
-              {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
-            </button>
+            {!isStandalonePwa && (
+              <button
+                type="button"
+                onClick={() => onThemeChange?.(theme === 'dark' ? 'light' : 'dark')}
+                aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                className="ml-auto flex h-9 w-9 items-center justify-center rounded-xl border border-[#dce6de] bg-[#f5f8f5] text-slate-700 transition-colors hover:bg-[#edf3ee]"
+              >
+                {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+              </button>
+            )}
           </div>
           <div className="flex-1 overflow-y-auto px-6 pt-6 pb-10">
             <form onSubmit={handleSubmit} className="w-full">
@@ -689,6 +696,113 @@ export default function AuthScreen({
           </div>
         </div>
       </div>
+
+      {isStandalonePwa && (
+        <section className="hidden min-h-[min(760px,calc(100dvh-3rem))] w-full max-w-6xl overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_28px_90px_rgba(27,65,41,0.14)] md:grid md:grid-cols-[1.05fr_0.95fr]">
+          <div className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-[#173F2D] via-[#23533A] to-[#3E7754] p-10 text-white lg:p-14">
+            <div className="absolute -right-24 -top-20 h-80 w-80 rounded-full border border-white/10 bg-white/[0.04]" />
+            <div className="absolute -bottom-36 -left-20 h-96 w-96 rounded-full border border-white/10 bg-white/[0.04]" />
+            <div className="relative flex items-center gap-3">
+              <img src={sharebillsIcon} alt="" className="h-11 w-11 rounded-xl border border-white/30 object-cover shadow-lg" />
+              <span className="text-xl font-extrabold tracking-tight">Sharebills</span>
+            </div>
+            <div className="relative my-12 max-w-lg">
+              <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-100">
+                Shared living, in sync
+              </span>
+              <h1 className="mt-6 text-4xl font-extrabold leading-tight tracking-tight lg:text-5xl">
+                Split bills, <span className="text-emerald-200">not friendships.</span>
+              </h1>
+              <p className="mt-5 max-w-md text-base leading-relaxed text-emerald-50/85">
+                Keep household expenses clear, balanced, and easy for everyone to settle.
+              </p>
+              <ul className="mt-8 space-y-4 text-sm text-emerald-50/90">
+                {[
+                  'Track shared expenses and rent in one place',
+                  'See who owes what with clear balances',
+                  'Settle up directly with simple payment details',
+                ].map((item) => (
+                  <li key={item} className="flex items-center gap-3">
+                    <CheckCircle2 size={18} className="flex-shrink-0 text-emerald-200" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <p className="relative text-xs font-medium text-emerald-100/70">
+              © {new Date().getFullYear()} Sharebills
+            </p>
+          </div>
+
+          <div className="flex items-center justify-center bg-[#fbfdfb] p-10 lg:p-14">
+            <div className="w-full max-w-md">
+              {isSheetOpen ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={closeSheet}
+                    className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition-colors hover:text-slate-900"
+                  >
+                    <ArrowLeft size={17} />
+                    Back
+                  </button>
+                  <div className="mb-7">
+                    <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">
+                      {isForgotPassword ? 'Reset password' : isLogin ? 'Welcome back' : 'Create your account'}
+                    </h2>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-500">
+                      {isForgotPassword
+                        ? 'We’ll email you a password reset link.'
+                        : isLogin
+                          ? 'Sign in to pick up where your household left off.'
+                          : 'Get your household on the same page about shared expenses.'}
+                    </p>
+                  </div>
+                  <form onSubmit={handleSubmit} className="w-full">
+                    {renderAuthForm(desktopIdentifierRef, desktopPasswordRef, 'desktop')}
+                  </form>
+                </>
+              ) : (
+                <>
+                  <span className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">
+                    Welcome to Sharebills
+                  </span>
+                  <h2 className="mt-4 text-3xl font-extrabold leading-tight tracking-tight text-slate-900 lg:text-4xl">
+                    Make shared expenses easier.
+                  </h2>
+                  <p className="mt-4 text-base leading-relaxed text-slate-600">
+                    Create a space for your household and keep every shared bill organized from day one.
+                  </p>
+                  <div className="mt-9 space-y-3">
+                    <Button onClick={() => handleOpenSheet('signup')} className="h-12 w-full text-sm">
+                      Get Started
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={handleGoogleSignIn}
+                      disabled={isSubmitting}
+                      className="flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <GoogleMark />
+                      Continue with Google
+                    </button>
+                  </div>
+                  <p className="mt-6 text-center text-sm text-slate-500">
+                    Already have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => handleOpenSheet('login')}
+                      className="font-bold text-slate-900 hover:underline"
+                    >
+                      Sign in
+                    </button>
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* DESKTOP LAYOUT */}
       <div className={`${isStandalonePwa ? 'hidden' : 'hidden md:flex'} w-full max-w-[920px] min-h-[540px] bg-white rounded-2xl border border-slate-200 shadow-[0_20px_60px_rgba(15,23,42,0.08)] overflow-hidden`}>

@@ -256,14 +256,15 @@ export default function App() {
   const lastExitedGroupIdRef = useRef(null);
   const activeUser = users.find((user) => user.id === activeUserId);
   const isLandingPageVisible = !activeUser && !authMode && !isStandalonePwa;
+  const isLightWelcomeVisible = !activeUser && (isLandingPageVisible || isStandalonePwa);
 
   useLayoutEffect(() => {
-    const isDarkMode = theme === 'dark' && !isLandingPageVisible;
+    const isDarkMode = theme === 'dark' && !isLightWelcomeVisible;
     document.documentElement.classList.toggle('dark', isDarkMode);
     localStorage.setItem('rs_theme', theme);
     document.querySelector('meta[name="theme-color"]')
       ?.setAttribute('content', isDarkMode ? '#000000' : '#3E7754');
-  }, [isLandingPageVisible, theme]);
+  }, [isLightWelcomeVisible, theme]);
 
   const mutedGroupIds = useMemo(
     () => (Array.isArray(activeUser?.mutedGroupIds) ? activeUser.mutedGroupIds : []),
