@@ -105,6 +105,22 @@ const RevealOnScroll = ({
   );
 };
 
+const LandingSectionGraphic = () => (
+  <svg
+    aria-hidden="true"
+    viewBox="0 0 160 160"
+    className="pointer-events-none absolute right-6 top-6 z-0 hidden h-36 w-36 text-[#91B69A]/40 sm:block"
+    fill="none"
+  >
+    <circle cx="80" cy="80" r="64" stroke="currentColor" strokeWidth="1.5" />
+    <circle cx="80" cy="80" r="47" stroke="currentColor" strokeDasharray="3 7" />
+    <path d="M80 16v128M16 80h128" stroke="currentColor" strokeWidth="1.5" />
+    <circle cx="80" cy="80" r="9" fill="currentColor" />
+    <circle cx="80" cy="16" r="4" fill="currentColor" />
+    <circle cx="144" cy="80" r="4" fill="currentColor" />
+  </svg>
+);
+
 const heroPreviewDisputes = [
   { title: 'WiFi + OTT Bill', raisedBy: 'Sushant', space: 'Flat 402 · Tap to resolve in chat' },
   { title: 'Groceries · ₹2,450', raisedBy: 'Aarav', space: 'Flat 402 · Your share was updated' },
@@ -1501,7 +1517,7 @@ export default function LandingPage({
       {/* =================================================================== */}
       <section
         id="mobile-showcase"
-        className="relative z-10 w-full overflow-hidden bg-[#F3F7F3] py-16"
+        className="relative z-10 w-full overflow-hidden bg-white py-16"
       >
         <div className="mx-auto max-w-[1360px] px-4 sm:px-6">
           <RevealOnScroll className="text-center">
@@ -1673,62 +1689,53 @@ export default function LandingPage({
 
       {/* SECTION 3: DESKTOP COMMAND CENTER */}
       <section id="desktop-preview" className="relative z-10 mx-auto max-w-[1340px] px-4 py-16 sm:px-6">
+        <LandingSectionGraphic />
         <RevealOnScroll className="flex flex-col items-start justify-between gap-6 lg:flex-row lg:flex-nowrap lg:items-end lg:gap-8">
           <div>
             <span className="rounded-full border border-[#BDD2C1] bg-[#EEF4EF] px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-[#3E7754]">
-              Interactive Desktop Command Center
+              Desktop Dashboard · MacBook Preview
             </span>
             <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-              Explore all 5 desktop views live
+              Sharebills on the big screen
             </h2>
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-600">
-              Click any tab below to inspect the redesigned widescreen workspace—including the new
-              Rent &amp; Disputes Hub, Monthly Analytics drilldowns, and AMOLED Dark Mode.
+              See your spaces, recent activity, balances, and rent settlements together in the
+              Sharebills desktop workspace.
             </p>
-          </div>
-
-          <div className="hidden shrink-0 items-center gap-2 xl:flex">
-            <div className="flex flex-nowrap rounded-2xl border border-white/90 bg-white/85 p-1 shadow-sm backdrop-blur-xl">
-              {[
-                { id: 'command', label: '1. Overview' },
-                { id: 'analytics', label: '2. Monthly Analytics' },
-                { id: 'rent', label: '3. Rent & Disputes' },
-                { id: 'transactions', label: '4. Transactions & Export' },
-                { id: 'spaces', label: '5. Shared Spaces' },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActivePreviewTab(tab.id)}
-                  className={`whitespace-nowrap rounded-xl px-2.5 py-2 text-[11px] font-bold transition-all ${
-                    activePreviewTab === tab.id
-                      ? 'bg-gradient-to-b from-[#3E7754] to-[#2C503A] text-white shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setDesktopDarkPreview((prev) => !prev)}
-              className={`inline-flex h-10 items-center gap-1.5 whitespace-nowrap rounded-2xl border px-3 text-xs font-bold shadow-xs transition-all ${
-                desktopDarkPreview
-                  ? 'border-slate-700 bg-slate-900 text-amber-300'
-                  : 'border-white/90 bg-white/90 text-slate-700 hover:bg-white'
-              }`}
-            >
-              {desktopDarkPreview ? <Moon size={14} /> : <Sun size={14} />}
-              <span>{desktopDarkPreview ? 'AMOLED Dark' : 'Light Glass'}</span>
-            </button>
           </div>
         </RevealOnScroll>
 
         <RevealOnScroll
           delay={150}
-          className="mt-7 hidden overflow-hidden rounded-[32px] border border-white/90 bg-white/60 shadow-2xl shadow-[#14291D]/10 backdrop-blur-2xl xl:block"
+          className="mt-7"
+        >
+          <div className="mx-auto max-w-[1180px] px-1 sm:px-4">
+            <div className="relative rounded-t-[18px] border-[8px] border-b-0 border-[#242629] bg-[#242629] shadow-[0_24px_50px_-22px_rgba(15,23,42,0.5)] sm:rounded-t-[24px] sm:border-[12px] sm:border-b-0">
+              <div
+                aria-hidden="true"
+                className="absolute left-1/2 top-[-1px] z-10 flex h-4 w-28 -translate-x-1/2 items-center justify-center gap-2 rounded-b-xl border-x border-b border-[#34373b] bg-[#101113] sm:h-5 sm:w-40"
+              >
+                <span className="h-1 w-1 rounded-full bg-[#30343a]" />
+                <span className="h-1.5 w-1.5 rounded-full border border-[#30343a] bg-[#17191c]" />
+              </div>
+              <img
+                src="/dashboard.png"
+                alt="Sharebills desktop dashboard with workspace navigation, balances, recent activity, and rent settlements"
+                className="block h-auto w-full rounded-t-[9px] sm:rounded-t-[12px]"
+              />
+            </div>
+            <div
+              aria-hidden="true"
+              className="relative mx-auto -mt-px h-3 w-[104%] rounded-b-[10px] border-x border-b border-[#aeb4bb] bg-[#d9dde1] shadow-[0_14px_18px_-12px_rgba(15,23,42,0.45)] sm:h-4"
+            >
+              <div className="mx-auto h-1 w-20 rounded-b-md bg-[#b8bec5] sm:w-28" />
+            </div>
+          </div>
+        </RevealOnScroll>
+
+        <RevealOnScroll
+          delay={150}
+          className="hidden"
         >
           <div
             className={`flex items-center justify-between border-b px-5 py-3 transition-colors ${
@@ -1979,7 +1986,10 @@ export default function LandingPage({
       {/* =================================================================== */}
       {/* SECTION 4: REDESIGNED BENTO SHOWCASE GRID                           */}
       {/* =================================================================== */}
-      <section id="features" className="relative z-10 mx-auto max-w-[1340px] px-4 py-20 sm:px-6">
+      <section
+        id="features"
+        className="relative z-10 mx-auto max-w-[1340px] px-4 py-20 before:absolute before:inset-y-0 before:left-1/2 before:-z-10 before:w-screen before:-translate-x-1/2 before:bg-white before:content-[''] sm:px-6"
+      >
         <RevealOnScroll className="text-center">
           <span className="rounded-full border border-[#BDD2C1] bg-[#EEF4EF] px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-[#3E7754]">
             Comprehensive Suite
@@ -2152,6 +2162,7 @@ export default function LandingPage({
         id="smart-split"
         className="relative z-10 overflow-hidden border-y border-[#DDE9DF] bg-[#EEF4EF] px-4 py-20 sm:px-6"
       >
+        <LandingSectionGraphic />
         {/* Dot field scoped exclusively to Section 5 */}
         <div aria-hidden="true" className="landing-dot-field pointer-events-none absolute inset-0 -z-10" />
 
@@ -2352,7 +2363,10 @@ export default function LandingPage({
       </section>
 
       {/* SECTION 6: HOW IT WORKS */}
-      <section id="how-it-works" className="relative z-10 mx-auto max-w-[1340px] px-4 py-16 sm:px-6">
+      <section
+        id="how-it-works"
+        className="relative z-10 mx-auto max-w-[1340px] px-4 py-16 before:absolute before:inset-y-0 before:left-1/2 before:-z-10 before:w-screen before:-translate-x-1/2 before:bg-white before:content-[''] sm:px-6"
+      >
         <RevealOnScroll className="text-center">
           <span className="rounded-full border border-[#BDD2C1] bg-[#EEF4EF] px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-[#3E7754]">
             Zero Setup Friction
@@ -2409,7 +2423,8 @@ export default function LandingPage({
 
       {/* SECTION 7: DOWNLOAD PWA */}
       <section id="download-section" className="relative z-10 mx-auto max-w-[1340px] px-4 py-10 sm:px-6">
-        <RevealOnScroll className="rounded-[32px] border border-white/90 bg-gradient-to-br from-[#173F2D] via-[#23533A] to-[#14291D] p-6 text-white shadow-2xl sm:p-10">
+        <LandingSectionGraphic />
+        <RevealOnScroll className="relative z-10 rounded-[32px] border border-[#2F6746] bg-[#173F2D] p-6 text-white shadow-2xl sm:p-10">
           <div className="flex flex-col items-center justify-between gap-8 lg:flex-row">
             <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:text-left">
               <img
@@ -2457,7 +2472,10 @@ export default function LandingPage({
       {/* =================================================================== */}
       {/* SECTION 8: DEVELOPERS (EQUAL WIDTH CARDS)                           */}
       {/* =================================================================== */}
-      <section id="developers" className="relative z-10 overflow-hidden px-4 py-16 sm:px-6">
+      <section
+        id="developers"
+        className="relative z-10 px-4 py-16 before:absolute before:inset-y-0 before:left-1/2 before:-z-10 before:w-screen before:-translate-x-1/2 before:bg-white before:content-[''] sm:px-6"
+      >
         <div className="relative mx-auto max-w-[1120px]">
           <RevealOnScroll className="mx-auto max-w-2xl text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-[#BDD2C1] bg-white/80 px-3.5 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#356447] shadow-xs">
@@ -2478,6 +2496,7 @@ export default function LandingPage({
               {
                 name: 'Taranveer Singh',
                 initials: 'TS',
+                image: '/taranveer_photograph.webp',
                 role: 'Founder & Lead Developer',
                 contribution: 'Designed and  Developed ShareBills, core architecture and backend systems.',
                 links: [
@@ -2515,9 +2534,17 @@ export default function LandingPage({
               >
                 <article className="group relative isolate flex h-full flex-col justify-between overflow-hidden rounded-[28px] border border-white/90 bg-white/80 p-6 shadow-md backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-[#BDD2C1] hover:bg-white hover:shadow-xl md:p-8">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-[22px] bg-gradient-to-br from-[#63B686] to-[#326b4a] text-xl font-black text-white shadow-lg shadow-[#326b4a]/20 transition-transform duration-300 group-hover:rotate-[-5deg] group-hover:scale-105">
-                      {developer.initials}
-                    </div>
+                    {developer.image ? (
+                      <img
+                        src={developer.image}
+                        alt={`${developer.name} profile`}
+                        className="h-20 w-20 flex-shrink-0 rounded-[22px] object-cover shadow-lg shadow-[#326b4a]/20 transition-transform duration-300 group-hover:rotate-[-5deg] group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-[22px] bg-gradient-to-br from-[#63B686] to-[#326b4a] text-xl font-black text-white shadow-lg shadow-[#326b4a]/20 transition-transform duration-300 group-hover:rotate-[-5deg] group-hover:scale-105">
+                        {developer.initials}
+                      </div>
+                    )}
                     <div className="min-w-0">
                       <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#43855F]">
                         {developer.role}
@@ -2530,14 +2557,14 @@ export default function LandingPage({
                       </p>
                     </div>
                   </div>
-                  <div className="mt-6 flex flex-wrap gap-2">
+                  <div className="mt-6 grid grid-cols-2 gap-2 lg:grid-cols-4">
                     {developer.links.map(({ label, href, icon: Icon }) => (
                       <a
                         key={label}
                         href={href}
                         target={href.startsWith('mailto:') ? undefined : '_blank'}
                         rel={href.startsWith('mailto:') ? undefined : 'noreferrer'}
-                        className="group/link inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200/90 bg-white/90 px-3.5 text-xs font-bold text-slate-600 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-[#63B686] hover:bg-[#eff8f2] hover:text-[#28583c] hover:shadow-sm"
+                        className="group/link inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-slate-200/90 bg-white/90 px-2 text-xs font-bold text-slate-600 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-[#63B686] hover:bg-[#eff8f2] hover:text-[#28583c] hover:shadow-sm"
                       >
                         <Icon size={14} />
                         {label}
@@ -2557,6 +2584,7 @@ export default function LandingPage({
 
       {/* SECTION 9: FAQ */}
       <section id="faq" className="relative z-10 mx-auto max-w-[920px] px-4 py-16 sm:px-6">
+        <LandingSectionGraphic />
         <RevealOnScroll className="text-center">
           <span className="rounded-full border border-[#BDD2C1] bg-[#EEF4EF] px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-[#3E7754]">
             Got Questions?
