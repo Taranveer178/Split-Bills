@@ -1334,7 +1334,9 @@ export default function ChatTab({
                       </div>
                     )}
 
-                    <div className="relative min-w-0 max-w-[70%] sm:max-w-none">
+                    <div className={`relative min-w-0 max-w-[70%] sm:max-w-none ${
+                      msg.type === 'expense_dispute' ? 'w-[min(22rem,70vw)]' : ''
+                    }`}>
                       <div 
                         onClick={() => handleBubbleClick(msg)}
                         onTouchStart={(e) => handleTouchStart(e, msg, isMe)}
@@ -1344,7 +1346,9 @@ export default function ChatTab({
                         onMouseUp={handleTouchEnd}
                         onMouseLeave={handleTouchEnd}
                         onContextMenu={(e) => handleContextMenu(e, msg, isMe)}
-                        className={`relative w-fit max-w-full break-words sm:max-w-[70vw] transition-all cursor-pointer select-none active:scale-[0.99] ${
+                        className={`relative ${
+                          msg.type === 'expense_dispute' ? 'w-full' : 'w-fit'
+                        } max-w-full break-words sm:max-w-[70vw] transition-all cursor-pointer select-none active:scale-[0.99] ${
                           isSelected ? 'ring-2 ring-sky-500/80 rounded-2xl' : ''
                         } ${
                           onlyEmoji 
@@ -1455,10 +1459,10 @@ export default function ChatTab({
                             )}
 
                             {msg.type === 'expense_dispute' ? (
-                              <div className="min-w-[16rem] max-w-sm px-3 py-2.5">
-                                <div className="flex items-center gap-2 text-xs font-extrabold text-amber-800">
-                                  <AlertTriangle size={15} />
-                                  <span>Expense dispute</span>
+                              <div className="w-full min-w-0 px-3 py-2.5">
+                                <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs font-extrabold text-amber-800">
+                                  <AlertTriangle size={15} className="shrink-0" />
+                                  <span className="min-w-0 flex-1">Expense dispute</span>
                                   <span className={`ml-auto rounded-full px-2 py-0.5 text-[9px] uppercase tracking-wide ${
                                     msg.status === 'resolved'
                                       ? 'bg-emerald-100 text-emerald-700'
@@ -1471,7 +1475,7 @@ export default function ChatTab({
                                       : msg.status === 'cancelled' ? 'Cancelled' : 'Open'}
                                   </span>
                                 </div>
-                                <p className="mt-1.5 text-xs font-bold text-slate-900">
+                                <p className="mt-1.5 min-w-0 break-words text-xs font-bold text-slate-900 [overflow-wrap:anywhere]">
                                   {msg.expenseTitle || 'Expense'}
                                 </p>
                                 {msg.expenseAmount != null && (
@@ -1479,7 +1483,7 @@ export default function ChatTab({
                                     {formatCurrency(msg.expenseAmount, group.currency)}
                                   </p>
                                 )}
-                                <p className="mt-1 text-[11px] text-slate-600">
+                                <p className="mt-1 break-words text-[11px] text-slate-600 [overflow-wrap:anywhere]">
                                   Raised by {msg.disputedByName || msg.senderName || 'a member'}
                                   {msg.status === 'resolved'
                                     ? ` · Resolved by ${msg.resolvedByName || 'a member'}`

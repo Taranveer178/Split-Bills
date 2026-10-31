@@ -579,6 +579,9 @@ async function handlePushRequest(request, env) {
                 },
               },
               webpush: {
+                fcm_options: {
+                  link: new URL('/', request.url).href,
+                },
                 notification: {
                   icon: notificationImage,
                   badge: fallbackIcon,

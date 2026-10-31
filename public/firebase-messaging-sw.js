@@ -1,4 +1,33 @@
 // public/firebase-messaging-sw.js
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const targetUrl = new URL(event.notification.data?.url || '/', self.location.origin);
+  if (targetUrl.origin !== self.location.origin) {
+    targetUrl.href = self.location.origin;
+  }
+
+  event.waitUntil((async () => {
+    const windowClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const appClient = windowClients.find((client) => {
+      try {
+        return new URL(client.url).origin === targetUrl.origin;
+      } catch {
+        return false;
+      }
+    });
+
+    if (appClient) {
+      if (appClient.url !== targetUrl.href && 'navigate' in appClient) {
+        await appClient.navigate(targetUrl.href);
+      }
+      return appClient.focus();
+    }
+
+    return clients.openWindow(targetUrl.href);
+  })());
+});
+
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
 
@@ -56,22 +85,4 @@ messaging.onBackgroundMessage((payload) => {
   };
 
   self.registration.showNotification(title, options);
-});
-
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  const urlToOpen = event.notification.data?.url || '/';
-
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      for (const client of windowClients) {
-        if (client.url === urlToOpen && 'focus' in client) {
-          return client.focus();
-        }
-      }
-      if (clients.openWindow) {
-        return clients.openWindow(urlToOpen);
-      }
-    })
-  );
 });
