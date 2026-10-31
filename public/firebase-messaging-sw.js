@@ -46,8 +46,8 @@ messaging.onBackgroundMessage((payload) => {
   const title = payload.notification?.title || payload.data?.title || 'Sharebills Alert';
   const options = {
     body: payload.notification?.body || payload.data?.message || 'New activity in your group.',
-    icon: '/sharebills-icon.webp',
-    badge: '/sharebills-icon.webp',
+    icon: '/sharebills-notification-icon.png',
+    badge: '/sharebills-notification-icon.png',
     data: {
       url: payload.data?.url || '/',
       recipientId: payload.data?.recipientId || '',

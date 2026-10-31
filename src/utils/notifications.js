@@ -352,7 +352,14 @@ export async function listenToForegroundMessages(onMessageReceived) {
   });
 }
 
-export async function triggerPushNotification({ senderId, recipientId, title, message, groupId }) {
+export async function triggerPushNotification({
+  senderId,
+  recipientId,
+  title,
+  message,
+  groupId,
+  avatarUserId,
+}) {
   if (!senderId) throw new Error('A sender account is required to send push notifications.');
   const currentUser = auth?.currentUser;
   if (!currentUser) throw new Error('Sign in to Sharebills before sending a test notification.');
@@ -378,6 +385,7 @@ export async function triggerPushNotification({ senderId, recipientId, title, me
       title: title || 'Sharebills',
       message: message || 'You have a new update in your group.',
       groupId: groupId || '',
+      ...(avatarUserId ? { avatarUserId } : {}),
     }),
   });
 

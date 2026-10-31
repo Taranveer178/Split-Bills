@@ -157,6 +157,7 @@ export default function AddExpenseTab({
               title: `New Expense in ${group.name || 'Group'}`,
               message: notif.message,
               groupId: group.id,
+              avatarUserId: paidBy,
             }).catch((err) => console.warn('Expense push trigger failed:', err));
           }
         }

@@ -800,6 +800,7 @@ export default function ChatTab({
         title: `Message in ${group.name || 'Group'}`,
         message: `${senderName}: ${message}`,
         groupId: group.id,
+        avatarUserId: currentUser.id,
       }).catch((error) => console.warn('Chat push error:', error));
     });
   };

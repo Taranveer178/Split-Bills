@@ -77,6 +77,48 @@ function decodeBase64Url(value) {
   return Uint8Array.from(binary, (character) => character.charCodeAt(0));
 }
 
+async function signNotificationAvatarUrl(userId, expiresAt, privateKey) {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(privateKey),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const signature = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    new TextEncoder().encode(`${userId}:${expiresAt}`),
+  );
+  return encodeBase64Url(new Uint8Array(signature));
+}
+
+async function getNotificationAvatarUrl(request, userId, photoDataUrl, privateKey) {
+  if (typeof photoDataUrl !== 'string' || !photoDataUrl) return '';
+
+  if (photoDataUrl.length <= 2048) {
+    try {
+      const photoUrl = new URL(photoDataUrl);
+      if (photoUrl.protocol === 'https:' && !photoUrl.username && !photoUrl.password) {
+        return photoUrl.href;
+      }
+    } catch {
+      // Profile photos may be stored as data URLs instead of hosted URLs.
+    }
+  }
+
+  if (!/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/i.test(photoDataUrl)) {
+    return '';
+  }
+
+  const expiresAt = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60);
+  const signature = await signNotificationAvatarUrl(userId, expiresAt, privateKey);
+  const avatarUrl = new URL(`/api/notification-avatar/${encodeURIComponent(userId)}`, request.url);
+  avatarUrl.searchParams.set('expires', String(expiresAt));
+  avatarUrl.searchParams.set('signature', signature);
+  return avatarUrl.href;
+}
+
 function equalBytes(left, right) {
   if (left.length !== right.length) return false;
   let difference = 0;
@@ -380,8 +422,12 @@ async function handlePushRequest(request, env) {
   const title = typeof payload?.title === 'string' ? payload.title.slice(0, 120) : 'RoomSplit';
   const message = typeof payload?.message === 'string' ? payload.message.slice(0, 500) : 'New activity';
   const groupId = typeof payload?.groupId === 'string' ? payload.groupId.trim() : '';
+  const avatarUserId = typeof payload?.avatarUserId === 'string' && payload.avatarUserId.trim()
+    ? payload.avatarUserId.trim()
+    : senderId;
   if (!recipientId) return jsonResponse({ error: 'recipientId is required' }, 400, corsHeaders);
   if (!senderId) return jsonResponse({ error: 'senderId is required' }, 400, corsHeaders);
+  if (avatarUserId.length > 128) return jsonResponse({ error: 'avatarUserId is invalid' }, 400, corsHeaders);
 
   const credentialSource = getServiceAccountSource(env);
   let serviceAccount;
@@ -476,13 +522,28 @@ async function handlePushRequest(request, env) {
       const group = documentFromFirestore(groupDocument);
       if (!Array.isArray(group.members)
         || !group.members.includes(senderId)
-        || !group.members.includes(recipientId)) {
-        return jsonResponse({ error: 'Sender and recipient must both be members of the group' }, 403, corsHeaders);
+        || !group.members.includes(recipientId)
+        || !group.members.includes(avatarUserId)) {
+        return jsonResponse({ error: 'Sender, recipient, and avatar user must all be members of the group' }, 403, corsHeaders);
       }
       if (Array.isArray(user.mutedGroupIds) && user.mutedGroupIds.includes(groupId)) {
         return jsonResponse({ success: true, muted: true, count: 0 }, 200, corsHeaders);
       }
+    } else if (avatarUserId !== senderId) {
+      return jsonResponse({ error: 'A different avatar user requires a group' }, 400, corsHeaders);
     }
+
+    stage = 'load notification sender profile photo';
+    const avatarUserDocument = await firestoreRequest(env, `users/${encodeURIComponent(avatarUserId)}`);
+    const avatarUser = documentFromFirestore(avatarUserDocument);
+    const avatarUrl = await getNotificationAvatarUrl(
+      request,
+      avatarUserId,
+      avatarUser.photoDataUrl,
+      serviceAccount.privateKey,
+    );
+    const fallbackIcon = new URL('/sharebills-notification-icon.png', request.url).href;
+    const notificationImage = avatarUrl || fallbackIcon;
 
     const tokens = [...new Set((Array.isArray(user.fcmTokens) ? user.fcmTokens : [])
       .filter((token) => typeof token === 'string' && token.length > 0))];
@@ -513,14 +574,14 @@ async function handlePushRequest(request, env) {
                   channel_id: 'default',
                   sound: 'default',
                   icon: 'ic_stat_roomsplit',
-                  color: '#2563EB',
-                  image: 'https://split-bills.taranveer.in/roomsplit-icon-192.png',
+                  color: '#3E7754',
+                  image: notificationImage,
                 },
               },
               webpush: {
                 notification: {
-                  icon: 'https://split-bills.taranveer.in/roomsplit-icon-192.png',
-                  badge: 'https://split-bills.taranveer.in/roomsplit-icon-192.png',
+                  icon: notificationImage,
+                  badge: fallbackIcon,
                 },
               },
               apns: { payload: { aps: { sound: 'default' } } },
@@ -616,11 +677,72 @@ async function handleAdminRequest(request, env) {
   return jsonResponse({ error: 'Not found' }, 404);
 }
 
+async function handleNotificationAvatarRequest(request, env) {
+  if (request.method !== 'GET') {
+    return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET' } });
+  }
+
+  const url = new URL(request.url);
+  let userId;
+  try {
+    userId = decodeURIComponent(url.pathname.slice('/api/notification-avatar/'.length));
+  } catch {
+    return new Response('Invalid avatar link', { status: 403 });
+  }
+  const expiresAt = Number(url.searchParams.get('expires'));
+  const signature = url.searchParams.get('signature') || '';
+  const serviceAccount = getServiceAccount(env);
+  if (
+    !/^[A-Za-z0-9._:@-]{1,128}$/.test(userId)
+    || !Number.isSafeInteger(expiresAt)
+    || expiresAt <= Math.floor(Date.now() / 1000)
+    || expiresAt > Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60)
+    || !/^[A-Za-z0-9_-]{43}$/.test(signature)
+  ) {
+    return new Response('Invalid avatar link', { status: 403 });
+  }
+
+  const expectedSignature = await signNotificationAvatarUrl(userId, expiresAt, serviceAccount.privateKey);
+  if (!equalBytes(decodeBase64Url(signature), decodeBase64Url(expectedSignature))) {
+    return new Response('Invalid avatar link', { status: 403 });
+  }
+
+  const document = await firestoreRequest(env, `users/${encodeURIComponent(userId)}`);
+  const photoDataUrl = documentFromFirestore(document).photoDataUrl;
+  const match = typeof photoDataUrl === 'string'
+    && photoDataUrl.length <= 380_000
+    ? photoDataUrl.match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+={0,2})$/i)
+    : null;
+  if (!match) return new Response('Avatar not found', { status: 404 });
+
+  let bytes;
+  try {
+    const binary = atob(match[2]);
+    bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  } catch {
+    return new Response('Avatar is invalid', { status: 404 });
+  }
+  if (!bytes.length || bytes.length > 280_000) {
+    return new Response('Avatar is invalid', { status: 404 });
+  }
+
+  return new Response(bytes, {
+    headers: {
+      'Content-Type': match[1].toLowerCase(),
+      'Cache-Control': 'public, max-age=3600',
+      'X-Content-Type-Options': 'nosniff',
+    },
+  });
+}
+
 export default {
   async fetch(request, env) {
     const pathname = new URL(request.url).pathname;
     if (pathname === '/api/send-push') {
       return handlePushRequest(request, env);
+    }
+    if (pathname.startsWith('/api/notification-avatar/')) {
+      return handleNotificationAvatarRequest(request, env);
     }
     if (pathname.startsWith('/api/admin/')) {
       return handleAdminRequest(request, env);
