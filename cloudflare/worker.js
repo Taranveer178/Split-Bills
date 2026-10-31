@@ -584,7 +584,7 @@ async function handlePushRequest(request, env) {
                 },
                 notification: {
                   icon: notificationImage,
-                  badge: fallbackIcon,
+                  badge: new URL('/sharebills-notification-badge.png', request.url).href,
                 },
               },
               apns: { payload: { aps: { sound: 'default' } } },

@@ -1,11 +1,10 @@
 // public/firebase-messaging-sw.js
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  event.stopImmediatePropagation();
 
-  const targetUrl = new URL(event.notification.data?.url || '/', self.location.origin);
-  if (targetUrl.origin !== self.location.origin) {
-    targetUrl.href = self.location.origin;
-  }
+  const notificationData = event.notification.data || {};
+  const targetUrl = new URL('/', self.location.origin);
 
   event.waitUntil((async () => {
     const windowClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
@@ -18,9 +17,13 @@ self.addEventListener('notificationclick', (event) => {
     });
 
     if (appClient) {
-      if (appClient.url !== targetUrl.href && 'navigate' in appClient) {
-        await appClient.navigate(targetUrl.href);
-      }
+      appClient.postMessage({
+        type: 'PUSH_NOTIFICATION_CLICK',
+        data: {
+          recipientId: notificationData.recipientId || '',
+          groupId: notificationData.groupId || '',
+        },
+      });
       return appClient.focus();
     }
 
@@ -76,7 +79,7 @@ messaging.onBackgroundMessage((payload) => {
   const options = {
     body: payload.notification?.body || payload.data?.message || 'New activity in your group.',
     icon: '/sharebills-notification-icon.png',
-    badge: '/sharebills-notification-icon.png',
+    badge: '/sharebills-notification-badge.png',
     data: {
       url: payload.data?.url || '/',
       recipientId: payload.data?.recipientId || '',

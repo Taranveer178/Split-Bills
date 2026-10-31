@@ -1,6 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
-import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
+import { deleteToken, getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 import { reload } from 'firebase/auth';
 import {
   arrayRemove,
@@ -129,9 +129,6 @@ function waitForNativeRegistration(userId) {
 
 async function processNativeToken(token) {
   const previousToken = currentPushToken || localStorage.getItem(PUSH_TOKEN_STORAGE_KEY);
-  currentPushToken = token;
-  localStorage.setItem(PUSH_TOKEN_STORAGE_KEY, token);
-  nativeTokenVerified = true;
 
   if (previousToken && previousToken !== token) {
     await removeTokenFromAllUsers(previousToken);
@@ -143,10 +140,13 @@ async function processNativeToken(token) {
     return;
   }
 
+  currentPushToken = token;
+  localStorage.setItem(PUSH_TOKEN_STORAGE_KEY, token);
   if (boundToken !== token || boundUserId !== ownerId) {
     const bound = await bindTokenToUser(token, ownerId);
     if (!bound) return;
   }
+  nativeTokenVerified = true;
   settleRegistrationWaiters({ success: true, token });
 }
 
@@ -318,8 +318,18 @@ export async function unregisterPushNotifications(userId) {
   if (token) {
     await removeTokenFromAllUsers(token);
   }
+
+  if (Capacitor.isNativePlatform()) {
+    await PushNotifications.unregister();
+  } else if (await isSupported()) {
+    await deleteToken(getMessaging(app));
+  }
+
+  currentPushToken = null;
+  localStorage.removeItem(PUSH_TOKEN_STORAGE_KEY);
   boundToken = null;
   boundUserId = null;
+  nativeTokenVerified = false;
   if (Capacitor.isNativePlatform()) {
     await PushNotifications.removeAllDeliveredNotifications();
   }

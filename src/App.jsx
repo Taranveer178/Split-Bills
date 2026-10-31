@@ -1439,7 +1439,7 @@ export default function App() {
   }, [pushUserId]);
 
   useEffect(() => {
-    return setPushNotificationActionHandler((notification) => {
+    const handleNotificationAction = (notification) => {
       if (!activeUserId || notification.data?.recipientId !== activeUserId) return;
       const notificationGroup = groups.find((group) => group.id === notification.data?.groupId);
       if (notificationGroup && navigateToRef.current) {
@@ -1450,7 +1450,19 @@ export default function App() {
           initialTab: 'expenses',
         });
       }
-    });
+    };
+    const removePushActionHandler = setPushNotificationActionHandler(handleNotificationAction);
+    const handleServiceWorkerMessage = (event) => {
+      if (event.data?.type === 'PUSH_NOTIFICATION_CLICK') {
+        handleNotificationAction({ data: event.data.data || {} });
+      }
+    };
+    navigator.serviceWorker?.addEventListener('message', handleServiceWorkerMessage);
+
+    return () => {
+      removePushActionHandler();
+      navigator.serviceWorker?.removeEventListener('message', handleServiceWorkerMessage);
+    };
   }, [activeUserId, groups]);
 
   const visibleNotifications = notifications.filter((notification) => {
